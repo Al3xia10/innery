@@ -148,21 +148,21 @@ export default function Navbar() {
                     How it works
                   </Link>
                   <Link
-                    href="/therapist"
+                    href="/for-therapists"
                     onClick={() => setOpen(false)}
                     className="rounded-xl px-3 py-3 text-gray-900 hover:bg-gray-50 transition"
                   >
                     For therapists
                   </Link>
                   <Link
-                    href="/client"
+                    href="/for-clients"
                     onClick={() => setOpen(false)}
                     className="rounded-xl px-3 py-3 text-gray-900 hover:bg-gray-50 transition"
                   >
                     For clients
                   </Link>
                   <Link
-                    href="/contact"
+                    href="/support"
                     onClick={() => setOpen(false)}
                     className="rounded-xl px-3 py-3 text-gray-900 hover:bg-gray-50 transition"
                   >
