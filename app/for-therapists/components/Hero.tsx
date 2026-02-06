@@ -6,8 +6,6 @@ import Image from "next/image";
 export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-[#F7F8FC]">
-      {/* soft background */}
-
       <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-22 mt-4">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-14">
           {/* LEFT */}

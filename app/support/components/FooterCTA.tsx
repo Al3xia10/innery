@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function FooterCTA() {
   return (
-    <section className="bg-white">
+    <section className="bg-[#F7F8FC]">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="relative overflow-hidden rounded-3xl border border-gray-200 bg-[#F7F8FC] p-8 md:p-10">
           <div className="pointer-events-none absolute inset-0">

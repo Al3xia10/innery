@@ -82,12 +82,12 @@ function Toggle({
           ].join(" ")}
         >
           {/* Track icons */}
-          <span className="pointer-events-none absolute left-2 inline-flex items-center justify-center">
+          <span className="pointer-events-none absolute -left-1 inline-flex items-center justify-center">
             <svg
               viewBox="0 0 24 24"
               fill="none"
               className={[
-                "h-3.5 w-3.5 transition",
+                "h-6 w-8 transition",
                 checked ? "text-white/90" : "text-gray-500",
               ].join(" ")}
               aria-hidden="true"

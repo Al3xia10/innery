@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   useEffect(() => {
   // flag global: sidebar dock se ascunde când meniul navbar e deschis
   document.documentElement.dataset.inneryNavOpen = open ? "1" : "0";
@@ -43,16 +45,32 @@ export default function Navbar() {
 
           {/* DESKTOP NAV */}
           <nav className="hidden md:flex items-center gap-8 text-sm">
-            <Link href="/how-it-works" className="text-gray-700 hover:text-indigo-600 transition">
+            <Link href="/how-it-works" className={`transition ${
+              pathname === "/how-it-works"
+                ? "text-indigo-600 font-semibold"
+                : "text-gray-700 hover:text-indigo-600"
+            }`}>
               How it works
             </Link>
-            <Link href="/for-therapists" className="text-gray-700 hover:text-indigo-600 transition">
+            <Link href="/for-therapists" className={`transition ${
+              pathname === "/for-therapists"
+                ? "text-indigo-600 font-semibold"
+                : "text-gray-700 hover:text-indigo-600"
+            }`}>
               For therapists
             </Link>
-            <Link href="/for-clients" className="text-gray-700 hover:text-indigo-600 transition">
+            <Link href="/for-clients" className={`transition ${
+              pathname === "/for-clients"
+                ? "text-indigo-600 font-semibold"
+                : "text-gray-700 hover:text-indigo-600"
+            }`}>
               For clients
             </Link>
-            <Link href="/support" className="text-gray-700 hover:text-indigo-600 transition">
+            <Link href="/support" className={`transition ${
+              pathname === "/support"
+                ? "text-indigo-600 font-semibold"
+                : "text-gray-700 hover:text-indigo-600"
+            }`}>
               Support
             </Link>
           </nav>
@@ -143,28 +161,44 @@ export default function Navbar() {
                   <Link
                     href="/how-it-works"
                     onClick={() => setOpen(false)}
-                    className="rounded-xl px-3 py-3 text-gray-900 hover:bg-gray-50 transition"
+                    className={`rounded-xl px-3 py-3 transition ${
+                      pathname === "/how-it-works"
+                        ? "bg-indigo-50 text-indigo-700 font-semibold"
+                        : "text-gray-900 hover:bg-gray-50"
+                    }`}
                   >
                     How it works
                   </Link>
                   <Link
                     href="/for-therapists"
                     onClick={() => setOpen(false)}
-                    className="rounded-xl px-3 py-3 text-gray-900 hover:bg-gray-50 transition"
+                    className={`rounded-xl px-3 py-3 transition ${
+                      pathname === "/for-therapists"
+                        ? "bg-indigo-50 text-indigo-700 font-semibold"
+                        : "text-gray-900 hover:bg-gray-50"
+                    }`}
                   >
                     For therapists
                   </Link>
                   <Link
                     href="/for-clients"
                     onClick={() => setOpen(false)}
-                    className="rounded-xl px-3 py-3 text-gray-900 hover:bg-gray-50 transition"
+                    className={`rounded-xl px-3 py-3 transition ${
+                      pathname === "/for-clients"
+                        ? "bg-indigo-50 text-indigo-700 font-semibold"
+                        : "text-gray-900 hover:bg-gray-50"
+                    }`}
                   >
                     For clients
                   </Link>
                   <Link
                     href="/support"
                     onClick={() => setOpen(false)}
-                    className="rounded-xl px-3 py-3 text-gray-900 hover:bg-gray-50 transition"
+                    className={`rounded-xl px-3 py-3 transition ${
+                      pathname === "/support"
+                        ? "bg-indigo-50 text-indigo-700 font-semibold"
+                        : "text-gray-900 hover:bg-gray-50"
+                    }`}
                   >
                     Support
                   </Link>

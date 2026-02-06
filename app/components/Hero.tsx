@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative w-full min-h-[90vh] overflow-hidden">
+    <section className="relative w-full min-h-[90vh] overflow-hidden bg-white">
 
 
       <div className="z-10 relative mx-auto max-w-7xl px-4 md:px-8 py-20 flex flex-col md:flex-row items-center justify-between gap-12">
@@ -42,7 +42,7 @@ export default function Hero() {
         </div>
 
         {/* RIGHT – IMAGE */}
-        <div className="w-full md:w-1/2 flex justify-center md:mt-10">
+        <div className="w-full md:w-1/2 flex justify-center md:mt-2">
           <Image
             src="/hero.png"
             alt="Illustration representing online therapy and reflection"
