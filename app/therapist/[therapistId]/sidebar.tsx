@@ -16,6 +16,13 @@ export default function Sidebar({
   // Mobile draggable dock position (Y axis)
   const [dockY, setDockY] = useState<number | null>(null);
 
+  const [therapistProfile, setTherapistProfile] = useState<{
+    name?: string;
+    email?: string;
+    role?: string;
+    id?: number;
+  } | null>(null);
+
   // If the top navbar (marketing) opens a full-screen mobile menu,
   // we temporarily hide the dashboard dock so the UI doesn't clash.
   useEffect(() => {
@@ -52,6 +59,24 @@ export default function Sidebar({
       window.removeEventListener("innery:nav-close", onClose);
       obs.disconnect();
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const raw = localStorage.getItem("innery_user");
+      if (!raw) return;
+
+      // raw might be a JSON string (common) or a plain object stringified twice
+      const first = JSON.parse(raw);
+      const parsed =
+        typeof first === "string" ? JSON.parse(first) : (first as any);
+
+      setTherapistProfile(parsed);
+    } catch {
+      // ignore
+    }
   }, []);
 
   const normalize = (p?: string) => (p ? p.replace(/\/+$/, "") : "");
@@ -142,12 +167,17 @@ export default function Sidebar({
           <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-indigo-600/10 ring-1 ring-indigo-600/10 flex items-center justify-center">
-                <span className="text-indigo-700 font-semibold text-sm">T</span>
+                <span className="text-indigo-700 font-semibold text-sm">
+                  {(therapistProfile?.name?.trim()?.[0] || "T").toUpperCase()}
+                </span>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 leading-tight">
-                  Therapist
+                <p className="text-sm font-semibold text-gray-900 leading-tight truncate">
+                  {therapistProfile?.name || "Therapist"}
                 </p>
+                {therapistProfile?.email ? (
+                  <p className="text-xs text-gray-500 truncate">{therapistProfile.email}</p>
+                ) : null}
                 <p className="text-xs text-gray-500 truncate">ID: {therapistId}</p>
               </div>
             </div>
@@ -159,7 +189,7 @@ export default function Sidebar({
         </div>
       </>
     ),
-    [therapistId, pathname]
+    [therapistId, pathname, therapistProfile]
   );
 
   return (

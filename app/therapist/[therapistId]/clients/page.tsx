@@ -3,22 +3,21 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { clients as allClients, therapists } from "@/app/_mock/data";
-import { getClientProfile, useTherapistProfile } from "@/app/_lib/profile";
+import { apiFetch } from "@/app/_lib/authClient";
 
-type ClientStatus = "Active" | "Paused";
+type ClientStatus = "Active" | "Paused" | "Invited";
 
 type Client = {
+  // For linked clients: id = user.id (string)
+  // For invites: id = "invite_<id>"
   id: string;
+  kind: "linked" | "invite";
   therapistId: string;
   name: string;
+  email?: string;
   status?: ClientStatus;
   lastSession?: string;
 };
-
-function uid(prefix = "c") {
-  return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
-}
 
 function initialsFromName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -29,123 +28,234 @@ function initialsFromName(name: string) {
 
 export default function ClientsPage() {
   const params = useParams<{ therapistId: string }>();
-  const therapistId = params?.therapistId ?? "t1";
+  const therapistId = params?.therapistId ?? "";
 
-  // Avoid hydration mismatches when profiles are read from localStorage.
-  // During the server pre-render of this Client Component, `window` isn't available,
-  // so profile helpers will fall back to defaults. We only apply overrides after mount.
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
-
-  const therapist = therapists.find((t) => t.id === therapistId);
-
-  const therapistProfile = useTherapistProfile(
-  therapistId,
-  therapist?.name ?? therapistId,
-  (therapist as any)?.email ?? "therapist@innery.com"
-);
-
-  const seed = React.useMemo<Client[]>(() => {
-    return allClients
-      .filter((c) => c.therapistId === therapistId)
-      .map((c) => ({
-        ...c,
-        status: (c as any).status ?? "Active",
-        lastSession: (c as any).lastSession ?? "—",
-      }));
-  }, [therapistId]);
-
-  const [clients, setClients] = React.useState<Client[]>(seed);
+  const [clients, setClients] = React.useState<Client[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [therapistName, setTherapistName] = React.useState<string>(therapistId);
   const [query, setQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<"all" | ClientStatus>("all");
 
-  const [profileTick, setProfileTick] = React.useState(0);
-
-  // Re-render when local profile overrides change (same tab or other tabs)
-  React.useEffect(() => {
-    const bump = () => setProfileTick((x) => x + 1);
-    const onStorage = () => bump();
-    const onClient = () => bump();
-    const onTherapist = () => bump();
-
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("innery:client-profile-update", onClient as EventListener);
-    window.addEventListener("innery:therapist-profile-update", onTherapist as EventListener);
-
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("innery:client-profile-update", onClient as EventListener);
-      window.removeEventListener("innery:therapist-profile-update", onTherapist as EventListener);
-    };
-  }, []);
-
-  // Ensure we actually re-compute derived names when profileTick changes
-  void profileTick;
-
   // Add client modal state
   const [open, setOpen] = React.useState(false);
+  const [draftEmail, setDraftEmail] = React.useState("");
   const [draftName, setDraftName] = React.useState("");
-  const [draftStatus, setDraftStatus] = React.useState<ClientStatus>("Active");
 
   React.useEffect(() => {
-    setClients(seed);
-    setQuery("");
-    setStatusFilter("all");
-    setOpen(false);
-    setDraftName("");
-    setDraftStatus("Active");
-  }, [seed]);
+    let alive = true;
+
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Try to get current logged-in user (therapist). If the route doesn't exist, ignore.
+        try {
+          const me = await apiFetch("/api/me", { method: "GET" });
+          if (alive) setTherapistName(me?.user?.name ?? therapistId);
+        } catch {
+          if (alive) setTherapistName(therapistId);
+        }
+
+        // Load clients for this therapist (includes both invites + linked)
+        const data = await apiFetch(`/api/therapists/${therapistId}/clients`, { method: "GET" });
+
+        const next: Client[] = (data?.clients ?? []).map((row: any) => {
+          const kind: "linked" | "invite" = row?.kind === "invite" ? "invite" : "linked";
+          if (kind === "invite") {
+            return {
+              id: String(row?.id ?? row?.invite?.id ?? ""),
+              kind: "invite",
+              therapistId: String(row?.therapistId ?? therapistId),
+              name: String(row?.name ?? row?.email ?? "Invited client"),
+              email: String(row?.email ?? ""),
+              status: "Invited",
+              lastSession: String(row?.lastSession ?? "—"),
+            };
+          }
+
+          // linked
+          const userId = String(row?.user?.id ?? row?.userId ?? row?.id);
+          return {
+            id: userId,
+            kind: "linked",
+            therapistId: String(row?.therapistId ?? therapistId),
+            name: String(row?.user?.name ?? row?.name ?? "Client"),
+            email: String(row?.user?.email ?? row?.email ?? ""),
+            status: (row?.status === "Paused" ? "Paused" : "Active") as ClientStatus,
+            lastSession: String(row?.lastSession ?? row?.lastSessionAt ?? "—"),
+          };
+        });
+
+        if (alive) setClients(next);
+      } catch (e: any) {
+        if (alive) setError(e?.message || "Failed to load clients");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [therapistId]);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = clients;
 
     if (statusFilter !== "all") {
-      list = list.filter((c) => (c.status ?? "Active") === statusFilter);
+      list = list.filter((c) => (c.status ?? (c.kind === "invite" ? "Invited" : "Active")) === statusFilter);
     }
 
     if (!q) return list;
-    return list.filter((c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
+    return list.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.id.toLowerCase().includes(q) ||
+        (c.email ? c.email.toLowerCase().includes(q) : false)
+    );
   }, [clients, query, statusFilter]);
 
   function onOpenAdd() {
+    setDraftEmail("");
     setDraftName("");
-    setDraftStatus("Active");
     setOpen(true);
   }
 
-  function onAddClient() {
+  async function onAddClient() {
+    const email = draftEmail.trim().toLowerCase();
     const name = draftName.trim();
-    if (!name) return;
 
-    const next: Client = {
-      id: uid("c"),
-      therapistId,
-      name,
-      status: draftStatus,
-      lastSession: "—",
-    };
+    if (!email) return;
 
-    setClients((prev) => [next, ...prev]);
-    setOpen(false);
+    try {
+      setError(null);
+      await apiFetch(`/api/therapists/${therapistId}/clients`, {
+        method: "POST",
+        body: JSON.stringify({ email, name: name || undefined }),
+      });
+
+      setOpen(false);
+      setDraftEmail("");
+      setDraftName("");
+
+      // refresh list
+      const data = await apiFetch(`/api/therapists/${therapistId}/clients`, { method: "GET" });
+      const next: Client[] = (data?.clients ?? []).map((row: any) => {
+        const kind: "linked" | "invite" = row?.kind === "invite" ? "invite" : "linked";
+        if (kind === "invite") {
+          return {
+            id: String(row?.id ?? row?.invite?.id ?? ""),
+            kind: "invite",
+            therapistId: String(row?.therapistId ?? therapistId),
+            name: String(row?.name ?? row?.email ?? "Invited client"),
+            email: String(row?.email ?? ""),
+            status: "Invited",
+            lastSession: String(row?.lastSession ?? "—"),
+          };
+        }
+        const userId = String(row?.user?.id ?? row?.userId ?? row?.id);
+        return {
+          id: userId,
+          kind: "linked",
+          therapistId: String(row?.therapistId ?? therapistId),
+          name: String(row?.user?.name ?? row?.name ?? "Client"),
+          email: String(row?.user?.email ?? row?.email ?? ""),
+          status: (row?.status === "Paused" ? "Paused" : "Active") as ClientStatus,
+          lastSession: String(row?.lastSession ?? row?.lastSessionAt ?? "—"),
+        };
+      });
+      setClients(next);
+    } catch (e: any) {
+      setError(e?.message || "Failed to invite client");
+    }
   }
 
-  function onToggleStatus(clientId: string) {
-    setClients((prev) =>
-      prev.map((c) =>
-        c.id === clientId
-          ? {
-              ...c,
-              status: (c.status ?? "Active") === "Active" ? "Paused" : "Active",
-            }
-          : c
-      )
-    );
+  async function onToggleStatus(clientId: string) {
+    const current = clients.find((c) => c.id === clientId);
+    if (!current) return;
+
+    // Invites cannot be paused
+    if (current.kind === "invite") return;
+
+    const nextStatus: ClientStatus = (current.status ?? "Active") === "Active" ? "Paused" : "Active";
+
+    try {
+      setError(null);
+      await apiFetch(`/api/therapists/${therapistId}/clients/${clientId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: nextStatus }),
+      });
+
+      // refresh list
+      const data = await apiFetch(`/api/therapists/${therapistId}/clients`, { method: "GET" });
+      const next: Client[] = (data?.clients ?? []).map((row: any) => {
+        const kind: "linked" | "invite" = row?.kind === "invite" ? "invite" : "linked";
+        if (kind === "invite") {
+          return {
+            id: String(row?.id ?? row?.invite?.id ?? ""),
+            kind: "invite",
+            therapistId: String(row?.therapistId ?? therapistId),
+            name: String(row?.name ?? row?.email ?? "Invited client"),
+            email: String(row?.email ?? ""),
+            status: "Invited",
+            lastSession: String(row?.lastSession ?? "—"),
+          };
+        }
+        const userId = String(row?.user?.id ?? row?.userId ?? row?.id);
+        return {
+          id: userId,
+          kind: "linked",
+          therapistId: String(row?.therapistId ?? therapistId),
+          name: String(row?.user?.name ?? row?.name ?? "Client"),
+          email: String(row?.user?.email ?? row?.email ?? ""),
+          status: (row?.status === "Paused" ? "Paused" : "Active") as ClientStatus,
+          lastSession: String(row?.lastSession ?? row?.lastSessionAt ?? "—"),
+        };
+      });
+      setClients(next);
+    } catch (e: any) {
+      setError(e?.message || "Failed to update status");
+    }
   }
 
-  function onRemove(clientId: string) {
-    // Demo-only; remove in-memory
-    setClients((prev) => prev.filter((c) => c.id !== clientId));
+  async function onRemove(clientId: string) {
+    try {
+      setError(null);
+      await apiFetch(`/api/therapists/${therapistId}/clients/${clientId}`, { method: "DELETE" });
+
+      // refresh list
+      const data = await apiFetch(`/api/therapists/${therapistId}/clients`, { method: "GET" });
+      const next: Client[] = (data?.clients ?? []).map((row: any) => {
+        const kind: "linked" | "invite" = row?.kind === "invite" ? "invite" : "linked";
+        if (kind === "invite") {
+          return {
+            id: String(row?.id ?? row?.invite?.id ?? ""),
+            kind: "invite",
+            therapistId: String(row?.therapistId ?? therapistId),
+            name: String(row?.name ?? row?.email ?? "Invited client"),
+            email: String(row?.email ?? ""),
+            status: "Invited",
+            lastSession: String(row?.lastSession ?? "—"),
+          };
+        }
+        const userId = String(row?.user?.id ?? row?.userId ?? row?.id);
+        return {
+          id: userId,
+          kind: "linked",
+          therapistId: String(row?.therapistId ?? therapistId),
+          name: String(row?.user?.name ?? row?.name ?? "Client"),
+          email: String(row?.user?.email ?? row?.email ?? ""),
+          status: (row?.status === "Paused" ? "Paused" : "Active") as ClientStatus,
+          lastSession: String(row?.lastSession ?? row?.lastSessionAt ?? "—"),
+        };
+      });
+      setClients(next);
+    } catch (e: any) {
+      setError(e?.message || "Failed to delete");
+    }
   }
 
   return (
@@ -160,9 +270,10 @@ export default function ClientsPage() {
           <h1 className="mt-2 text-2xl sm:text-2xl font-semibold tracking-tight text-gray-900">Clients</h1>
           <p className="mt-1 text-sm text-gray-600 max-w-2xl">
             Clients currently assigned to{" "}
-            <span className="font-semibold text-gray-900" suppressHydrationWarning>
-  {therapistProfile.name}
-</span>.
+            <span className="font-semibold text-gray-900">
+              {therapistName}
+            </span>
+            .
           </p>
         </div>
 
@@ -204,12 +315,19 @@ export default function ClientsPage() {
           <FilterButton active={statusFilter === "Paused"} onClick={() => setStatusFilter("Paused")}>
             Paused
           </FilterButton>
+          <FilterButton active={statusFilter === "Invited"} onClick={() => setStatusFilter("Invited")}>
+            Invited
+          </FilterButton>
         </div>
       </div>
 
       {/* GRID */}
       <div className="mt-4">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-700">Loading clients…</div>
+        ) : error ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">{error}</div>
+        ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center">
             <h3 className="text-sm font-semibold text-gray-900">No clients found</h3>
             <p className="mt-2 text-sm text-gray-600">Try a different search or add a new client.</p>
@@ -229,8 +347,6 @@ export default function ClientsPage() {
                 key={client.id}
                 therapistId={therapistId}
                 client={client}
-                profileTick={profileTick}
-                mounted={mounted}
                 onToggleStatus={() => onToggleStatus(client.id)}
                 onRemove={() => onRemove(client.id)}
               />
@@ -254,7 +370,7 @@ export default function ClientsPage() {
             <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between">
               <div>
                 <h3 className="text-base font-semibold text-gray-900">Add client</h3>
-                <p className="mt-1 text-sm text-gray-600">Create a new client entry (demo: stored in-memory).</p>
+                <p className="mt-1 text-sm text-gray-600">Create a new client entry for your workspace.</p>
               </div>
               <button
                 type="button"
@@ -268,25 +384,23 @@ export default function ClientsPage() {
 
             <div className="px-6 py-5 space-y-4">
               <label className="block">
-                <span className="text-xs font-semibold text-gray-500">Client name</span>
+                <span className="text-xs font-semibold text-gray-500">Client email</span>
+                <input
+                  value={draftEmail}
+                  onChange={(e) => setDraftEmail(e.target.value)}
+                  placeholder="e.g., client@email.com"
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-gray-500">Name (optional)</span>
                 <input
                   value={draftName}
                   onChange={(e) => setDraftName(e.target.value)}
                   placeholder="e.g., Anna M."
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-gray-500">Status</span>
-                <select
-                  value={draftStatus}
-                  onChange={(e) => setDraftStatus(e.target.value as ClientStatus)}
-                  className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Paused">Paused</option>
-                </select>
               </label>
 
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
@@ -318,28 +432,16 @@ export default function ClientsPage() {
 function ClientCard({
   therapistId,
   client,
-  profileTick,
-  mounted,
   onToggleStatus,
   onRemove,
 }: {
   therapistId: string;
   client: Client;
-  profileTick: number;
-  mounted: boolean;
   onToggleStatus: () => void;
   onRemove: () => void;
 }) {
-  // Re-compute when profileTick changes
-  void profileTick;
-
-  const fallbackEmail = (client as any)?.email ?? "client@innery.com";
-  const displayClientName = mounted
-    ? getClientProfile(client.id, client.name, fallbackEmail).name
-    : client.name;
-
-  const initials = initialsFromName(displayClientName);
-  const status = client.status ?? "Active";
+  const initials = initialsFromName(client.name);
+  const status = client.status ?? (client.kind === "invite" ? "Invited" : "Active");
 
   return (
     <div className="group relative rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition">
@@ -350,8 +452,8 @@ function ClientCard({
           </div>
 
           <div className="min-w-0">
-            <p className="font-semibold text-gray-900 truncate" suppressHydrationWarning>
-              {displayClientName}
+            <p className="font-semibold text-gray-900 truncate">
+              {client.name}
             </p>
             <p className="text-xs text-gray-500">Last session: {client.lastSession ?? "—"}</p>
           </div>
@@ -362,6 +464,8 @@ function ClientCard({
             "shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 " +
             (status === "Active"
               ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+              : status === "Invited"
+              ? "bg-yellow-50 text-yellow-700 ring-yellow-100"
               : "bg-gray-50 text-gray-700 ring-gray-200")
           }
         >
@@ -373,29 +477,33 @@ function ClientCard({
       <div className="mt-5">
         {/* Mobile: stacked buttons */}
         <div className="flex flex-col gap-2 sm:hidden">
-          <Link
-            href={`/therapist/${therapistId}/clients/${client.id}`}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
-          >
-            Open profile
-          </Link>
+          {client.kind === "linked" ? (
+            <Link
+              href={`/therapist/${therapistId}/clients/${client.id}`}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
+            >
+              Open profile
+            </Link>
+          ) : null}
 
-          <button
-            type="button"
-            onClick={onToggleStatus}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
-          >
-            {status === "Active" ? "Pause" : "Activate"}
-          </button>
+          {client.kind === "linked" ? (
+            <button
+              type="button"
+              onClick={onToggleStatus}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+            >
+              {status === "Active" ? "Pause" : "Activate"}
+            </button>
+          ) : null}
 
           <button
             type="button"
             onClick={onRemove}
             className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 shadow-sm hover:bg-rose-100 transition"
-            aria-label="Remove client"
-            title="Remove (demo)"
+            aria-label={client.kind === "invite" ? "Delete invite" : "Unlink client"}
+            title={client.kind === "invite" ? "Delete invite" : "Unlink"}
           >
-            Remove
+            {client.kind === "invite" ? "Delete invite" : "Unlink"}
           </button>
         </div>
 
@@ -422,34 +530,38 @@ function ClientCard({
 
             <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg z-20">
               <div className="py-1">
-                <Link
-                  href={`/therapist/${therapistId}/clients/${client.id}`}
-                  onClick={(e) => {
-                    (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open');
-                  }}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-gray-500" aria-hidden="true">
-                    <path d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z" stroke="currentColor" strokeWidth="1.8" />
-                    <path d="M12 15.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Z" stroke="currentColor" strokeWidth="1.8" />
-                  </svg>
-                  Open profile
-                </Link>
+                {client.kind === "linked" ? (
+                  <Link
+                    href={`/therapist/${therapistId}/clients/${client.id}`}
+                    onClick={(e) => {
+                      (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open');
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-gray-500" aria-hidden="true">
+                      <path d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z" stroke="currentColor" strokeWidth="1.8" />
+                      <path d="M12 15.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Z" stroke="currentColor" strokeWidth="1.8" />
+                    </svg>
+                    Open profile
+                  </Link>
+                ) : null}
 
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open');
-                    onToggleStatus();
-                  }}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-gray-500" aria-hidden="true">
-                    <path d="M10 9v6M14 9v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" strokeWidth="1.8" />
-                  </svg>
-                  {status === "Active" ? "Pause" : "Activate"}
-                </button>
+                {client.kind === "linked" ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open');
+                      onToggleStatus();
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-gray-500" aria-hidden="true">
+                      <path d="M10 9v6M14 9v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" strokeWidth="1.8" />
+                    </svg>
+                    {status === "Active" ? "Pause" : "Activate"}
+                  </button>
+                ) : null}
 
                 <div className="my-1 h-px bg-gray-100" />
 
@@ -460,15 +572,15 @@ function ClientCard({
                     onRemove();
                   }}
                   className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 transition"
-                  aria-label="Remove client"
-                  title="Remove (demo)"
+                  aria-label={client.kind === "invite" ? "Delete invite" : "Unlink client"}
+                  title={client.kind === "invite" ? "Delete invite" : "Unlink"}
                 >
                   <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-rose-600" aria-hidden="true">
                     <path d="M6 7h12M10 11v7M14 11v7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     <path d="M9 7l1-2h4l1 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     <path d="M7 7l1 14h8l1-14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  Remove
+                  {client.kind === "invite" ? "Delete invite" : "Unlink"}
                 </button>
               </div>
             </div>
@@ -477,34 +589,36 @@ function ClientCard({
 
         {/* Laptop/Desktop: compact inline buttons */}
         <div className="hidden xl:flex items-center justify-end gap-2">
-          <Link
-            href={`/therapist/${therapistId}/clients/${client.id}`}
-            className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
-          >
-            Open profile
-          </Link>
+          {client.kind === "linked" ? (
+            <Link
+              href={`/therapist/${therapistId}/clients/${client.id}`}
+              className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
+            >
+              Open profile
+            </Link>
+          ) : null}
 
-          <button
-            type="button"
-            onClick={onToggleStatus}
-            className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
-          >
-            {status === "Active" ? "Pause" : "Activate"}
-          </button>
+          {client.kind === "linked" ? (
+            <button
+              type="button"
+              onClick={onToggleStatus}
+              className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+            >
+              {status === "Active" ? "Pause" : "Activate"}
+            </button>
+          ) : null}
 
           <button
             type="button"
             onClick={onRemove}
             className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 shadow-sm hover:bg-rose-100 transition"
-            aria-label="Remove client"
-            title="Remove (demo)"
+            aria-label={client.kind === "invite" ? "Delete invite" : "Unlink client"}
+            title={client.kind === "invite" ? "Delete invite" : "Unlink"}
           >
-            Remove
+            {client.kind === "invite" ? "Delete invite" : "Unlink"}
           </button>
         </div>
       </div>
-
-      <p className="mt-4 text-xs text-gray-400">Demo mode • stored in-memory • refresh resets</p>
     </div>
   );
 }

@@ -3,19 +3,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { therapists } from "@/app/_mock/data";
-import { getTherapistProfile, setTherapistProfile } from "@/app/_lib/profile";
+import { apiFetch } from "@/app/_lib/authClient";
 
 type TherapistPrefs = {
   emailNotifications: boolean;
   weeklySummary: boolean;
   newClientAlerts: boolean;
   noteReminders: boolean;
-};
-
-type TherapistProfileOverride = {
-  name: string;
-  email: string;
 };
 
 function storageKey(therapistId: string) {
@@ -163,13 +157,10 @@ function Toggle({
 export default function TherapistSettingsPage() {
   const params = useParams<{ therapistId: string }>();
   const therapistId = params?.therapistId ?? "";
-
-  const therapist = React.useMemo(
-    () => therapists.find((t) => t.id === therapistId),
-    [therapistId]
-  );
-
-  const [profile, setProfile] = React.useState<TherapistProfileOverride | null>(null);
+  // Backend profile state
+  const [meLoading, setMeLoading] = React.useState(true);
+  const [meError, setMeError] = React.useState<string | null>(null);
+  const [meUser, setMeUser] = React.useState<{ id: number; role: string; name: string; email: string } | null>(null);
   const [editingProfile, setEditingProfile] = React.useState(false);
   const [draftName, setDraftName] = React.useState("");
   const [draftEmail, setDraftEmail] = React.useState("");
@@ -192,7 +183,6 @@ export default function TherapistSettingsPage() {
   React.useEffect(() => {
     if (!therapistId) return;
     const existing = safeParse<TherapistPrefs>(localStorage.getItem(storageKey(therapistId)));
-
     if (existing) {
       setPrefs({
         emailNotifications: !!existing.emailNotifications,
@@ -204,21 +194,35 @@ export default function TherapistSettingsPage() {
       localStorage.setItem(storageKey(therapistId), JSON.stringify(defaultPrefs));
       setPrefs(defaultPrefs);
     }
-
     setHydrated(true);
   }, [therapistId, defaultPrefs]);
 
-  // Hydrate profile override from localStorage
+  // Hydrate profile from backend
   React.useEffect(() => {
-    if (!therapistId || !therapist) return;
-
-    const fallbackEmail = (therapist as any).email ?? "therapist@innery.com";
-    const next = getTherapistProfile(therapistId, therapist.name, fallbackEmail);
-
-    setProfile(next);
-    setDraftName(next.name);
-    setDraftEmail(next.email);
-  }, [therapistId, therapist]);
+    if (!therapistId) return;
+    let cancelled = false;
+    async function fetchMe() {
+      setMeLoading(true);
+      setMeError(null);
+      try {
+        const me = await apiFetch("/api/me", { method: "GET" });
+        if (!me || !me.user) throw new Error("No user found");
+        if (cancelled) return;
+        setMeUser(me.user);
+        setDraftName(me.user.name ?? "");
+        setDraftEmail(me.user.email ?? "");
+      } catch (err: any) {
+        if (cancelled) return;
+        setMeError(err?.message || "Failed to load profile");
+      } finally {
+        if (!cancelled) setMeLoading(false);
+      }
+    }
+    fetchMe();
+    return () => {
+      cancelled = true;
+    };
+  }, [therapistId]);
 
   React.useEffect(() => {
     if (!hydrated || !therapistId) return;
@@ -237,54 +241,95 @@ export default function TherapistSettingsPage() {
   }
 
   function openProfileEdit() {
-    if (!profile) return;
+    if (!meUser) return;
     setEditingProfile(true);
-    setDraftName(profile.name);
-    setDraftEmail(profile.email);
+    setDraftName(meUser.name ?? "");
+    setDraftEmail(meUser.email ?? "");
   }
 
   function cancelProfileEdit() {
-    if (!profile) return;
+    if (!meUser) return;
     setEditingProfile(false);
-    setDraftName(profile.name);
-    setDraftEmail(profile.email);
+    setDraftName(meUser.name ?? "");
+    setDraftEmail(meUser.email ?? "");
   }
 
   async function saveProfileEdit() {
-    if (!therapistId || !profile) return;
-
     const name = draftName.trim();
     const email = draftEmail.trim();
-
     if (!name || !email) {
       setToast("Please fill name + email");
       return;
     }
-
     setProfileSaving(true);
-    await new Promise((r) => setTimeout(r, 250));
-
-    const next = { name, email };
-    setProfile(next);
-    setTherapistProfile(therapistId, next);
-
-    setEditingProfile(false);
-    setProfileSaving(false);
-    setToast("Saved");
+    try {
+      const data = await apiFetch("/api/settings/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ name, email }),
+      });
+      if (!data || !data.user) throw new Error("No user returned");
+      setMeUser(data.user);
+      setEditingProfile(false);
+      setToast("Saved");
+    } catch (err: any) {
+      setToast(err?.message || "Failed to update profile");
+    } finally {
+      setProfileSaving(false);
+    }
   }
 
-  if (!therapist) {
+  // SECURITY STATE
+  const [pwOld, setPwOld] = React.useState("");
+  const [pwNew, setPwNew] = React.useState("");
+  const [pwConfirm, setPwConfirm] = React.useState("");
+  const [pwSaving, setPwSaving] = React.useState(false);
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pwOld || !pwNew || !pwConfirm) {
+      setToast("Please fill all password fields");
+      return;
+    }
+    if (pwNew.length < 8) {
+      setToast("New password must be at least 8 characters");
+      return;
+    }
+    if (pwNew !== pwConfirm) {
+      setToast("Passwords do not match");
+      return;
+    }
+    setPwSaving(true);
+    try {
+      await apiFetch("/api/settings/password", {
+        method: "PATCH",
+        body: JSON.stringify({ oldPassword: pwOld, newPassword: pwNew }),
+      });
+      setPwOld("");
+      setPwNew("");
+      setPwConfirm("");
+      setToast("Password updated");
+    } catch (err: any) {
+      setToast(err?.message || "Failed to update password");
+    } finally {
+      setPwSaving(false);
+    }
+  }
+
+  if (meLoading) {
     return (
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-        <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-gray-900">Therapist not found</h1>
-          <p className="mt-2 text-sm text-gray-600">Check the URL. This is a demo route.</p>
-          <Link
-            href="/"
-            className="mt-5 inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 transition"
-          >
-            Go home
-          </Link>
+        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+          <h1 className="text-base font-semibold text-gray-900">Loading…</h1>
+        </div>
+      </section>
+    );
+  }
+  if (meError) {
+    return (
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+        <div className="rounded-2xl border border-rose-200 bg-white p-10 text-center">
+          <h1 className="text-base font-semibold text-rose-700">Error</h1>
+          <p className="mt-2 text-sm text-gray-600">{meError}</p>
         </div>
       </section>
     );
@@ -337,18 +382,18 @@ export default function TherapistSettingsPage() {
 
             <div className="mt-5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-semibold">
-                {initials(profile?.name ?? therapist.name)}
+                {initials(meUser?.name ?? "")}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{profile?.name ?? therapist.name}</p>
-                <p className="text-xs text-gray-500 truncate">Therapist ID: {therapistId}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{meUser?.name ?? ""}</p>
+                <p className="text-xs text-gray-500 truncate">Therapist ID: {meUser?.id ?? therapistId}</p>
               </div>
             </div>
 
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <SettingRow label="Name" value={profile?.name ?? therapist.name} />
-              <SettingRow label="Email" value={profile?.email ?? ((therapist as any).email ?? "therapist@innery.com")} />
-              <SettingRow label="Role" value="Therapist" />
+              <SettingRow label="Name" value={meUser?.name ?? ""} />
+              <SettingRow label="Email" value={meUser?.email ?? ""} />
+              <SettingRow label="Role" value={meUser?.role ?? "Therapist"} />
             </div>
 
             {editingProfile ? (
@@ -379,9 +424,7 @@ export default function TherapistSettingsPage() {
                 </div>
 
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <p className="text-xs text-gray-500">
-                    Saved locally (demo). Later this will connect to backend profile.
-                  </p>
+                  <div />
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -445,25 +488,51 @@ export default function TherapistSettingsPage() {
                 <h2 className="text-sm font-semibold text-gray-900">Security</h2>
                 <p className="mt-1 text-sm text-gray-600">Protect your therapist workspace.</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setToast("Update security (demo)")}
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition"
-              >
-                Update
-              </button>
             </div>
-
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <SettingRow label="Password" value="••••••••" />
-              <SettingRow label="Two-factor auth" value="Disabled (demo)" />
-            </div>
-
-            <div className="mt-5 rounded-2xl bg-gray-50/40 border border-gray-100 p-4">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                When you add backend auth, this will connect to real password + 2FA settings.
-              </p>
-            </div>
+            <form className="mt-5 grid grid-cols-1 gap-4" onSubmit={handleChangePassword}>
+              <div>
+                <label className="text-xs font-semibold text-gray-600">Old password</label>
+                <input
+                  type="password"
+                  value={pwOld}
+                  onChange={(e) => setPwOld(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Old password"
+                  autoComplete="current-password"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600">New password</label>
+                <input
+                  type="password"
+                  value={pwNew}
+                  onChange={(e) => setPwNew(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="New password"
+                  autoComplete="new-password"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600">Confirm new password</label>
+                <input
+                  type="password"
+                  value={pwConfirm}
+                  onChange={(e) => setPwConfirm(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Confirm new password"
+                  autoComplete="new-password"
+                />
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  disabled={pwSaving}
+                  className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-50 transition"
+                >
+                  {pwSaving ? "Changing…" : "Change password"}
+                </button>
+              </div>
+            </form>
           </div>
 
           {/* DANGER */}
@@ -491,10 +560,10 @@ export default function TherapistSettingsPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h3 className="text-sm font-semibold text-gray-900">Account</h3>
             <p className="mt-2 text-sm text-gray-600">
-              <span className="font-semibold text-gray-900">{profile?.name ?? therapist.name}</span>
+              <span className="font-semibold text-gray-900">{meUser?.name ?? ""}</span>
             </p>
-            <p className="mt-1 text-xs text-gray-500">Therapist ID: {therapistId}</p>
-
+            <p className="mt-1 text-xs text-gray-500">Therapist ID: {meUser?.id ?? therapistId}</p>
+            <div className="mt-1 text-xs text-gray-500">{meUser?.email ?? ""}</div>
             <div className="mt-4 rounded-2xl bg-gray-50/40 border border-gray-100 p-4">
               <p className="text-sm text-gray-700 leading-relaxed">
                 Preferences are saved locally on this device (localStorage).

@@ -4,16 +4,23 @@ import * as React from "react";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { therapists, clients, sessions as allSessions } from "@/app/_mock/data";
-import { getClientProfile, useTherapistProfile } from "@/app/_lib/profile";
+import { apiFetch } from "@/app/_lib/authClient";
+
+type SessionStatus = "Scheduled" | "Completed" | "Canceled" | "NoShow";
 
 type Session = {
   id: string;
   therapistId: string;
-  clientId: string;
-  date: string;
-  status?: "Upcoming" | "Completed" | "Canceled";
+  clientUserId: string;
+  startsAt: string;
+  status: SessionStatus;
   type?: "Individual" | "Couple" | "Group";
+};
+
+type Client = {
+  id: string;
+  name: string;
+  email?: string;
 };
 
 function toNiceDate(raw: string) {
@@ -29,9 +36,9 @@ function toNiceDate(raw: string) {
 }
 
 function compareByDate(a: Session, b: Session) {
-  const da = new Date(a.date).getTime();
-  const db = new Date(b.date).getTime();
-  if (Number.isNaN(da) || Number.isNaN(db)) return a.date.localeCompare(b.date);
+  const da = new Date(a.startsAt).getTime();
+  const db = new Date(b.startsAt).getTime();
+  if (Number.isNaN(da) || Number.isNaN(db)) return a.startsAt.localeCompare(b.startsAt);
   return da - db;
 }
 
@@ -39,58 +46,95 @@ export default function TherapistDashboard() {
   const params = useParams() as { therapistId?: string };
   const therapistId = (params?.therapistId as string) ?? "t1";
 
-  const [profileTick, setProfileTick] = React.useState(0);
+  const [clients, setClients] = React.useState<Client[]>([]);
+  const [sessions, setSessions] = React.useState<Session[]>([]);
+  const [notesCount, setNotesCount] = React.useState<number | null>(null);
+  const [notesCountLoading, setNotesCountLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [therapistName, setTherapistName] = React.useState<string>(therapistId);
 
   React.useEffect(() => {
-    const bump = () => setProfileTick((x) => x + 1);
+    let alive = true;
 
-    const onStorage = () => bump();
-    const onClient = () => bump();
-    const onTherapist = () => bump();
+    (async () => {
+      try {
+        setLoading(true);
 
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("innery:client-profile-update", onClient as EventListener);
-    window.addEventListener("innery:therapist-profile-update", onTherapist as EventListener);
+        const me = await apiFetch("/api/me", { method: "GET" });
+        const meName = me?.user?.name;
+        if (alive && typeof meName === "string" && meName.trim()) {
+          setTherapistName(meName);
+        }
+
+        const clientsData = await apiFetch(
+          `/api/therapists/${therapistId}/clients`,
+          { method: "GET" }
+        );
+
+        const nextClients: Client[] = (clientsData?.clients ?? [])
+          .filter((c: any) => c.kind === "linked")
+          .map((c: any) => ({
+            id: String(c.user?.id),
+            name: String(c.user?.name ?? "Client"),
+            email: String(c.user?.email ?? ""),
+          }));
+
+        const sessionsData = await apiFetch(
+          `/api/therapists/${therapistId}/sessions`,
+          { method: "GET" }
+        );
+
+        const nextSessions: Session[] = (sessionsData?.sessions ?? []).map(
+          (s: any) => ({
+            id: String(s.id),
+            therapistId: String(s.therapistId),
+            clientUserId: String(s.clientUserId),
+            startsAt: String(s.startsAt),
+            status: (s.status ?? "Scheduled") as SessionStatus,
+            type: s.type ?? "Individual",
+          })
+        );
+
+        // Notes count (best-effort). We prefer a dedicated endpoint if it exists.
+        // If not available yet, we keep "—" in UI and everything else still works.
+        try {
+          if (alive) setNotesCountLoading(true);
+
+          // Option A (preferred): backend exposes a therapist notes list
+          // Expected shape: { notes: [...] }
+          const notesData = await apiFetch(`/api/therapists/${therapistId}/notes`, { method: "GET" });
+          const count = Array.isArray(notesData?.notes) ? notesData.notes.length : null;
+          if (alive) setNotesCount(typeof count === "number" ? count : null);
+        } catch (e) {
+          // Ignore if endpoint doesn't exist yet (404) or other transient errors.
+          if (alive) setNotesCount(null);
+        } finally {
+          if (alive) setNotesCountLoading(false);
+        }
+
+        if (alive) {
+          setClients(nextClients);
+          setSessions(nextSessions);
+        }
+      } catch (e) {
+        console.error("Dashboard load error", e);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
 
     return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("innery:client-profile-update", onClient as EventListener);
-      window.removeEventListener("innery:therapist-profile-update", onTherapist as EventListener);
+      alive = false;
     };
-  }, []);
+  }, [therapistId]);
 
-  // ensure derived names re-compute when overrides change
-  void profileTick;
+  const displayTherapistName = therapistName || therapistId;
 
-  const therapist = React.useMemo(
-    () => therapists.find((t) => t.id === therapistId),
-    [therapistId]
-  );
-
-  const myClients = React.useMemo(
-    () => clients.filter((c) => c.therapistId === therapistId),
-    [therapistId]
-  );
-
-  const sessions = React.useMemo(
-    () =>
-      ((allSessions as unknown) as Session[])
-        .filter((s) => s.therapistId === therapistId)
-        .filter((s) => (s.status ?? "Upcoming") === "Upcoming")
-        .slice()
-        .sort(compareByDate),
-    [therapistId]
-  );
-
-  const therapistProfile = useTherapistProfile(
-    therapistId,
-    therapist?.name ?? therapistId,
-    (therapist as any)?.email ?? "therapist@innery.com"
-  );
-
-  const displayTherapistName = therapistProfile?.name ?? therapist?.name ?? therapistId;
-
-  const upcoming = sessions.slice(0, 3);
+  const upcoming = sessions
+    .filter((s) => s.status === "Scheduled")
+    .slice()
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
+    .slice(0, 3);
 
   return (
     <section className="space-y-10">
@@ -127,19 +171,19 @@ export default function TherapistDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Active clients"
-          value={myClients.length.toString()}
+          value={clients.length.toString()}
           subtitle="ongoing relationships"
           href={`/therapist/${therapistId}/clients`}
         />
         <StatCard
           title="Upcoming"
-          value={sessions.length.toString()}
+          value={sessions.filter((s) => s.status === "Scheduled").length.toString()}
           subtitle="scheduled sessions"
           href={`/therapist/${therapistId}/sessions`}
         />
         <StatCard
           title="Notes"
-          value="—"
+          value={notesCountLoading ? "…" : (notesCount == null ? "—" : String(notesCount))}
           subtitle="open your notes hub"
           href={`/therapist/${therapistId}/notes`}
         />
@@ -187,20 +231,17 @@ export default function TherapistDashboard() {
             ) : (
               <ul className="mt-5 divide-y">
                 {upcoming.map((s) => {
-                  const client = myClients.find((c) => c.id === s.clientId) ??
-                    clients.find((c) => c.id === s.clientId);
+                  const client = clients.find((c) => c.id === s.clientUserId);
                   const fallbackName = client?.name ?? "Unknown client";
-                  const fallbackEmail = (client as any)?.email ?? "client@innery.com";
-                  const name = getClientProfile(s.clientId, fallbackName, fallbackEmail).name;
                   const type = s.type ?? "Individual";
 
                   return (
                     <SessionRow
                       key={s.id}
                       therapistId={therapistId}
-                      clientId={s.clientId}
-                      name={name}
-                      time={toNiceDate(s.date)}
+                      clientId={s.clientUserId}
+                      name={client?.name ?? "Unknown client"}
+                      time={toNiceDate(s.startsAt)}
                       type={type}
                     />
                   );
@@ -224,7 +265,7 @@ export default function TherapistDashboard() {
               </Link>
             </div>
 
-            {myClients.length === 0 ? (
+            {clients.length === 0 ? (
               <div className="mt-5 rounded-2xl border border-dashed border-gray-200 p-8 text-center">
                 <p className="text-sm font-semibold text-gray-900">No clients yet</p>
                 <p className="mt-1 text-sm text-gray-600">Add your first client from the Clients page.</p>
@@ -237,7 +278,7 @@ export default function TherapistDashboard() {
               </div>
             ) : (
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {myClients.slice(0, 6).map((client) => (
+                {clients.slice(0, 6).map((client) => (
                   <Link
                     key={client.id}
                     href={`/therapist/${therapistId}/clients/${client.id}`}
@@ -245,25 +286,17 @@ export default function TherapistDashboard() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 font-semibold">
-                        {getClientProfile(
-                          client.id,
-                          client.name,
-                          (client as any)?.email ?? "client@innery.com"
-                        ).name
+                        {client.name
                           .split(" ")
                           .filter(Boolean)
-                          .map((n) => n[0])
+                          .map((n: string) => n[0])
                           .join("")
                           .slice(0, 2)
                           .toUpperCase()}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">
-                          {getClientProfile(
-                            client.id,
-                            client.name,
-                            (client as any)?.email ?? "client@innery.com"
-                          ).name}
+                          {client.name}
                         </p>
                         <p className="text-xs text-gray-500 truncate">Client ID: {client.id}</p>
                       </div>
@@ -286,7 +319,7 @@ export default function TherapistDashboard() {
                 {(displayTherapistName ?? "T")
                   .split(" ")
                   .filter(Boolean)
-                  .map((n) => n[0])
+                  .map((n: string) => n[0])
                   .join("")
                   .slice(0, 2)
                   .toUpperCase()}

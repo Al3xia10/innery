@@ -3,10 +3,16 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { apiFetch, setAccessToken } from "@/app/_lib/authClient";
 
 export default function LoginPage() {
   const [role, setRole] = useState<"therapist" | "client">("therapist");
   const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const copy = useMemo(() => {
     if (role === "therapist") {
@@ -98,13 +104,33 @@ export default function LoginPage() {
             {/* FORM */}
             <form
               className="space-y-5"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
+                setError(null);
+                setIsSubmitting(true);
 
-                if (role === "therapist") {
-                  router.push("/therapist/t1");
-                } else {
-                  router.push("/client/c1");
+                try {
+                  const data = await apiFetch("/api/auth/login", {
+                    method: "POST",
+                    body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+                  });
+
+                  setAccessToken(data.accessToken);
+
+                  const user = data.user; // { id, role, name, email }
+                  // Persist the user so other pages (e.g. Clients) can read therapistId/role
+                  try {
+                    localStorage.setItem("innery_user", JSON.stringify(user));
+                  } catch {}
+                  if (user?.role === "therapist") {
+                    router.push(`/therapist/${user.id}`);
+                  } else {
+                    router.push(`/client/${user.id}`);
+                  }
+                } catch (err: any) {
+                  setError(err?.message || "Login failed");
+                } finally {
+                  setIsSubmitting(false);
                 }
               }}
             >
@@ -120,6 +146,8 @@ export default function LoginPage() {
                   placeholder="you@example.com"
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400
                              focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -141,6 +169,8 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400
                              focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
@@ -148,11 +178,16 @@ export default function LoginPage() {
                 type="submit"
                 className="mt-2 w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white
                            hover:bg-indigo-700 transition"
+                disabled={isSubmitting}
               >
-                {copy.primaryCta}
+                {isSubmitting ? "Signing in..." : copy.primaryCta}
               </button>
 
-              <p className="text-xs text-gray-500">Demo only — no data is stored yet.</p>
+              {error ? (
+                <p className="text-xs text-red-600">{error}</p>
+              ) : (
+                <p className="text-xs text-gray-500">Your account is protected with secure sign-in.</p>
+              )}
             </form>
 
             <div className="mt-8 border-t border-gray-100 pt-6 text-sm text-gray-600">

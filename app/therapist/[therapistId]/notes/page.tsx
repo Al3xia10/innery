@@ -1,13 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { useTherapistProfile } from "@/app/_lib/profile";
+import { useParams, useRouter } from "next/navigation";
+import { apiFetch } from "@/app/_lib/authClient";
 
 type NoteTag = "Today" | "Yesterday" | "3 days ago" | "Individual session" | "Couple session" | "Draft";
 
 type Note = {
   id: string;
   therapistId: string;
+  sessionId: string;
+  clientId: string;
+  clientName: string;
+  sessionType: "Individual" | "Couple" | "Group" | "Unknown";
+  scheduledAtISO: string;
   title: string;
   dateLabel: "Today" | "Yesterday" | "3 days ago";
   preview: string;
@@ -15,6 +21,9 @@ type Note = {
   content: string;
   updatedAtISO: string;
 };
+
+type ClientOption = { id: string; name: string };
+type SessionOption = { id: string; clientUserId: string; label: string };
 
 function makePreview(content: string) {
   const clean = content.replace(/\s+/g, " ").trim();
@@ -33,71 +42,106 @@ export default function NotesPage() {
   // In a real app this comes from auth/session; for now we keep it dynamic-path friendly.
   // If the route is /therapist/t1/notes, this reads therapistId = "t1".
   // Works in Client Components.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const params = (require("next/navigation") as any).useParams?.() as { therapistId?: string };
-  const therapistId = params?.therapistId ?? "t1";
-  const therapistProfile = useTherapistProfile(therapistId, therapistId, "therapist@innery.com");
-  const displayTherapistName = therapistProfile?.name ?? therapistId;
+  const params = useParams<{ therapistId?: string }>();
+  const router = useRouter();
+  const therapistId = String(params?.therapistId ?? "1");
 
-  const seed = React.useMemo<Note[]>(
-    () => [
-      {
-        id: "note_anna",
-        therapistId,
-        title: "Session reflection – Anna M.",
-        dateLabel: "Today",
-        preview: "Client expressed increased awareness around emotional triggers...",
-        tags: ["Today", "Individual session", "Draft"],
-        content:
-          "Client expressed increased awareness around emotional triggers. We explored a recent situation and identified early body signals and thought patterns. Next step: short grounding routine + journaling prompt before next session.",
-        updatedAtISO: nowISO(),
-      },
-      {
-        id: "note_daniel",
-        therapistId,
-        title: "Follow-up notes – Daniel R.",
-        dateLabel: "Yesterday",
-        preview: "Discussed progress since last session and areas of resistance...",
-        tags: ["Yesterday", "Individual session"],
-        content:
-          "Discussed progress since last session. Noted resistance when talking about family boundaries. Agreed on one small action: practice saying no once this week and capture feelings afterwards.",
-        updatedAtISO: nowISO(),
-      },
-      {
-        id: "note_maria",
-        therapistId,
-        title: "Couple session – Maria L.",
-        dateLabel: "3 days ago",
-        preview: "Focused on communication patterns and emotional validation...",
-        tags: ["3 days ago", "Couple session"],
-        content:
-          "Focused on communication patterns and emotional validation. Introduced reflective listening. Homework: 10-minute check-in 3 times this week using the script.",
-        updatedAtISO: nowISO(),
-      },
-    ],
-    [therapistId]
-  );
+  const [displayTherapistName, setDisplayTherapistName] = React.useState<string>(therapistId);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  // Create-note modal
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [createLoading, setCreateLoading] = React.useState(false);
+  const [createError, setCreateError] = React.useState<string | null>(null);
+  const [createClients, setCreateClients] = React.useState<ClientOption[]>([]);
+  const [createClientId, setCreateClientId] = React.useState<string>("");
+  const [createSessions, setCreateSessions] = React.useState<SessionOption[]>([]);
+  const [createSessionId, setCreateSessionId] = React.useState<string>("");
+  const [createContent, setCreateContent] = React.useState<string>("");
 
-  const [notes, setNotes] = React.useState<Note[]>(seed);
-  const [selectedId, setSelectedId] = React.useState<string>(seed[0]?.id ?? "");
-  const [query, setQuery] = React.useState<string>("");
-  const [filter, setFilter] = React.useState<"all" | "recent">("all");
-  const [draftById, setDraftById] = React.useState<Record<string, string>>(() => {
-    const init: Record<string, string> = {};
-    for (const n of seed) init[n.id] = n.content;
-    return init;
-  });
+  const [notes, setNotes] = React.useState<Note[]>([]);
+const [selectedId, setSelectedId] = React.useState<string>("");
+const [query, setQuery] = React.useState<string>("");
+const [filter, setFilter] = React.useState<"all" | "recent">("all");
+const [draftById, setDraftById] = React.useState<Record<string, string>>({});
 
   // When seed changes (therapistId changes), reset.
   React.useEffect(() => {
-    setNotes(seed);
-    setSelectedId(seed[0]?.id ?? "");
-    setQuery("");
-    setFilter("all");
-    const init: Record<string, string> = {};
-    for (const n of seed) init[n.id] = n.content;
-    setDraftById(init);
-  }, [seed]);
+  let alive = true;
+
+  (async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const me = await apiFetch("/api/me", { method: "GET" });
+      if (alive) setDisplayTherapistName(me?.user?.name ?? therapistId);
+
+      const data = await apiFetch(`/api/therapists/${therapistId}/notes`, { method: "GET" });
+
+      const toLabel = (iso: string): "Today" | "Yesterday" | "3 days ago" => {
+        const d = new Date(iso);
+        const now = new Date();
+        const startNow = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const startD = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const diffDays = Math.floor((startNow - startD) / (24 * 60 * 60 * 1000));
+        if (diffDays <= 0) return "Today";
+        if (diffDays === 1) return "Yesterday";
+        return "3 days ago";
+      };
+
+      const toSessionTag = (): NoteTag => "Individual session";
+
+      const next: Note[] = (data?.notes ?? []).map((n: any) => {
+        const createdAt = String(n.createdAt ?? n.updatedAt ?? nowISO());
+        const session = n.session ?? {};
+        const client = session.clientUser ?? {};
+        const clientName = String(client.name ?? "Unknown client");
+        const sessionType = "Individual";
+
+        const content = String(n.content ?? "");
+        const title = `Session note – ${clientName}`;
+
+        const dateLabel = toLabel(createdAt);
+        const tags: NoteTag[] = [dateLabel, toSessionTag()];
+
+        return {
+          id: String(n.id),
+          therapistId: String(n.therapistId ?? therapistId),
+          sessionId: String(session.id ?? ""),
+          clientId: String(client.id ?? session.clientUserId ?? ""),
+          clientName,
+          sessionType,
+          scheduledAtISO: String(session.startsAt ?? ""),
+          title,
+          dateLabel,
+          preview: makePreview(content),
+          tags,
+          content,
+          updatedAtISO: String(n.updatedAt ?? createdAt),
+        };
+      });
+
+      if (alive) {
+        setNotes(next);
+        setSelectedId(next[0]?.id ?? "");
+        const initDraft: Record<string, string> = {};
+        for (const nn of next) initDraft[nn.id] = nn.content;
+        setDraftById(initDraft);
+        setQuery("");
+        setFilter("all");
+      }
+    } catch (e: any) {
+      if (alive) setError(e?.message || "Failed to load notes");
+    } finally {
+      if (alive) setLoading(false);
+    }
+  })();
+
+  return () => {
+    alive = false;
+  };
+}, [therapistId]);
 
   const selectedNote = React.useMemo(() => notes.find((n) => n.id === selectedId), [notes, selectedId]);
 
@@ -132,22 +176,125 @@ export default function NotesPage() {
     });
   }
 
+  function defaultNowLocal(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  async function loadCreateClients() {
+    const data = await apiFetch(`/api/therapists/${therapistId}/clients`, { method: "GET" });
+    const linked = (data?.clients ?? []).filter((c: any) => c.kind === "linked");
+    const opts: ClientOption[] = linked.map((c: any) => ({
+      id: String(c.user?.id ?? c.id),
+      name: String(c.user?.name ?? c.name ?? c.email ?? "Client"),
+    }));
+    setCreateClients(opts);
+    if (!createClientId && opts[0]?.id) setCreateClientId(opts[0].id);
+  }
+
+  async function loadCreateSessions(clientUserId: string) {
+    const data = await apiFetch(`/api/therapists/${therapistId}/sessions`, { method: "GET" });
+    const all: SessionOption[] = (data?.sessions ?? []).map((s: any) => ({
+      id: String(s.id),
+      clientUserId: String(s.clientUserId),
+      label: `${new Date(String(s.startsAt)).toLocaleString()} • ${String(s.status ?? "Scheduled")} • ${String(s.type ?? "Individual")}`,
+    }));
+    const filtered = all.filter((s) => s.clientUserId === String(clientUserId));
+    setCreateSessions(filtered);
+    setCreateSessionId(filtered[0]?.id ?? "");
+  }
+
+  async function openCreateModal() {
+    setCreateError(null);
+    setCreateContent("");
+    setCreateSessions([]);
+    setCreateSessionId("");
+
+    try {
+      setCreateLoading(true);
+      await loadCreateClients();
+    } catch (e: any) {
+      setCreateError(e?.message || "Failed to load clients");
+    } finally {
+      setCreateLoading(false);
+    }
+
+    setCreateOpen(true);
+  }
+
+  function closeCreateModal() {
+    setCreateOpen(false);
+  }
+
+  async function onCreateNoteConfirm() {
+    if (!createClientId) {
+      setCreateError("Select a client.");
+      return;
+    }
+    if (!createSessionId) {
+      setCreateError("Select a session for this client.");
+      return;
+    }
+
+    const content = createContent.trim();
+    if (!content) {
+      setCreateError("Write something in the note.");
+      return;
+    }
+
+    try {
+      setCreateLoading(true);
+      setCreateError(null);
+
+      const data = await apiFetch(
+        `/api/therapists/${therapistId}/sessions/${createSessionId}/notes`,
+        {
+          method: "POST",
+          body: JSON.stringify({ content }),
+        }
+      );
+
+      const createdAt = String(data?.note?.createdAt ?? nowISO());
+      const createdId = String(data?.note?.id ?? uid("note"));
+
+      // Refresh notes list entry (prepend)
+      const sessionPick = createSessions.find((s) => s.id === createSessionId);
+      const clientPick = createClients.find((c) => c.id === createClientId);
+
+      const newNote: Note = {
+        id: createdId,
+        therapistId,
+        sessionId: String(createSessionId),
+        clientId: String(createClientId),
+        clientName: String(clientPick?.name ?? "Unknown client"),
+        sessionType: "Unknown",
+        scheduledAtISO: "",
+        title: `Session note – ${String(clientPick?.name ?? "Client")}`,
+        dateLabel: "Today",
+        preview: makePreview(content),
+        tags: ["Today"],
+        content,
+        updatedAtISO: createdAt,
+      };
+
+      setNotes((prev) => {
+        const without = prev.filter((n) => n.id !== newNote.id);
+        return [newNote, ...without];
+      });
+      setDraftById((prev) => ({ ...prev, [newNote.id]: content }));
+      setSelectedId(newNote.id);
+
+      closeCreateModal();
+    } catch (e: any) {
+      setCreateError(e?.message || "Failed to save note");
+    } finally {
+      setCreateLoading(false);
+    }
+  }
+
   function onNewNote() {
-    const id = uid("note");
-    const empty = "";
-    const newNote: Note = {
-      id,
-      therapistId,
-      title: "New note",
-      dateLabel: "Today",
-      preview: "",
-      tags: ["Today", "Draft"],
-      content: empty,
-      updatedAtISO: nowISO(),
-    };
-    upsertNote(newNote);
-    setDraftById((prev) => ({ ...prev, [id]: empty }));
-    setSelectedId(id);
+    void openCreateModal();
   }
 
   function onDuplicate() {
@@ -178,25 +325,93 @@ export default function NotesPage() {
     setDraftById((prev) => ({ ...prev, [selectedNote.id]: selectedNote.content }));
   }
 
-  function onSave() {
+  async function onSave() {
     if (!selectedNote) return;
-    const content = draftById[selectedNote.id] ?? selectedNote.content;
-    const next: Note = {
-      ...selectedNote,
-      content,
-      preview: makePreview(content),
-      updatedAtISO: nowISO(),
-      tags: (selectedNote.tags.includes("Draft") ? selectedNote.tags : (["Draft", ...selectedNote.tags] as NoteTag[])),
-    };
 
-    // If user wrote something, remove Draft tag (nice UX for demo)
-    const hasRealContent = content.trim().length > 0;
-    if (hasRealContent) {
-      next.tags = next.tags.filter((t) => t !== "Draft");
+    const content = (draftById[selectedNote.id] ?? selectedNote.content).trim();
+    if (!content) return;
+
+    const isDraft = selectedNote.tags.includes("Draft") || selectedNote.id.startsWith("note_") || selectedNote.id.startsWith("dup_");
+
+    try {
+      if (!isDraft) {
+        // Update existing note
+        const data = await apiFetch(`/api/therapists/${therapistId}/notes/${selectedNote.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ content }),
+        });
+
+        const updatedAt = String(data?.note?.updatedAt ?? nowISO());
+        const nextNote: Note = {
+          ...selectedNote,
+          content,
+          preview: makePreview(content),
+          updatedAtISO: updatedAt,
+          tags: selectedNote.tags.filter((t) => t !== "Draft") as NoteTag[],
+        };
+
+        upsertNote(nextNote);
+        setDraftById((prev) => ({ ...prev, [nextNote.id]: content }));
+        return;
+      }
+
+      // Drafts must be linked to a session to be created
+      if (!selectedNote.sessionId) {
+        alert("This note is not linked to a session yet. Use New note to pick a client/session.");
+        return;
+      }
+
+      // Create a new note (POST) for drafts
+      const data = await apiFetch(`/api/therapists/${therapistId}/sessions/${selectedNote.sessionId}/notes`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+
+      const createdAt = String(data?.note?.createdAt ?? nowISO());
+      const createdId = String(data?.note?.id ?? uid("note"));
+
+      const nextNote: Note = {
+        ...selectedNote,
+        id: createdId,
+        content,
+        preview: makePreview(content),
+        updatedAtISO: createdAt,
+        tags: Array.from(new Set(["Today", ...selectedNote.tags.filter((t) => t !== "Draft")])) as NoteTag[],
+        dateLabel: "Today",
+      };
+
+      setNotes((prev) => {
+        const without = prev.filter((n) => n.id !== nextNote.id);
+        return [nextNote, ...without];
+      });
+      setDraftById((prev) => ({ ...prev, [nextNote.id]: content }));
+      setSelectedId(nextNote.id);
+    } catch (e: any) {
+      alert(e?.message || "Failed to save note");
     }
-
-    upsertNote(next);
   }
+  React.useEffect(() => {
+    if (!createOpen) return;
+    if (!createClientId) return;
+
+    let alive = true;
+    (async () => {
+      try {
+        setCreateError(null);
+        setCreateLoading(true);
+        await loadCreateSessions(createClientId);
+      } catch (e: any) {
+        if (alive) setCreateError(e?.message || "Failed to load sessions");
+      } finally {
+        if (alive) setCreateLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createOpen, createClientId]);
 
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -284,24 +499,31 @@ export default function NotesPage() {
           </div>
 
           <div className="p-4 space-y-3 max-h-90 lg:max-h-[calc(100vh-260px)] overflow-auto">
-            {filteredNotes.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-gray-200 p-6 text-center">
-                <p className="text-sm font-medium text-gray-900">No notes match your search</p>
-                <p className="mt-1 text-xs text-gray-500">Try a different keyword or switch to “All”.</p>
-              </div>
-            ) : (
-              filteredNotes.map((n) => (
-                <NoteCard
-                  key={n.id}
-                  title={n.title}
-                  date={n.dateLabel}
-                  preview={n.preview || "(No content yet)"}
-                  selected={n.id === selectedId}
-                  onClick={() => selectNote(n.id)}
-                />
-              ))
-            )}
-          </div>
+  {loading ? (
+    <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-700">
+      Loading notes…
+    </div>
+  ) : error ? (
+    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+      {error}
+    </div>
+  ) : filteredNotes.length === 0 ? (
+    <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-700">
+      No notes yet. Create your first note from <span className="font-medium">Sessions</span>.
+    </div>
+  ) : (
+    filteredNotes.map((n) => (
+      <NoteCard
+        key={n.id}
+        title={n.title}
+        date={n.dateLabel}
+        preview={n.preview || "(No content yet)"}
+        selected={n.id === selectedId}
+        onClick={() => selectNote(n.id)}
+      />
+    ))
+  )}
+</div>
         </aside>
 
         {/* NOTE EDITOR */}
@@ -373,13 +595,118 @@ export default function NotesPage() {
                 </div>
 
                 <p className="mt-3 text-xs text-gray-400">
-                  Demo mode • therapist: <span className="font-medium">{displayTherapistName}</span> • changes are kept in-memory (no backend yet)
-                </p>
+  Saved to your private workspace • therapist: <span className="font-medium">{displayTherapistName}</span>
+</p>
               </div>
             </>
           )}
         </div>
       </div>
+      {/* CREATE NOTE MODAL */}
+      {createOpen ? (
+        <div
+          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={closeCreateModal}
+        >
+          <div
+            className="mx-auto mt-24 w-[92%] max-w-lg rounded-2xl bg-white shadow-xl border border-gray-100"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">New note</h3>
+                <p className="mt-1 text-sm text-gray-600">Choose a client + session, then write your note.</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeCreateModal}
+                className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 transition"
+                aria-label="Close"
+              >
+                <XIcon />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <label className="block">
+                  <span className="text-xs font-semibold text-gray-500">Client</span>
+                  <select
+                    value={createClientId}
+                    onChange={(e) => setCreateClientId(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="" disabled>
+                      {createClients.length ? "Select a client" : "No linked clients"}
+                    </option>
+                    {createClients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-semibold text-gray-500">Session</span>
+                  <select
+                    value={createSessionId}
+                    onChange={(e) => setCreateSessionId(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    disabled={!createClientId}
+                  >
+                    <option value="" disabled>
+                      {createClientId ? (createSessions.length ? "Select a session" : "No sessions for this client") : "Select a client first"}
+                    </option>
+                    {createSessions.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-semibold text-gray-500">Note</span>
+                  <textarea
+                    value={createContent}
+                    onChange={(e) => setCreateContent(e.target.value)}
+                    placeholder={`Write your note… (${defaultNowLocal()})`}
+                    rows={6}
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </label>
+
+                {createError ? (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{createError}</div>
+                ) : null}
+
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={closeCreateModal}
+                    className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                    disabled={createLoading}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onCreateNoteConfirm}
+                    className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition disabled:opacity-50"
+                    disabled={createLoading}
+                  >
+                    {createLoading ? "Saving…" : "Save note"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -491,6 +818,14 @@ function CopyIcon() {
         strokeWidth="1.8"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
