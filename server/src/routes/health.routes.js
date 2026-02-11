@@ -1,15 +1,19 @@
 import { Router } from "express";
-import { sequelize } from "../config/db.js";
 
 const router = Router();
 
-router.get("/", async (req, res) => {
-  try {
-    await sequelize.query("SELECT 1+1 AS result");
-    res.json({ ok: true, db: "up" });
-  } catch (e) {
-    res.status(500).json({ ok: false, db: "down" });
-  }
+/**
+ * Basic health check.
+ * Always responds if the API process is running.
+ * DB status should be handled separately in server.js if needed.
+ */
+router.get("/", (_req, res) => {
+  res.status(200).json({
+    ok: true,
+    service: "innery-api",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
 });
 
 export default router;
