@@ -5,11 +5,14 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
     "db:up": "node src/migrate.js up",
     "db:down": "node src/migrate.js down",
     "db:pending": "node src/migrate.js pending",
-    "db:executed": "node src/migrate.js executed"
+    "db:executed": "node src/migrate.js executed",
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "seed": "sequelize-cli db:seed:all",
+    "start": "node src/server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
