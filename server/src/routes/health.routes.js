@@ -3,27 +3,37 @@ import { sequelize } from "../config/db.js";
 
 const router = Router();
 
-function baseHealth() {
-  return {
+// GET /api/health  -> service up (no DB hit)
+router.get("/", (req, res) => {
+  res.json({
     ok: true,
     service: "innery-api",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
-  };
-}
-
-// GET /api/health
-router.get("/", (req, res) => {
-  return res.json(baseHealth());
+  });
 });
 
-// GET /api/health/db
+// GET /api/health/db -> DB check
 router.get("/db", async (req, res) => {
   try {
     await sequelize.query("SELECT 1+1 AS result");
-    return res.json({ ...baseHealth(), db: "up" });
+    res.json({
+      ok: true,
+      service: "innery-api",
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      db: "up",
+    });
   } catch (e) {
-    return res.status(500).json({ ...baseHealth(), ok: false, db: "down" });
+    res.status(200).json({
+      ok: false,
+      service: "innery-api",
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      db: "down",
+      // optional: te ajută enorm în Railway logs
+      error: e?.message ? String(e.message) : "DB connection failed",
+    });
   }
 });
 
