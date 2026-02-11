@@ -33,7 +33,9 @@ app.use(
 // ---- CORS (dev + prod) ----
 // Supports comma-separated origins in env, e.g.
 // CORS_ORIGIN=http://localhost:3000,https://innery.ro
-const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
+const allowedOrigins = (
+  process.env.CORS_ORIGIN || "http://localhost:3000,https://innery.vercel.app"
+)
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -44,7 +46,11 @@ app.use(
       // Allow tools like Thunder Client/Postman (no Origin header)
       if (!origin) return cb(null, true);
 
+      // Allow exact matches
       if (allowedOrigins.includes(origin)) return cb(null, true);
+
+      // Allow Vercel preview deployments (*.vercel.app)
+      if (origin.endsWith(".vercel.app")) return cb(null, true);
 
       return cb(new Error(`CORS blocked for origin: ${origin}`));
     },
