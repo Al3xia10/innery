@@ -1,49 +1,37 @@
 import { Sequelize } from "sequelize";
 import { env } from "./env.js";
 
-function must(v, name) {
-  if (!v) throw new Error(`Missing env: ${name}`);
-  return v;
+// Railway (și alte platforme) pot injecta direct variabilele în process.env.
+// Facem fallback: process.env -> env.js
+const DB_HOST = process.env.DB_HOST ?? env.db.host;
+const DB_PORT = Number(process.env.DB_PORT ?? env.db.port ?? 3306);
+const DB_NAME = process.env.DB_NAME ?? env.db.name;
+const DB_USER = process.env.DB_USER ?? env.db.user;
+const DB_PASSWORD = process.env.DB_PASSWORD ?? env.db.password;
+
+// Debug fără parolă (util ca să vezi în logs ce ia Railway)
+if (process.env.DB_CONNECT_DEBUG === "true") {
+  console.log("🔎 DB config:", {
+    DB_HOST,
+    DB_PORT,
+    DB_NAME,
+    DB_USER,
+  });
 }
 
-// Support both local env.* and Railway-provided MySQL vars.
-// Priority: Railway MYSQL* -> existing env.db.* -> legacy DB_* (if present)
-const host = process.env.MYSQLHOST || env?.db?.host || process.env.DB_HOST;
-
-const portRaw =
-  process.env.MYSQLPORT || env?.db?.port || process.env.DB_PORT || 3306;
-
-const dbName =
-  process.env.MYSQLDATABASE || env?.db?.name || process.env.DB_NAME;
-
-const dbUser = process.env.MYSQLUSER || env?.db?.user || process.env.DB_USER;
-
-const dbPassword =
-  process.env.MYSQLPASSWORD ||
-  env?.db?.password ||
-  process.env.DB_PASSWORD ||
-  "";
-
-export const sequelize = new Sequelize(
-  must(dbName, "MYSQLDATABASE/DB_NAME"),
-  must(dbUser, "MYSQLUSER/DB_USER"),
-  dbPassword,
-  {
-    host: must(host, "MYSQLHOST/DB_HOST"),
-    port: Number(portRaw),
-    dialect: "mysql",
-    logging: false,
-    pool: {
-      max: 10,
-      min: 0,
-      idle: 10000,
-      acquire: 30000,
-    },
-    dialectOptions: {
-      connectTimeout: 15000,
-    },
+export const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
+  host: DB_HOST,
+  port: DB_PORT,
+  dialect: "mysql",
+  logging: false,
+  dialectOptions: {
+    // ajută la timeouts / conexiuni lente în cloud
+    connectTimeout: 20000,
   },
-);
-
-// Default export to avoid ESM import issues in other files
-export default sequelize;
+  pool: {
+    max: 10,
+    min: 0,
+    acquire: 30000,
+    idle: 10000,
+  },
+});
