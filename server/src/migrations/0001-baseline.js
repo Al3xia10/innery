@@ -1,8 +1,13 @@
-export async function up() {
-  // Baseline migration: database already exists (created by sequelize.sync earlier)
-  // This migration only establishes migration tracking via SequelizeMeta.
-}
+"use strict";
 
-export async function down() {
-  // No-op
-}
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    // Baseline migration.
+    // Intentionally empty because tables are created by later migrations
+    // or were previously created during development.
+  },
+
+  async down(queryInterface, Sequelize) {
+    // No rollback needed for baseline.
+  },
+};
