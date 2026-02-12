@@ -1,4 +1,3 @@
-// server/config/config.cjs
 module.exports = {
   production: {
     use_env_variable: "DATABASE_URL",
