@@ -1,4 +1,4 @@
-// server/src/config/sequelize-cli.cjs
+// server/config/config.cjs
 module.exports = {
   production: {
     use_env_variable: "DATABASE_URL",

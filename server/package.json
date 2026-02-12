@@ -9,7 +9,7 @@
     "db:down": "node src/migrate.js down",
     "db:pending": "node src/migrate.js pending",
     "db:executed": "node src/migrate.js executed",
-    "migrate": "sequelize-cli db:migrate --env production",
+    "migrate": "sequelize-cli db:migrate --env production --config config/config.cjs --migrations-path migrations",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "seed": "sequelize-cli db:seed:all",
     "start": "node src/server.js"
