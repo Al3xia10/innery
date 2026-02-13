@@ -37,7 +37,7 @@ router.get(
           attributes: ["id", "name", "email", "role"],
         },
       ],
-      order: [["createdAt", "DESC"]],
+      order: [["created_at", "DESC"]],
     });
 
     const clients = rows.map((r) => {
