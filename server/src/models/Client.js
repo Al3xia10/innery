@@ -15,13 +15,11 @@ const Client = sequelize.define(
       allowNull: false,
     },
 
-    // Linked client (when the client has an account)
     userId: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
     },
 
-    // Used only for invited clients (pending)
     email: {
       type: DataTypes.STRING(190),
       allowNull: true,
@@ -40,7 +38,6 @@ const Client = sequelize.define(
   },
   {
     tableName: "clients",
-    underscored: true,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
