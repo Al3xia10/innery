@@ -2,9 +2,63 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { apiFetch, setAccessToken } from "@/app/_lib/authClient";
 
 export default function SignupPageAlt() {
   const [role, setRole] = useState<"therapist" | "client">("therapist");
+
+  const router = useRouter();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+
+      // 1) Create account
+      await apiFetch("/api/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          role,
+          name: name.trim(),
+          email: normalizedEmail,
+          password,
+        }),
+      });
+
+      // 2) Auto-login
+      const data = await apiFetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email: normalizedEmail, password }),
+      });
+
+      setAccessToken(data.accessToken);
+      try {
+        localStorage.setItem("innery_user", JSON.stringify(data.user));
+      } catch {}
+
+      if (data.user?.role === "therapist") {
+        router.push(`/therapist/${data.user.id}`);
+      } else {
+        // Client portal should not depend on ID in the URL
+        router.push(`/client`);
+      }
+    } catch (err: any) {
+      setError(err?.message || "Signup failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   const copy = useMemo(() => {
     if (role === "therapist") {
@@ -84,13 +138,20 @@ export default function SignupPageAlt() {
           </div>
 
           {/* FORM */}
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSignup}>
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Full name
               </label>
               <input
                 required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Your full name"
                 className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm
                            focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -104,6 +165,8 @@ export default function SignupPageAlt() {
               <input
                 type="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm
                            focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -117,6 +180,9 @@ export default function SignupPageAlt() {
               <input
                 type="password"
                 required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
                 className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm
                            focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -125,15 +191,12 @@ export default function SignupPageAlt() {
 
             <button
               type="submit"
+              disabled={isSubmitting}
               className="w-full mt-4 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white
-                         hover:bg-indigo-700 transition"
+                         hover:bg-indigo-700 transition disabled:opacity-60"
             >
-              {copy.cta}
+              {isSubmitting ? "Creating..." : copy.cta}
             </button>
-
-            <p className="text-xs text-gray-500">
-              Demo only — no data is stored yet.
-            </p>
           </form>
 
           <div className="mt-6 pt-6 border-t border-gray-100 text-sm text-gray-600">

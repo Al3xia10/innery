@@ -117,16 +117,20 @@ export default function LoginPage() {
 
                   setAccessToken(data.accessToken);
 
-                  const user = data.user; // { id, role, name, email }
-                  // Persist the user so other pages (e.g. Clients) can read therapistId/role
-                  try {
-                    localStorage.setItem("innery_user", JSON.stringify(user));
-                  } catch {}
-                  if (user?.role === "therapist") {
-                    router.push(`/therapist/${user.id}`);
-                  } else {
-                    router.push(`/client/${user.id}`);
-                  }
+const user = data.user;
+
+try {
+  localStorage.setItem("innery_user", JSON.stringify(user));
+} catch {}
+
+// Mic delay pentru a te asigura că localStorage e setat
+setTimeout(() => {
+  if (user?.role === "therapist") {
+    router.push(`/therapist/${user.id}`);
+  } else {
+    router.push(`/client`);
+  }
+}, 50);
                 } catch (err: any) {
                   setError(err?.message || "Login failed");
                 } finally {

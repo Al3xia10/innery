@@ -40,19 +40,22 @@ router.post("/signup", async (req, res) => {
       passwordHash,
     });
 
-    // Auto-link: dacă un client își face cont și există o invitație (Invited) pe email,
-    // o transformăm în link activ (Active) setând userId.
     if (role === "client") {
-      await models.Client.update(
-        { userId: user.id, status: "Active" },
-        {
-          where: {
-            email: user.email,
-            userId: null,
-            status: "Invited",
+      try {
+        await models.Client.update(
+          { userId: user.id, status: "Active" },
+          {
+            where: {
+              email: user.email,
+              userId: null,
+              status: "Invited",
+            },
           },
-        },
-      );
+        );
+      } catch (e) {
+        // IMPORTANT: signup trebuie să reușească și fără invitație / chiar dacă auto-link-ul eșuează
+        console.warn("Auto-link invite failed (non-fatal):", e?.message || e);
+      }
     }
 
     // nu trimitem hash-ul înapoi

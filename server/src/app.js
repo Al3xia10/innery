@@ -3,7 +3,6 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
-
 import { env } from "./config/env.js";
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -13,6 +12,7 @@ import sessionsRoutes from "./routes/sessions.routes.js";
 import notesRoutes from "./routes/notes.routes.js";
 import clientsRoutes from "./routes/clients.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
+import clientTodayRoutes from "./routes/client.today.routes.js";
 
 export const app = express();
 
@@ -93,6 +93,7 @@ app.use("/api", sessionsRoutes);
 app.use("/api", notesRoutes);
 app.use("/api", clientsRoutes);
 app.use("/api", settingsRoutes);
+app.use("/api", clientTodayRoutes);
 
 // ---- Errors (CORS) ----
 app.use((err, req, res, next) => {

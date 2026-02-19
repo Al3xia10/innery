@@ -3,6 +3,9 @@ import { initUserModel } from "./User.js";
 import Client from "./Client.js";
 import { initSessionModel } from "./Session.js";
 import { initNoteModel } from "./Note.js";
+import { initCheckinModel } from "./Checkin.js";
+import { initGoalModel } from "./Goal.js";
+import { initGoalUpdateModel } from "./GoalUpdate.js";
 
 export const models = {};
 
@@ -10,6 +13,10 @@ models.User = initUserModel(sequelize);
 models.Client = Client;
 models.Session = initSessionModel(sequelize);
 models.Note = initNoteModel(sequelize);
+models.Checkin = initCheckinModel(sequelize);
+models.Goal = initGoalModel(sequelize);
+models.GoalUpdate = initGoalUpdateModel(sequelize);
+
 // Associations
 // Un terapeut (User) are mai mulți clienți (Client rows)
 models.User.hasMany(models.Client, {
@@ -95,6 +102,58 @@ models.Note.belongsTo(models.User, {
   onDelete: "CASCADE",
   onUpdate: "CASCADE",
 });
+
+// Checkin associations
+models.User.hasMany(models.Checkin, {
+  foreignKey: "clientUserId",
+  as: "checkins",
+});
+models.Checkin.belongsTo(models.User, {
+  foreignKey: "clientUserId",
+  as: "clientUser",
+});
+
+models.User.hasMany(models.Checkin, {
+  foreignKey: "therapistId",
+  as: "therapistCheckins",
+});
+models.Checkin.belongsTo(models.User, {
+  foreignKey: "therapistId",
+  as: "therapist",
+});
+
+models.Session.hasMany(models.Checkin, {
+  foreignKey: "sessionId",
+  as: "checkins",
+});
+models.Checkin.belongsTo(models.Session, {
+  foreignKey: "sessionId",
+  as: "session",
+});
+
+// Goals
+models.User.hasMany(models.Goal, { foreignKey: "clientUserId", as: "goals" });
+models.Goal.belongsTo(models.User, {
+  foreignKey: "clientUserId",
+  as: "clientUser",
+});
+
+models.User.hasMany(models.Goal, {
+  foreignKey: "therapistId",
+  as: "therapistGoals",
+});
+models.Goal.belongsTo(models.User, {
+  foreignKey: "therapistId",
+  as: "therapist",
+});
+
+// GoalUpdates
+models.Goal.hasMany(models.GoalUpdate, {
+  foreignKey: "goalId",
+  as: "updates",
+  onDelete: "CASCADE",
+});
+models.GoalUpdate.belongsTo(models.Goal, { foreignKey: "goalId", as: "goal" });
 
 // aici adăugăm și celelalte modele imediat (Client, Session, Note, Reflection)
 
