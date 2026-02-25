@@ -29,10 +29,17 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   const envBase = process.env.NEXT_PUBLIC_API_BASE;
   const base = normalizeBaseUrl(envUrl || envBase || "http://localhost:4000");
   const token = getAccessToken();
+  const method = (options.method ?? "GET").toUpperCase();
 
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  // Avoid 304 caching / ETag issues (especially in dev) for authenticated GET requests
+  if (method === "GET") {
+    headers.set("Cache-Control", "no-store");
+    headers.set("Pragma", "no-cache");
+  }
 
   const isAbsoluteUrl = path.startsWith("http");
   const url = isAbsoluteUrl ? path : `${base}${path}`;
@@ -40,6 +47,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   const res = await fetch(url, {
     ...options,
     headers,
+    cache: method === "GET" ? "no-store" : options.cache,
   });
 
   if (res.status === 204) {

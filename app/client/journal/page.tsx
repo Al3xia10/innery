@@ -2,25 +2,26 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/app/_lib/authClient";
 
 type Visibility = "private" | "shared";
 
 type Entry = {
-  id: string;
+  id: number;
   createdAt: string; // ISO
-  title: string;
+  updatedAt?: string; // ISO
+  title: string | null;
   content: string;
   tags: string[];
   visibility: Visibility;
+  preparedForSession: boolean;
+  preparedAt: string | null;
 };
 
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
-function uid(prefix = "e") {
-  return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
-}
 
 function toNiceDate(raw: string) {
   const d = new Date(raw);
@@ -144,7 +145,7 @@ export default function JournalPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   // draft fields
   const [draftTitle, setDraftTitle] = useState("");
@@ -152,26 +153,59 @@ export default function JournalPage() {
   const [draftTags, setDraftTags] = useState("");
   const [draftVisibility, setDraftVisibility] = useState<Visibility>("private");
 
-  const [entries, setEntries] = useState<Entry[]>([
-    {
-      id: uid(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-      title: "Ce am observat ieri",
-      content:
-        "Am avut un moment de anxietate după-amiază. M-a ajutat să respir 60 secunde și să scriu 2 idei în jurnal.",
-      tags: ["anxietate", "respirație"],
-      visibility: "private",
-    },
-    {
-      id: uid(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-      title: "Ce a mers bine azi",
-      content:
-        "Am reușit să pun o limită mică și a fost mai ușor decât mă așteptam. Vreau să duc asta în ședința următoare.",
-      tags: ["limite", "curaj"],
-      visibility: "shared",
-    },
-  ]);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // Load entries from backend
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        setLoading(true);
+        setLoadError(null);
+
+        // Expected response shape: { entries: [...] }
+        const data = await apiFetch("/api/client/journal", { method: "GET" });
+        const raw = Array.isArray(data?.entries) ? data.entries : [];
+
+        const next: Entry[] = raw.map((e: any) => ({
+          id: Number(e.id),
+          createdAt: String(e.createdAt ?? e.created_at ?? new Date().toISOString()),
+          updatedAt: e.updatedAt ? String(e.updatedAt) : e.updated_at ? String(e.updated_at) : undefined,
+          title: e.title == null ? null : String(e.title),
+          content: String(e.content ?? ""),
+          tags: Array.isArray(e.tags)
+            ? e.tags.map((t: any) => String(t).trim().replace(/^#/, "")).filter(Boolean)
+            : typeof e.tags === "string"
+              ? e.tags
+                  .split(",")
+                  .map((t: string) => t.trim().replace(/^#/, ""))
+                  .filter(Boolean)
+              : [],
+          visibility: (e.visibility === "shared" ? "shared" : "private") as Visibility,
+          preparedForSession:
+            typeof e.preparedForSession === "boolean"
+              ? e.preparedForSession
+              : typeof e.prepared_for_session === "boolean"
+                ? e.prepared_for_session
+                : Boolean(e.prepared_for_session),
+          preparedAt: e.preparedAt ? String(e.preparedAt) : e.prepared_at ? String(e.prepared_at) : null,
+        }));
+
+        if (alive) setEntries(next);
+      } catch (err: any) {
+        console.error("Failed to load journal entries", err);
+        if (alive) setLoadError("Nu am putut încărca jurnalul. Încearcă din nou.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const visibleEntries = useMemo(() => entries.filter((e) => e.visibility === tab), [entries, tab]);
 
@@ -188,7 +222,7 @@ export default function JournalPage() {
         if (selectedTag && !e.tags.includes(selectedTag)) return false;
         if (!q) return true;
         return (
-          e.title.toLowerCase().includes(q) ||
+          (e.title?.toLowerCase().includes(q)) ||
           e.content.toLowerCase().includes(q) ||
           e.tags.some((t) => t.toLowerCase().includes(q))
         );
@@ -210,7 +244,6 @@ export default function JournalPage() {
     if (!draftContent.trim() && !draftTitle.trim()) return;
 
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 220));
 
     const tags = draftTags
       .split(",")
@@ -218,36 +251,132 @@ export default function JournalPage() {
       .filter(Boolean)
       .slice(0, 8);
 
-    if (editingId) {
+    const payload = {
+      title: draftTitle.trim() ? draftTitle.trim() : null,
+      content: draftContent.trim(),
+      tags,
+      visibility: draftVisibility,
+    };
+
+    try {
+      if (editingId != null) {
+        // Expected response: { entry: {...} }
+        const data = await apiFetch(`/api/client/journal/${editingId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+
+        const saved = data?.entry ?? data;
+
+        setEntries((prev) =>
+          prev.map((e) =>
+            e.id === editingId
+              ? {
+                  ...e,
+                  title: saved?.title == null ? payload.title : String(saved?.title),
+                  content: String(saved?.content ?? payload.content),
+                  tags: Array.isArray(saved?.tags) ? saved.tags : payload.tags,
+                  visibility: (saved?.visibility === "shared" ? "shared" : "private") as Visibility,
+                  createdAt: String(saved?.createdAt ?? e.createdAt),
+                  updatedAt: saved?.updatedAt ? String(saved.updatedAt) : e.updatedAt,
+                  preparedForSession:
+                    typeof saved?.preparedForSession === "boolean" ? saved.preparedForSession : e.preparedForSession,
+                  preparedAt:
+                    saved?.preparedAt ? String(saved.preparedAt) : saved?.prepared_at ? String(saved.prepared_at) : e.preparedAt,
+                }
+              : e
+          )
+        );
+      } else {
+        // Expected response: { entry: {...} }
+        const data = await apiFetch("/api/client/journal", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+
+        const saved = data?.entry ?? data;
+
+        const next: Entry = {
+          id: Number(saved?.id),
+          createdAt: String(saved?.createdAt ?? new Date().toISOString()),
+          updatedAt: saved?.updatedAt ? String(saved.updatedAt) : undefined,
+          title: saved?.title == null ? payload.title : String(saved?.title),
+          content: String(saved?.content ?? payload.content),
+          tags: Array.isArray(saved?.tags) ? saved.tags : payload.tags,
+          visibility: (saved?.visibility === "shared" ? "shared" : "private") as Visibility,
+          preparedForSession: Boolean(saved?.preparedForSession ?? false),
+          preparedAt: saved?.preparedAt ? String(saved.preparedAt) : null,
+        };
+
+        setEntries((prev) => [next, ...prev]);
+      }
+
+      setModalOpen(false);
+      setEditingId(null);
+    } catch (err) {
+      console.error("Save entry failed", err);
+      // keep modal open so user doesn't lose text
+      alert("Nu am putut salva nota. Verifică conexiunea și încearcă din nou.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteEntry() {
+    if (!editingId) return;
+
+    const ok = confirm("Ștergi nota? Acțiunea nu poate fi anulată.");
+    if (!ok) return;
+
+    try {
+      setSaving(true);
+      await apiFetch(`/api/client/journal/${editingId}`, { method: "DELETE" });
+      setEntries((prev) => prev.filter((e) => e.id !== editingId));
+      setModalOpen(false);
+      setEditingId(null);
+    } catch (err) {
+      console.error("Delete entry failed", err);
+      alert("Nu am putut șterge nota. Încearcă din nou.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function togglePrepared(entry: Entry) {
+    try {
+      const nextPrepared = !entry.preparedForSession;
+      const data = await apiFetch(`/api/client/journal/${entry.id}/prepare`, {
+        method: "POST",
+        body: JSON.stringify({ prepared: nextPrepared }),
+      });
+
+      const saved = data?.entry ?? data;
+
       setEntries((prev) =>
         prev.map((e) =>
-          e.id === editingId
+          e.id === entry.id
             ? {
                 ...e,
-                title: draftTitle.trim() || "Fără titlu",
-                content: draftContent.trim(),
-                tags,
-                visibility: draftVisibility,
+                preparedForSession:
+                  typeof saved?.preparedForSession === "boolean"
+                    ? saved.preparedForSession
+                    : nextPrepared,
+                preparedAt: saved?.preparedAt
+                  ? String(saved.preparedAt)
+                  : saved?.prepared_at
+                    ? String(saved.prepared_at)
+                    : nextPrepared
+                      ? new Date().toISOString()
+                      : null,
+                updatedAt: saved?.updatedAt ? String(saved.updatedAt) : e.updatedAt,
               }
             : e
         )
       );
-    } else {
-      const next: Entry = {
-        id: uid(),
-        createdAt: new Date().toISOString(),
-        title: draftTitle.trim() || "Fără titlu",
-        content: draftContent.trim(),
-        tags,
-        visibility: draftVisibility,
-      };
-
-      setEntries((prev) => [next, ...prev]);
+    } catch (err) {
+      console.error("Toggle prepared failed", err);
+      alert("Nu am putut actualiza statusul. Încearcă din nou.");
     }
-
-    setSaving(false);
-    setModalOpen(false);
-    setEditingId(null);
   }
 
   const empty = filtered.length === 0;
@@ -381,6 +510,23 @@ export default function JournalPage() {
 
 
         {/* LIST */}
+        {loading ? (
+          <div className="rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl p-6 shadow-sm">
+            <p className="text-sm font-semibold text-gray-900">Se încarcă jurnalul…</p>
+            <p className="mt-1 text-sm text-gray-600">Un moment.</p>
+          </div>
+        ) : loadError ? (
+          <div className="rounded-[28px] border border-rose-200 bg-rose-50/70 backdrop-blur-xl p-6 shadow-sm">
+            <p className="text-sm font-semibold text-rose-800">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition"
+            >
+              Reîncarcă pagina
+            </button>
+          </div>
+        ) : null}
         {selectedTag && (
           <div className="flex items-center justify-between text-xs text-gray-600 px-2">
             <span>
@@ -427,7 +573,7 @@ export default function JournalPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-gray-900 truncate">{e.title}</h3>
+                    <h3 className="text-base font-semibold text-gray-900 truncate">{e.title ?? "Fără titlu"}</h3>
                     <p className="mt-1 text-xs text-gray-500">{toNiceDate(e.createdAt)}</p>
                   </div>
                   <span
@@ -470,13 +616,12 @@ export default function JournalPage() {
                     type="button"
                     onClick={() => {
                       setEditingId(e.id);
-                      // For now: simple “open” behavior = jump to top + open modal prefilled (future: dedicated entry page)
-                      setDraftTitle(e.title);
+                      // For now: simple “open” behavior = open modal prefilled (future: dedicated entry page)
+                      setDraftTitle(e.title ?? "");
                       setDraftContent(e.content);
                       setDraftTags(e.tags.map((t) => `#${t}`).join(", "));
                       setDraftVisibility(e.visibility);
                       setModalOpen(true);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                     className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/60 bg-white/70 px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
                   >
@@ -484,16 +629,37 @@ export default function JournalPage() {
                   </button>
 
                   {e.visibility === "shared" ? (
-                    <button
-                      type="button"
-                      className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
-                      onClick={() => {
-                        // Placeholder: next step will call backend to notify therapist / attach to session
-                        alert("În curând vei putea trimite nota către terapeut.");
-                      }}
-                    >
-                      Trimite terapeutului
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => togglePrepared(e)}
+                        className={cn(
+                          "inline-flex w-full sm:w-auto items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition",
+                          e.preparedForSession
+                            ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                            : "border border-white/60 bg-white/70 text-gray-800"
+                        )}
+                      >
+                        {e.preparedForSession ? "Pregătită pentru ședință" : "Pregătește pentru ședință"}
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={!e.preparedForSession}
+                        className={cn(
+                          "inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition",
+                          !e.preparedForSession
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+                        )}
+                        onClick={() => {
+                          // urmează pasul următor: trimitere către terapeut (când avem endpoint dedicat)
+                          alert("Perfect. În curând vei putea trimite nota către terapeut, direct de aici.");
+                        }}
+                      >
+                        Trimite terapeutului
+                      </button>
+                    </>
                   ) : null}
                 </div>
               </article>
@@ -509,9 +675,10 @@ export default function JournalPage() {
           setModalOpen(false);
           setSaving(false);
           setEditingId(null);
+          setDraftVisibility(tab);
         }}
         title={editingId ? "Editează nota" : "Scrie în jurnal"}
-        subtitle="Scrie liber. Nu trebuie să fie perfect."
+        subtitle={editingId ? "Fă mici ajustări. Nota rămâne a ta." : "Scrie liber. Nu trebuie să fie perfect."}
       >
         <div className="space-y-4">
           <div>
@@ -592,6 +759,17 @@ export default function JournalPage() {
             >
               {saving ? "Se salvează…" : editingId ? "Salvează modificările" : "Salvează nota"}
             </button>
+
+            {editingId ? (
+              <button
+                type="button"
+                onClick={deleteEntry}
+                disabled={saving}
+                className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition disabled:opacity-50"
+              >
+                Șterge
+              </button>
+            ) : null}
 
             <button
               type="button"

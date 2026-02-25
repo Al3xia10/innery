@@ -32,6 +32,12 @@ export function initCheckinModel(sequelize) {
         defaultValue: "daily",
       },
 
+      day: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        field: "day",
+      },
+
       mood: { type: DataTypes.TINYINT.UNSIGNED, allowNull: false },
       anxiety: { type: DataTypes.TINYINT.UNSIGNED, allowNull: true },
       energy: { type: DataTypes.TINYINT.UNSIGNED, allowNull: true },

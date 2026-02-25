@@ -6,9 +6,10 @@ import { initNoteModel } from "./Note.js";
 import { initCheckinModel } from "./Checkin.js";
 import { initGoalModel } from "./Goal.js";
 import { initGoalUpdateModel } from "./GoalUpdate.js";
+import { initJournalEntryModel } from "./JournalEntry.js";
+import initClientSettingsModel from "./ClientSettings.js";
 
 export const models = {};
-
 models.User = initUserModel(sequelize);
 models.Client = Client;
 models.Session = initSessionModel(sequelize);
@@ -16,6 +17,8 @@ models.Note = initNoteModel(sequelize);
 models.Checkin = initCheckinModel(sequelize);
 models.Goal = initGoalModel(sequelize);
 models.GoalUpdate = initGoalUpdateModel(sequelize);
+models.JournalEntry = initJournalEntryModel(sequelize);
+models.ClientSettings = initClientSettingsModel(sequelize);
 
 // Associations
 // Un terapeut (User) are mai mulți clienți (Client rows)
@@ -154,6 +157,36 @@ models.Goal.hasMany(models.GoalUpdate, {
   onDelete: "CASCADE",
 });
 models.GoalUpdate.belongsTo(models.Goal, { foreignKey: "goalId", as: "goal" });
+
+// Journal entries
+models.User.hasMany(models.JournalEntry, {
+  foreignKey: "clientUserId",
+  as: "journalEntries",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+models.JournalEntry.belongsTo(models.User, {
+  foreignKey: "clientUserId",
+  as: "clientUser",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+// Client Settings (1:1 with User - client)
+models.User.hasOne(models.ClientSettings, {
+  foreignKey: "clientUserId",
+  as: "settings",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+models.ClientSettings.belongsTo(models.User, {
+  foreignKey: "clientUserId",
+  as: "clientUser",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
 
 // aici adăugăm și celelalte modele imediat (Client, Session, Note, Reflection)
 

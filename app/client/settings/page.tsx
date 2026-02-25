@@ -3,8 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { clients } from "@/app/_mock/data";
-import { getClientProfile, setClientProfile } from "@/app/_lib/profile";
+import { apiFetch } from "@/app/_lib/authClient";
 
 type ClientPrefs = {
   emailNotifications: boolean;
@@ -14,10 +13,6 @@ type ClientPrefs = {
   privacyMode: "balanced" | "private" | "open";
 };
 
-type ClientProfileOverride = {
-  name: string;
-  email: string;
-};
 
 
 function storageKey(clientId: string) {
@@ -176,12 +171,15 @@ function Toggle({
 }
 
 export default function ClientSettingsPage() {
-  const params = useParams<{ clientId: string }>();
-  const clientId = params?.clientId ?? "";
+  const params = useParams<{ clientId?: string }>();
+  // This page is for the currently authenticated client.
+  // We keep a stable key for local fallbacks (cached prefs).
+  const clientId = params?.clientId ?? "me";
 
-  const client = React.useMemo(() => clients.find((c) => c.id === clientId), [clientId]);
-
-  const [profile, setProfile] = React.useState<ClientProfileOverride | null>(null);
+  // Backend profile state
+  const [meLoading, setMeLoading] = React.useState(true);
+  const [meError, setMeError] = React.useState<string | null>(null);
+  const [meUser, setMeUser] = React.useState<{ id: number; role: string; name: string; email: string } | null>(null);
   const [editingProfile, setEditingProfile] = React.useState(false);
   const [draftName, setDraftName] = React.useState("");
   const [draftEmail, setDraftEmail] = React.useState("");
@@ -203,33 +201,87 @@ export default function ClientSettingsPage() {
   const [toast, setToast] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!clientId) return;
-    const existing = safeParse<ClientPrefs>(localStorage.getItem(storageKey(clientId)));
-    if (existing) {
-      setPrefs({
-        emailNotifications: !!existing.emailNotifications,
-        sessionReminders: !!existing.sessionReminders,
-        shareReflectionsByDefault: !!existing.shareReflectionsByDefault,
-        shareNotesByDefault: !!existing.shareNotesByDefault,
-        privacyMode: clampPrivacyMode(existing.privacyMode),
-      });
-    } else {
-      localStorage.setItem(storageKey(clientId), JSON.stringify(defaultPrefs));
-      setPrefs(defaultPrefs);
+    let cancelled = false;
+
+    async function load() {
+      // 1) Instant UI: hydrate from local cache if present
+      const cached = safeParse<ClientPrefs>(localStorage.getItem(storageKey(clientId)));
+      if (cached) {
+        setPrefs({
+          emailNotifications: !!cached.emailNotifications,
+          sessionReminders: !!cached.sessionReminders,
+          shareReflectionsByDefault: !!cached.shareReflectionsByDefault,
+          shareNotesByDefault: !!cached.shareNotesByDefault,
+          privacyMode: clampPrivacyMode((cached as any).privacyMode),
+        });
+      } else {
+        localStorage.setItem(storageKey(clientId), JSON.stringify(defaultPrefs));
+        setPrefs(defaultPrefs);
+      }
+      setHydrated(true);
+
+      // 2) Source of truth: backend
+      try {
+        const res = await apiFetch("/api/client/settings", { method: "GET" });
+        // expecting: { settings: { ... } }
+        const s = (res as any)?.settings ?? (res as any);
+        if (!s) return;
+
+        const next: ClientPrefs = {
+          emailNotifications: !!s.emailNotifications,
+          sessionReminders: !!s.sessionReminders,
+          shareReflectionsByDefault: !!s.shareReflectionsByDefault,
+          shareNotesByDefault: !!s.shareNotesByDefault,
+          privacyMode: clampPrivacyMode(s.privacyMode),
+        };
+
+        if (!cancelled) {
+          setPrefs(next);
+          localStorage.setItem(storageKey(clientId), JSON.stringify(next));
+        }
+      } catch (e) {
+        // Backend not ready / offline: keep cached values.
+        // Optional: surface a soft hint.
+        if (!cancelled) {
+          // no toast spam on first load
+        }
+      }
     }
-    setHydrated(true);
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [clientId, defaultPrefs]);
 
+  // Hydrate profile from backend
   React.useEffect(() => {
-    if (!clientId || !client) return;
+    let cancelled = false;
 
-    const fallbackEmail = (client as any).email ?? "client@innery.com";
-    const next = getClientProfile(clientId, client.name, fallbackEmail);
+    async function fetchMe() {
+      setMeLoading(true);
+      setMeError(null);
+      try {
+        const me = await apiFetch("/api/me", { method: "GET" });
+        if (!me || !(me as any).user) throw new Error("No user found");
+        if (cancelled) return;
+        const u = (me as any).user;
+        setMeUser(u);
+        setDraftName(u.name ?? "");
+        setDraftEmail(u.email ?? "");
+      } catch (err: any) {
+        if (cancelled) return;
+        setMeError(err?.message || "Failed to load profile");
+      } finally {
+        if (!cancelled) setMeLoading(false);
+      }
+    }
 
-    setProfile(next);
-    setDraftName(next.name);
-    setDraftEmail(next.email);
-  }, [clientId, client]);
+    fetchMe();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!hydrated || !clientId) return;
@@ -242,28 +294,49 @@ export default function ClientSettingsPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  function update(next: Partial<ClientPrefs>) {
-    setPrefs((p) => ({ ...p, ...next }));
-    setToast("Saved");
+  async function update(next: Partial<ClientPrefs>) {
+    // Optimistic UI, with safe rollback.
+    let prev: ClientPrefs | null = null;
+
+    setPrefs((p) => {
+      prev = p;
+      return { ...p, ...next } as ClientPrefs;
+    });
+
+    setToast("Saving…");
+
+    const merged = { ...prefs, ...next } as ClientPrefs;
+
+    try {
+      await apiFetch("/api/client/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(merged),
+      });
+
+      localStorage.setItem(storageKey(clientId), JSON.stringify(merged));
+      setToast("Saved");
+    } catch (e) {
+      if (prev) setPrefs(prev);
+      setToast("Could not save");
+    }
   }
 
   function openProfileEdit() {
-    if (!profile) return;
+    if (!meUser) return;
     setEditingProfile(true);
-    setDraftName(profile.name);
-    setDraftEmail(profile.email);
+    setDraftName(meUser.name ?? "");
+    setDraftEmail(meUser.email ?? "");
   }
 
   function cancelProfileEdit() {
-    if (!profile) return;
+    if (!meUser) return;
     setEditingProfile(false);
-    setDraftName(profile.name);
-    setDraftEmail(profile.email);
+    setDraftName(meUser.name ?? "");
+    setDraftEmail(meUser.email ?? "");
   }
 
   async function saveProfileEdit() {
-    if (!clientId || !profile) return;
-
     const name = draftName.trim();
     const email = draftEmail.trim();
 
@@ -273,29 +346,77 @@ export default function ClientSettingsPage() {
     }
 
     setProfileSaving(true);
-    await new Promise((r) => setTimeout(r, 250));
-
-    const next = { name, email };
-    setProfile(next);
-    setClientProfile(clientId, next);
-
-    setEditingProfile(false);
-    setProfileSaving(false);
-    setToast("Saved");
+    try {
+      const data = await apiFetch("/api/settings/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ name, email }),
+      });
+      if (!data || !(data as any).user) throw new Error("No user returned");
+      setMeUser((data as any).user);
+      setEditingProfile(false);
+      setToast("Saved");
+    } catch (err: any) {
+      setToast(err?.message || "Failed to update profile");
+    } finally {
+      setProfileSaving(false);
+    }
   }
 
-  if (!client) {
+  // SECURITY STATE
+  const [pwOld, setPwOld] = React.useState("");
+  const [pwNew, setPwNew] = React.useState("");
+  const [pwConfirm, setPwConfirm] = React.useState("");
+  const [pwSaving, setPwSaving] = React.useState(false);
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pwOld || !pwNew || !pwConfirm) {
+      setToast("Please fill all password fields");
+      return;
+    }
+    if (pwNew.length < 8) {
+      setToast("New password must be at least 8 characters");
+      return;
+    }
+    if (pwNew !== pwConfirm) {
+      setToast("Passwords do not match");
+      return;
+    }
+
+    setPwSaving(true);
+    try {
+      await apiFetch("/api/settings/password", {
+        method: "PATCH",
+        body: JSON.stringify({ oldPassword: pwOld, newPassword: pwNew }),
+      });
+      setPwOld("");
+      setPwNew("");
+      setPwConfirm("");
+      setToast("Password updated");
+    } catch (err: any) {
+      setToast(err?.message || "Failed to update password");
+    } finally {
+      setPwSaving(false);
+    }
+  }
+
+
+  if (meLoading) {
     return (
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-        <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-gray-900">Client not found</h1>
-          <p className="mt-2 text-sm text-gray-600">Check the URL. This is a demo route.</p>
-          <Link
-            href="/"
-            className="mt-5 inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 transition"
-          >
-            Go home
-          </Link>
+        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+          <h1 className="text-base font-semibold text-gray-900">Loading…</h1>
+        </div>
+      </section>
+    );
+  }
+
+  if (meError) {
+    return (
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+        <div className="rounded-2xl border border-rose-200 bg-white p-10 text-center">
+          <h1 className="text-base font-semibold text-rose-700">Error</h1>
+          <p className="mt-2 text-sm text-gray-600">{meError}</p>
         </div>
       </section>
     );
@@ -310,15 +431,15 @@ export default function ClientSettingsPage() {
             <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
             Client settings
           </div>
-          <h1 className="mt-2 text-2xl font-semibold text-gray-900">Preferences</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-gray-900">Settings</h1>
           <p className="mt-1 text-sm text-gray-600 max-w-xl">
-            Control notifications, privacy, and how you share your notes.
+            Manage your profile, notifications, and privacy preferences.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <Link
-            href={`/client/${clientId}`}
+            href={`/client`}
             className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
           >
             Back to dashboard
@@ -348,20 +469,20 @@ export default function ClientSettingsPage() {
 
             <div className="mt-5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-semibold">
-                {initials(profile?.name ?? client.name)}
+                {initials(meUser?.name ?? "")}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {profile?.name ?? client.name}
+                  {meUser?.name ?? ""}
                 </p>
-                <p className="text-xs text-gray-500 truncate">Client ID: {clientId}</p>
+                <p className="text-xs text-gray-500 truncate">Client ID: {meUser?.id ?? clientId}</p>
               </div>
             </div>
 
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <SettingRow label="Name" value={profile?.name ?? client.name} />
-              <SettingRow label="Email" value={profile?.email ?? ((client as any).email ?? "client@innery.com")} />
-              <SettingRow label="Role" value="Client" />
+              <SettingRow label="Name" value={meUser?.name ?? ""} />
+              <SettingRow label="Email" value={meUser?.email ?? ""} />
+              <SettingRow label="Role" value={meUser?.role ?? "Client"} />
               <SettingRow label="Privacy mode" value={prefs.privacyMode[0].toUpperCase() + prefs.privacyMode.slice(1)} />
             </div>
 
@@ -394,7 +515,7 @@ export default function ClientSettingsPage() {
 
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <p className="text-xs text-gray-500">
-                    Saved locally (demo). Later this will connect to backend profile.
+                    Profile and settings are saved to your account.
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -416,6 +537,61 @@ export default function ClientSettingsPage() {
                 </div>
               </div>
             ) : null}
+          </div>
+          {/* SECURITY */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Security</h2>
+              <p className="mt-1 text-sm text-gray-600">Keep your account safe.</p>
+            </div>
+
+            <form className="mt-5 grid grid-cols-1 gap-4" onSubmit={handleChangePassword}>
+              <div>
+                <label className="text-xs font-semibold text-gray-600">Old password</label>
+                <input
+                  type="password"
+                  value={pwOld}
+                  onChange={(e) => setPwOld(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Old password"
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600">New password</label>
+                <input
+                  type="password"
+                  value={pwNew}
+                  onChange={(e) => setPwNew(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="New password"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600">Confirm new password</label>
+                <input
+                  type="password"
+                  value={pwConfirm}
+                  onChange={(e) => setPwConfirm(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Confirm new password"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={pwSaving}
+                  className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-50 transition"
+                >
+                  {pwSaving ? "Changing…" : "Change password"}
+                </button>
+              </div>
+            </form>
           </div>
 
           {/* ACCOUNT */}
@@ -527,19 +703,19 @@ export default function ClientSettingsPage() {
 
           {/* DANGER */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900">Account status</h2>
+            <h2 className="text-sm font-semibold text-gray-900">Danger zone</h2>
             <p className="mt-2 text-sm text-gray-600">
-              If you need a break, you can pause your therapy journey.
+              Permanently delete your account and all associated data.
             </p>
 
             <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-xs text-gray-500">Demo action • does not change data</div>
               <button
                 type="button"
-                onClick={() => setToast("Paused (demo)")}
+                onClick={() => setToast("Delete account (demo)")}
                 className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition"
               >
-                Pause account
+                Delete account
               </button>
             </div>
           </div>
@@ -550,13 +726,14 @@ export default function ClientSettingsPage() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <h3 className="text-sm font-semibold text-gray-900">Account</h3>
             <p className="mt-2 text-sm text-gray-600">
-              <span className="font-semibold text-gray-900">{profile?.name ?? client.name}</span>
+              <span className="font-semibold text-gray-900">{meUser?.name ?? ""}</span>
             </p>
-            <p className="mt-1 text-xs text-gray-500">Client ID: {clientId}</p>
+            <p className="mt-1 text-xs text-gray-500">Client ID: {meUser?.id ?? clientId}</p>
+            <div className="mt-1 text-xs text-gray-500">{meUser?.email ?? ""}</div>
 
             <div className="mt-4 rounded-2xl bg-gray-50/40 border border-gray-100 p-4">
               <p className="text-sm text-gray-700 leading-relaxed">
-                Preferences are saved locally on this device (localStorage).
+                Settings are saved to your account. This page also caches locally for faster load.
               </p>
             </div>
           </div>

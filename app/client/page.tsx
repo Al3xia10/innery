@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/_lib/authClient";
@@ -55,6 +55,8 @@ export default function ClientTodayPage() {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
+  const [checkinOpen, setCheckinOpen] = useState(false);
 
   const existsToday = data?.today.checkin.existsToday ?? false;
   const streak = data?.today.checkin.streak.count ?? 0;
@@ -85,7 +87,14 @@ export default function ClientTodayPage() {
           setSleepHours(Number.isFinite(sh) ? sh : 6.5);
           setNote((last.note ?? "").toString());
         }
-      } catch {
+      } catch (e: any) {
+        const msg = String(e?.message ?? "");
+        const unauthorized =
+          e?.status === 401 || msg.includes("401") || msg.toLowerCase().includes("unauthorized");
+        if (unauthorized) {
+          router.replace("/login");
+          return;
+        }
         setError("Nu s-a putut încărca pagina Today.");
       } finally {
         setLoading(false);
@@ -93,17 +102,16 @@ export default function ClientTodayPage() {
     };
     load();
   }, [router]);
+  
 
-  const niceDate = useMemo(() => {
-    const raw = data?.today.date;
-    if (!raw) return "";
-    const d = new Date(raw);
-    return d.toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "long",
-      day: "2-digit",
-    });
-  }, [data?.today.date]);
+  const rawDate = data?.today.date;
+  const niceDate = rawDate
+    ? new Date(rawDate).toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "2-digit",
+      })
+    : "";
 
   async function saveCheckin() {
     try {
@@ -125,8 +133,10 @@ export default function ClientTodayPage() {
       setNote("");
       setSavedToast(true);
       window.setTimeout(() => setSavedToast(false), 2600);
+      setCheckinOpen(false);
     } catch {
-      alert("Nu am putut salva check-in-ul. Încearcă din nou.");
+      setErrorToast("Nu am putut salva check-in-ul. Încearcă din nou.");
+      window.setTimeout(() => setErrorToast(null), 2800);
     } finally {
       setSaving(false);
     }
@@ -160,6 +170,14 @@ export default function ClientTodayPage() {
             </div>
           </div>
         ) : null}
+        {errorToast ? (
+          <div className="fixed right-4 top-4 z-50">
+            <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 shadow-sm">
+              <p className="text-sm font-semibold text-rose-800">Ups.</p>
+              <p className="text-xs text-rose-700/80">{errorToast}</p>
+            </div>
+          </div>
+        ) : null}
         {/* HERO */}
         <header className="relative overflow-hidden rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl shadow-sm">
           <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-linear-to-br from-rose-200/70 to-amber-200/60 blur-2xl" />
@@ -170,7 +188,7 @@ export default function ClientTodayPage() {
               <div className="max-w-2xl">
                 <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
                   <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                  Daily space
+                  Spațiul tău zilnic
                 </div>
 
                 <h1 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900">
@@ -187,13 +205,13 @@ export default function ClientTodayPage() {
                   href="/client/progress"
                   className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
                 >
-                  Progress
+                  Progres
                 </Link>
                 <Link
                   href="/client/journal"
                   className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
                 >
-                  Journal
+                  Jurnal
                 </Link>
               </div>
             </div>
@@ -201,30 +219,30 @@ export default function ClientTodayPage() {
             {/* Mini wellbeing strip */}
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div className="col-span-2 sm:col-span-1 rounded-2xl border border-gray-100 bg-white/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm">
-                <p className="text-xs font-semibold text-gray-500">Streak</p>
+                <p className="text-xs font-semibold text-gray-500">Ritmul tău</p>
                 <p className="mt-1 text-2xl font-semibold text-gray-900">{streak}</p>
-                <p className="mt-1 text-xs text-gray-500">zile cu check-in</p>
+                <p className="mt-1 text-xs text-gray-500">zile la rând</p>
               </div>
 
               <div className="rounded-2xl border border-gray-100 bg-white/70 p-4 flex flex-col transition hover:-translate-y-0.5 hover:shadow-sm">
-                <p className="text-xs font-semibold text-gray-500">Next session</p>
+                <p className="text-xs font-semibold text-gray-500">Următoarea ședință</p>
                 <p className="mt-1 text-sm font-semibold text-gray-900 line-clamp-2">{nextSessionLabel}</p>
                 <Link
                   href="/client/plan"
                   className="mt-auto inline-flex text-xs font-semibold text-indigo-600 hover:text-indigo-700"
                 >
-                  Open →
+                  Deschide →
                 </Link>
               </div>
 
               <div className="rounded-2xl border border-gray-100 bg-white/70 p-4 flex flex-col transition hover:-translate-y-0.5 hover:shadow-sm">
-                <p className="text-xs font-semibold text-gray-500">Active goal</p>
+                <p className="text-xs font-semibold text-gray-500">Obiectiv activ</p>
                 <p className="mt-1 text-sm font-semibold text-gray-900 line-clamp-2">{activeGoalLabel}</p>
                 <Link
                   href="/client/plan"
                   className="mt-auto inline-flex text-xs font-semibold text-indigo-600 hover:text-indigo-700"
                 >
-                  Open →
+                  Deschide →
                 </Link>
               </div>
             </div>
@@ -248,96 +266,148 @@ export default function ClientTodayPage() {
                 </p>
               </div>
 
-              {existsToday ? (
-                <div className="mt-8 space-y-6">
+              <div className="mt-8 space-y-6">
+                {existsToday ? (
                   <div className="rounded-3xl bg-indigo-50 border border-indigo-100 p-6">
-                    <p className="text-sm font-semibold text-indigo-800">
-                      ✔️ Check-in completat astăzi
-                    </p>
-                    <p className="mt-1 text-xs text-indigo-700/80">
-                      Ai făcut spațiu pentru tine. Contează.
+                    <p className="text-sm font-semibold text-indigo-800">✔️ Check-in completat azi</p>
+                    <p className="mt-1 text-xs text-indigo-700/80">Ai făcut loc pentru tine. Contează.</p>
+                  </div>
+                ) : (
+                  <div className="rounded-3xl bg-amber-50 border border-amber-100 p-6">
+                    <p className="text-sm font-semibold text-amber-900">Check-in-ul de azi e încă deschis</p>
+                    <p className="mt-1 text-xs text-amber-900/80">
+                      Dacă vrei, completează-l în ritmul tău — durează sub un minut.
                     </p>
                   </div>
+                )}
 
-                  {lastCheckin && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <Metric label="Mood" value={`${lastCheckin.mood}/10`} />
-                      <Metric label="Anxietate" value={`${lastCheckin.anxiety}/10`} />
-                      <Metric label="Energie" value={`${lastCheckin.energy}/10`} />
-                      <Metric label="Somn" value={`${Number(lastCheckin.sleepHours) || 0}h`} />
-                    </div>
-                  )}
+                {lastCheckin ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <Metric label="Stare" value={`${lastCheckin.mood}/10`} />
+                    <Metric label="Anxietate" value={`${lastCheckin.anxiety}/10`} />
+                    <Metric label="Energie" value={`${lastCheckin.energy}/10`} />
+                    <Metric label="Somn" value={`${Number(lastCheckin.sleepHours) || 0}h`} />
+                  </div>
+                ) : null}
 
-                  {lastCheckin?.note && (
-                    <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4 text-sm text-gray-700">
-                      <span className="font-semibold text-gray-900">Notiță: </span>
-                      {lastCheckin.note}
-                    </div>
-                  )}
+                {lastCheckin?.note ? (
+                  <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4 text-sm text-gray-700">
+                    <span className="font-semibold text-gray-900">Notiță: </span>
+                    {lastCheckin.note}
+                  </div>
+                ) : null}
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCheckinOpen((v) => !v)}
+                    className="inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
+                  >
+                    {existsToday ? "Actualizează check-in" : "Completează check-in"}
+                  </button>
                 </div>
-              ) : (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    saveCheckin();
-                  }}
-                  className="mt-8 space-y-10"
-                >
-                  <div className="space-y-6">
-                    <div>
-                      <FancySlider label="Mood" value={mood} onChange={setMood} />
-                      <p className="mt-2 text-xs text-gray-400">1 = foarte jos · 10 = foarte bine</p>
-                    </div>
-                    <div>
-                      <FancySlider label="Anxietate" value={anxiety} onChange={setAnxiety} />
-                      <p className="mt-2 text-xs text-gray-400">1 = calm · 10 = foarte intens</p>
-                    </div>
-                    <div>
-                      <FancySlider label="Energie" value={energy} onChange={setEnergy} />
-                      <p className="mt-2 text-xs text-gray-400">1 = epuizat · 10 = plin de energie</p>
-                    </div>
-                  </div>
+              </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900">
-                        Somn (ore)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.5"
-                        min={0}
-                        max={24}
-                        value={sleepHours}
-                        onChange={(e) => setSleepHours(Number(e.target.value))}
-                        className="mt-3 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    </div>
+              {checkinOpen ? (
+  <div className="mt-6 rounded-3xl border border-white/60 bg-white/60 backdrop-blur-xl shadow-sm overflow-hidden">
+    <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-white/60 bg-white/70">
+      <div>
+        <p className="text-sm font-semibold text-gray-900">
+          {existsToday ? "Actualizează check-in" : "Completează check-in"}
+        </p>
+        <p className="mt-1 text-xs text-gray-600">O fotografie sinceră a momentului.</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => setCheckinOpen(false)}
+        className="shrink-0 inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+      >
+        Închide
+      </button>
+    </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900">
-                        Ce e diferit azi?
-                      </label>
-                      <input
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        placeholder="Un gând scurt..."
-                        className="mt-3 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    </div>
-                  </div>
+    <div className="px-5 py-5">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {/* LEFT: sliders */}
+        <div className="space-y-5">
+          <div className="rounded-3xl border border-white/60 bg-white/65 p-4 shadow-sm">
+            <FancySlider label="Mood" value={mood} onChange={setMood} />
+            <p className="mt-2 text-[11px] text-gray-500">1 = foarte jos · 10 = foarte bine</p>
+          </div>
 
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
-                    >
-                      {saving ? "Salvez..." : "Salvează momentul"}
-                    </button>
-                  </div>
-                </form>
-              )}
+          <div className="rounded-3xl border border-white/60 bg-white/65 p-4 shadow-sm">
+            <FancySlider label="Anxietate" value={anxiety} onChange={setAnxiety} />
+            <p className="mt-2 text-[11px] text-gray-500">1 = calm · 10 = foarte intens</p>
+          </div>
+
+          <div className="rounded-3xl border border-white/60 bg-white/65 p-4 shadow-sm">
+            <FancySlider label="Energie" value={energy} onChange={setEnergy} />
+            <p className="mt-2 text-[11px] text-gray-500">1 = epuizat · 10 = plin de energie</p>
+          </div>
+        </div>
+
+        {/* RIGHT: inputs */}
+        <div className="space-y-5">
+          <div className="rounded-3xl border border-white/60 bg-white/65 p-4 shadow-sm">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900">Somn (ore)</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min={0}
+                  max={24}
+                  value={sleepHours}
+                  onChange={(e) => setSleepHours(Number(e.target.value))}
+                  className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <p className="mt-2 text-[11px] text-gray-500">Poți scrie 6.5, 7, 8…</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900">Ce e diferit azi?</label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Un gând scurt..."
+                  rows={4}
+                  className="mt-2 w-full resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <p className="mt-2 text-[11px] text-gray-500">Doar pentru tine. Poate rămâne gol.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-indigo-100 bg-indigo-50/70 p-4">
+            <p className="text-xs font-semibold text-indigo-800">Tip</p>
+            <p className="mt-1 text-xs text-indigo-700/80">
+              Dacă îți vine să grăbești, e ok. Revino blând la ritm.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <button
+          type="button"
+          onClick={() => setCheckinOpen(false)}
+          className="inline-flex w-full items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 sm:w-auto"
+        >
+          Renunță
+        </button>
+
+        <button
+          type="button"
+          disabled={saving}
+          onClick={saveCheckin}
+          className="inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 sm:w-auto"
+        >
+          {saving ? "Salvez..." : "Salvează"}
+        </button>
+      </div>
+    </div>
+  </div>
+) : null}
             </section>
 
           </div>
@@ -360,7 +430,7 @@ export default function ClientTodayPage() {
                   href="/client/journal"
                   className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
                 >
-                  Open →
+                  Deschide →
                 </Link>
               </div>
 
@@ -373,7 +443,7 @@ export default function ClientTodayPage() {
                   href="/client/journal"
                   className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
                 >
-                  Răspunde în jurnal
+                  Scrie în jurnal
                 </Link>
                 
               </div>
@@ -382,14 +452,14 @@ export default function ClientTodayPage() {
             <section className="rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl p-6 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900">Profile</h3>
-                  <p className="mt-1 text-sm text-gray-600">Signed in as</p>
+                  <h3 className="text-base font-semibold text-gray-900">Profil</h3>
+                  <p className="mt-1 text-sm text-gray-600">Ești conectată ca</p>
                 </div>
                 <Link
                   href="/client/settings"
                   className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition"
                 >
-                  Settings →
+                  Setări →
                 </Link>
               </div>
 
@@ -412,8 +482,8 @@ export default function ClientTodayPage() {
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <MiniPill label="Today" value={existsToday ? "Done" : "Pending"} />
-                <MiniPill label="Streak" value={String(streak)} />
+                <MiniPill label="Azi" value={existsToday ? "Făcut" : "În așteptare"} />
+                <MiniPill label="Ritmul tău" value={String(streak)} />
               </div>
             </section>
 
@@ -424,31 +494,6 @@ export default function ClientTodayPage() {
   );
 }
 
-function StatCard({
-  title,
-  value,
-  subtitle,
-  href,
-}: {
-  title: string;
-  value: string;
-  subtitle: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-gray-200 hover:shadow-md transition"
-    >
-      <p className="text-sm text-gray-600">{title}</p>
-      {value ? <p className="mt-2 text-3xl font-semibold text-gray-900">{value}</p> : null}
-      <p className="mt-1 text-xs text-gray-500">{subtitle}</p>
-      <p className="mt-4 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 transition">
-        Open →
-      </p>
-    </Link>
-  );
-}
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
@@ -459,36 +504,6 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Slider({
-  label,
-  value,
-  onChange,
-  help,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  help: string;
-}) {
-  const id = `slider_${label.toLowerCase().replace(/\s+/g, "_")}`;
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-semibold text-gray-900">
-        {label}
-      </label>
-      <input
-        id={id}
-        type="range"
-        min={1}
-        max={10}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-3 w-full accent-indigo-500"
-      />
-      <p className="mt-2 text-xs text-gray-500">{help}</p>
-    </div>
-  );
-}
 function FancySlider({
   label,
   value,

@@ -13,6 +13,11 @@ import notesRoutes from "./routes/notes.routes.js";
 import clientsRoutes from "./routes/clients.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import clientTodayRoutes from "./routes/client.today.routes.js";
+import clientProgressRoutes from "./routes/client.progress.routes.js";
+import clientPlanRoutes from "./routes/client.plan.routes.js";
+import clientJournalRoutes from "./routes/client.journal.routes.js";
+import clientCheckinsRoutes from "./routes/client.checkins.routes.js";
+import clientSettingsRoutes from "./routes/client.settings.routes.js";
 
 export const app = express();
 
@@ -93,7 +98,16 @@ app.use("/api", sessionsRoutes);
 app.use("/api", notesRoutes);
 app.use("/api", clientsRoutes);
 app.use("/api", settingsRoutes);
+
+// Client area (Today / Progress / Journal / Plan)
 app.use("/api", clientTodayRoutes);
+app.use("/api", clientProgressRoutes);
+// Plan (Goals)
+app.use("/api/client/plan", clientPlanRoutes);
+app.use("/api/client", clientJournalRoutes);
+app.use("/api/client", clientCheckinsRoutes);
+// Client settings
+app.use("/api", clientSettingsRoutes);
 
 // ---- Errors (CORS) ----
 app.use((err, req, res, next) => {
