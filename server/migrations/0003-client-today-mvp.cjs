@@ -31,11 +31,6 @@ module.exports = {
         allowNull: false,
         defaultValue: "daily",
       },
-      day: {
-        type: Sequelize.DATEONLY,
-        allowNull: false,
-        defaultValue: Sequelize.literal("CURRENT_DATE"),
-      },
 
       mood: {
         type: Sequelize.TINYINT.UNSIGNED,
@@ -112,10 +107,6 @@ module.exports = {
 
     await queryInterface.addIndex("checkins", ["created_at"], {
       name: "idx_checkins_created_at",
-    });
-
-    await queryInterface.addIndex("checkins", ["client_user_id", "day"], {
-      name: "idx_checkins_client_day",
     });
 
     // GOALS
