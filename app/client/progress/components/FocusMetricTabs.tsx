@@ -17,13 +17,13 @@ export function FocusMetricTabs({
 }) {
   return (
     <div className="max-w-full overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="inline-flex items-center gap-1 rounded-full border border-white/60 bg-white/50 backdrop-blur p-1 shadow-sm">
+      <div className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-sm">
         <button
           type="button"
           onClick={() => onChange("mood")}
           className={cn(
             "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-            value === "mood" ? "bg-indigo-600/90 text-white shadow-sm" : "text-gray-700 hover:bg-white/80"
+            value === "mood" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-50"
           )}
         >
           Stare
@@ -33,7 +33,7 @@ export function FocusMetricTabs({
           onClick={() => onChange("anxiety")}
           className={cn(
             "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-            value === "anxiety" ? "bg-indigo-600/90 text-white shadow-sm" : "text-gray-700 hover:bg-white/80"
+            value === "anxiety" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-50"
           )}
         >
           Tensiune
@@ -43,7 +43,7 @@ export function FocusMetricTabs({
           onClick={() => onChange("energy")}
           className={cn(
             "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-            value === "energy" ? "bg-indigo-600/90 text-white shadow-sm" : "text-gray-700 hover:bg-white/80"
+            value === "energy" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-50"
           )}
         >
           Energie
@@ -53,7 +53,7 @@ export function FocusMetricTabs({
           onClick={() => onChange("sleep")}
           className={cn(
             "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-            value === "sleep" ? "bg-indigo-600/90 text-white shadow-sm" : "text-gray-700 hover:bg-white/80"
+            value === "sleep" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-50"
           )}
         >
           Somn

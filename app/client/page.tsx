@@ -154,18 +154,12 @@ export default function ClientTodayPage() {
 
   return (
     <section className="relative">
-      {/* Softer canvas (less dashboard, more calm) */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-36 left-1/2 h-130 w-130 -translate-x-1/2 rounded-full bg-rose-200/25 blur-3xl" />
-        <div className="absolute top-40 -right-40 h-130 w-130 rounded-full bg-amber-200/20 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-130 w-130 rounded-full bg-indigo-200/20 blur-3xl" />
-      </div>
 
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-10">
+      <div className="mx-auto max-w-6xl px-6 lg:px-8 py-8 space-y-8">
         {/* Toasts */}
         {savedToast ? (
           <div className="fixed right-4 top-4 z-50">
-            <div className="rounded-2xl border border-white/60 bg-white/80 backdrop-blur px-4 py-3 shadow-sm">
+            <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
   <p className="text-sm font-semibold text-gray-900">✔️ Ai făcut loc pentru tine.</p>
   <p className="text-xs text-gray-600">Chiar și un minut contează.</p>
 </div>
@@ -173,50 +167,34 @@ export default function ClientTodayPage() {
         ) : null}
         {errorToast ? (
           <div className="fixed right-4 top-4 z-50">
-            <div className="rounded-2xl border border-white/60 bg-white/80 backdrop-blur px-4 py-3 shadow-sm">
+            <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
   <p className="text-sm font-semibold text-gray-900">Ups.</p>
   <p className="text-xs text-gray-600">{errorToast}</p>
 </div>
           </div>
         ) : null}
 
-        {/* Top links (secondary) — laptop only */}
-        <div className="hidden lg:flex items-center justify-end gap-2">
-          <Link
-            href="/client/progress"
-            className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white/80 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-white transition"
-          >
-            Ritmul tău
-          </Link>
-          <Link
-            href="/client/plan"
-            className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white/80 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-white transition"
-          >
-            Plan
-          </Link>
-          <Link
-            href="/client/settings"
-            className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white/80 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-white transition"
-          >
-            Setări
-          </Link>
-        </div>
+        
 
         {/* HERO (centered, minimal, warm) */}
-        <header className="mt-6">
-          <div className="mt-6 relative overflow-hidden rounded-4xl border border-white/60 bg-linear-to-br from-indigo-50 via-white to-amber-50 p-7 sm:p-9 shadow-sm backdrop-blur-xl">
-            <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-indigo-200/35 blur-2xl" />
-            <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-amber-200/30 blur-2xl" />
+        <header>
+          <div
+  className="relative overflow-hidden rounded-3xl border border-black/5 shadow-sm p-7 sm:p-9"
+  style={{
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+  }}
+>
 
             <div className="relative">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-white/60 backdrop-blur">
-                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                    Momentul tău
-                  </div>
+                 <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                Momentul tau
+              </div>
 
-                  <h1 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight text-gray-900">
+                  <h1 className="mt-3 text-3xl sm:text-3xl font-semibold tracking-tight text-gray-900">
                     Bună, {getMeName(me)}
                   </h1>
 
@@ -242,7 +220,7 @@ export default function ClientTodayPage() {
                 <div className="h-px flex-1 bg-gray-900/10" />
               </div>
 
-              <p className="mt-3 text-xl sm:text-2xl font-semibold text-gray-900 leading-relaxed">
+              <p className="mt-3 text-xl sm:text-xl font-semibold text-gray-900 leading-relaxed">
                 “{data.today.prompt.text}”
               </p>
 
@@ -310,9 +288,13 @@ export default function ClientTodayPage() {
         </header>
 
         {/* CHECK-IN (flow, no right column) */}
-       <section className="mt-8 relative overflow-hidden rounded-4xl border border-white/60 bg-linear-to-br from-indigo-50 via-white to-amber-50 backdrop-blur-xl shadow-sm p-6 sm:p-8">
-         <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-indigo-200/20 blur-3xl" />
-  <div className="absolute -bottom-14 -left-14 h-56 w-56 rounded-full bg-amber-200/18 blur-3xl" />
+       <section
+  className="mt-7 relative overflow-hidden rounded-3xl border border-black/5 shadow-sm p-6 sm:p-8"
+  style={{
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+  }}
+>
          <div className="relative flex flex-col gap-2">
             <h2 className="text-xl font-semibold text-gray-900">Cum e pentru tine în acest moment?</h2>
             <p className="text-sm text-gray-600">Nu trebuie să explici nimic. Doar observă ce e aici. E suficient.</p>
@@ -320,12 +302,12 @@ export default function ClientTodayPage() {
 
           <div className="relative mt-6 space-y-4">
             {existsToday ? (
-              <div className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur p-5">
+              <div className="rounded-2xl border border-gray-200 bg-white p-5">
                 <p className="text-sm font-semibold text-gray-900">✔️ Ai făcut deja check-in azi</p>
                 <p className="mt-1 text-xs text-gray-600">Dacă vrei, poți reveni și ajusta. Fără presiune.</p>
               </div>
             ) : (
-              <div className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur p-5">
+              <div className="rounded-2xl border border-gray-200 bg-white p-5">
                 <p className="text-sm font-semibold text-gray-900">Poți reveni la tine când simți.</p>
                 <p className="mt-1 text-xs text-gray-600">
                   Dacă alegi să îl completezi, fă-o în ritmul tău. Nu e grabă.
@@ -365,7 +347,7 @@ export default function ClientTodayPage() {
           </div>
 
           {checkinOpen ? (
-            <div className="mt-6 rounded-3xl border border-white/60 bg-white/70 backdrop-blur-xl shadow-sm overflow-hidden">
+            <div className="mt-6 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
               <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-white/60 bg-white/80">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
@@ -392,7 +374,7 @@ export default function ClientTodayPage() {
                   </div>
 
                   <div className="space-y-5">
-                    <div className="rounded-3xl border border-white/60 bg-white/75 p-4 shadow-sm">
+                    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                       <div className="grid grid-cols-1 gap-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-900">Somn (ore)</label>

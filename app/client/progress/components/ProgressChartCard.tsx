@@ -1,4 +1,3 @@
-// app/client/progress/components/ProgressChartCard.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
@@ -109,7 +108,7 @@ export function ProgressChartCard({
 
   if (empty) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-200 bg-white/60 p-5">
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-5">
         <p className="text-sm font-semibold text-gray-900">Încă nu avem suficiente repere</p>
         <p className="mt-1 text-sm text-gray-600">{hint}</p>
         <Link
@@ -123,19 +122,19 @@ export function ProgressChartCard({
   }
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white/60 p-3 sm:p-5">
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-gray-900">{label}</p>
 
         {hover ? (
-          <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm">
+          <div className="hidden sm:flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
             {Math.round(hover.v * 10) / 10}
           </div>
         ) : null}
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-white/60 bg-linear-to-br from-white/70 via-white/40 to-indigo-50/60 shadow-sm">
+      <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-white">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="block h-44 sm:h-56 w-full"

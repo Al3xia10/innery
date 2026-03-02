@@ -11,6 +11,15 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
 
+  // TEMP: Therapist area is still in development.
+  // We hide the therapist navigation entirely so visitors only see the
+  // "under construction" content from the pages.
+  const THERAPIST_UNDER_CONSTRUCTION = true;
+
+  if (THERAPIST_UNDER_CONSTRUCTION) {
+    return null;
+  }
+
   const [hideMobileDock, setHideMobileDock] = useState(false);
 
   // Mobile draggable dock position (Y axis)

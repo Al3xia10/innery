@@ -1,4 +1,3 @@
-// app/client/progress/components/PillToggle.tsx
 "use client";
 
 import React from "react";
@@ -16,15 +15,15 @@ export function PillToggle({
   onChange: (v: RangeKey) => void;
 }) {
   return (
-    <div className="inline-flex items-center rounded-full border border-white/60 bg-white/50 backdrop-blur p-1 shadow-sm">
+    <div className="inline-flex items-center rounded-full border border-black/5 bg-white p-1 shadow-sm">
       <button
         type="button"
         onClick={() => onChange("7")}
         className={cn(
           "rounded-full px-3 py-1.5 text-xs font-semibold transition",
           value === "7"
-            ? "bg-indigo-600/90 text-white shadow-sm"
-            : "text-gray-700 hover:bg-white/80"
+            ? "bg-indigo-600 text-white shadow-sm"
+            : "text-gray-700 hover:bg-gray-100"
         )}
       >
         7 zile
@@ -35,8 +34,8 @@ export function PillToggle({
         className={cn(
           "rounded-full px-3 py-1.5 text-xs font-semibold transition",
           value === "30"
-            ? "bg-indigo-600/90 text-white shadow-sm"
-            : "text-gray-700 hover:bg-white/80"
+            ? "bg-indigo-600 text-white shadow-sm"
+            : "text-gray-700 hover:bg-gray-100"
         )}
       >
         30 zile

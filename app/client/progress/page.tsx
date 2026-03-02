@@ -353,7 +353,11 @@ export default function ProgressPage() {
                 {/* GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SoftCard
-            className="lg:col-span-2"
+            className="lg:col-span-2 rounded-3xl border border-black/5 shadow-sm"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+            }}
             title={
               range === "7"
                 ? "Cum a fost ultima săptămână, per ansamblu"

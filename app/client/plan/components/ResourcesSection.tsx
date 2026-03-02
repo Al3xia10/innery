@@ -6,7 +6,13 @@ import { cn, toNiceDate } from "../lib/goalTypes";
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl p-5 sm:p-6 shadow-sm">
+    <div
+      className="rounded-[28px] border border-black/5 shadow-sm p-5 sm:p-6"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+      }}
+    >
       {children}
     </div>
   );
@@ -44,13 +50,16 @@ function EmptyState({
   onClick: () => void;
 }) {
   return (
-    <div className="mt-5 rounded-3xl border border-dashed border-gray-200 bg-white/60 p-8 text-center">
+    <div
+      className="mt-5 bg-white/70 rounded-3xl border border-dashed border-black/10 p-8 text-center"
+      
+    >
       <p className="text-sm font-semibold text-gray-900">{title}</p>
       <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
       <button
         type="button"
         onClick={onClick}
-        className="mt-4 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+        className="mt-4 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
       >
         {cta}
       </button>
@@ -69,7 +78,13 @@ function ResourceRow({ res }: { res: Resource }) {
       : "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100";
 
   return (
-    <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm">
+    <div
+      className="rounded-2xl border border-black/5 p-4 shadow-sm"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+      }}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{res.title}</p>
@@ -121,7 +136,14 @@ export default function ResourcesSection({
       {loading ? (
         <div className="mt-5 space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="animate-pulse rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm">
+            <div
+              key={i}
+              className="animate-pulse rounded-2xl border border-black/5 p-4 shadow-sm"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+              }}
+            >
               <div className="h-4 w-1/2 rounded bg-gray-200" />
               <div className="mt-2 h-3 w-2/3 rounded bg-gray-100" />
               <div className="mt-3 h-3 w-1/4 rounded bg-gray-200" />

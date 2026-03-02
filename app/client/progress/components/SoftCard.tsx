@@ -1,4 +1,3 @@
-// app/client/progress/components/SoftCard.tsx
 "use client";
 
 import React from "react";
@@ -13,19 +12,22 @@ export function SoftCard({
   right,
   children,
   className,
+  style,
 }: {
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
     <section
       className={cn(
-        "rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl p-6 sm:p-7 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+        "rounded-3xl border border-black/5 bg-white p-6 sm:p-7 shadow-sm",
         className
       )}
+      style={style}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>

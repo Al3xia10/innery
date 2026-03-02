@@ -28,8 +28,12 @@ export default function JournalEntryCard({
 }) {
   return (
     <article
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+      }}
       className={cn(
-        "relative overflow-hidden rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+        "relative overflow-hidden rounded-3xl border border-black/5 p-6 shadow-sm",
         e.visibility === "private"
           ? "before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-linear-to-b before:from-gray-300 before:to-transparent before:content-['']"
           : "before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-linear-to-b before:from-indigo-400 before:to-transparent before:content-['']"
@@ -63,7 +67,7 @@ export default function JournalEntryCard({
               key={t}
               type="button"
               onClick={() => onToggleTag(t)}
-              className="rounded-full border border-white/60 bg-white/70 px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+              className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
             >
               #{t}
             </button>
@@ -75,7 +79,7 @@ export default function JournalEntryCard({
         <button
           type="button"
           onClick={() => onOpen(e)}
-          className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/60 bg-white/70 px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+          className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 transition"
         >
           Continuă
         </button>

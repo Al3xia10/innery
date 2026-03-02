@@ -14,14 +14,19 @@ export function ProgressHeader({
   setRange: (v: RangeKey) => void;
 }) {
   return (
-    <header className="rounded-4xl border border-white/60 bg-white/70 backdrop-blur-xl shadow-sm overflow-hidden">
-      <div className="relative px-6 py-7 sm:px-10 sm:py-10">
-        <div className="absolute inset-0 bg-linear-to-br from-white/50 to-white/10" />
+    <header
+      className="rounded-3xl border border-black/5 shadow-sm overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+      }}
+    >
+      <div className="mx-auto max-w-6xl px-6 lg:px-8 py-8 space-y-8">
 
         <div className="relative flex flex-col gap-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm">
                 <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
                 Progress
               </div>
@@ -34,9 +39,9 @@ export function ProgressHeader({
                 Aici nu urmărim perfecțiune. Urmărim să te înțelegi. Numerele sunt doar repere — contextul e mai important.
               </p>
 
-              <div className="mt-4 rounded-[22px] border border-white/60 bg-white/60 backdrop-blur p-5">
+              <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-5">
                 <p className="text-sm font-semibold text-gray-900">Un reminder mic</p>
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/60 px-3 py-1 text-xs font-semibold text-gray-700">
+                <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                   E normal ca starea să fie în valuri. Progresul nu e o linie dreaptă.
                 </div>

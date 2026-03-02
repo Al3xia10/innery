@@ -13,7 +13,7 @@ function TagChip({ tag, active, onClick }: { tag: string; active: boolean; onCli
         "inline-flex snap-start items-center rounded-full border px-3 py-1 text-xs font-semibold shadow-sm transition",
         active
           ? "border-indigo-200 bg-indigo-50 text-indigo-800"
-          : "border-white/60 bg-white/70 text-gray-700 hover:bg-white hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
       )}
     >
       {tag === "all" ? "Toate" : `#${tag}`}
@@ -41,15 +41,20 @@ export default function JournalHeader({
   openNewEntry: () => void;
 }) {
   return (
-    <header className="rounded-4xl border border-white/60 bg-white/70 backdrop-blur-xl shadow-sm overflow-hidden">
-      <div className="relative px-6 py-7 sm:px-10 sm:py-10">
-        <div className="absolute inset-0 bg-linear-to-br from-white/50 to-white/10" />
+    <header
+      className="rounded-3xl border border-black/5 shadow-sm overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+      }}
+    >
+     <div className="mx-auto max-w-6xl px-6 lg:px-8 py-8 space-y-8">
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-              Spațiul tău de jurnal
-            </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                Spatiul tau de jurnal
+              </div>
             <h1 className="mt-3 text-2xl sm:text-3xl font-semibold text-gray-900">
               Jurnalul tău, în ritmul tău
             </h1>
@@ -68,7 +73,7 @@ export default function JournalHeader({
             </button>
             <Link
               href="/client"
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/60 bg-white/70 px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 transition"
             >
               Înapoi la Azi
             </Link>
@@ -77,7 +82,7 @@ export default function JournalHeader({
 
         {/* Tabs */}
         <div className="relative mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="inline-flex items-center rounded-full border border-white/60 bg-white/70 backdrop-blur p-1 shadow-sm w-full sm:w-auto">
+          <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-sm w-full sm:w-auto">
             <button
               type="button"
               onClick={() => {
@@ -86,7 +91,7 @@ export default function JournalHeader({
               }}
               className={cn(
                 "flex-1 sm:flex-none rounded-full px-3 py-2 text-xs font-semibold transition",
-                tab === "private" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"
+                tab === "private" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100"
               )}
             >
               Privat
@@ -99,7 +104,7 @@ export default function JournalHeader({
               }}
               className={cn(
                 "flex-1 sm:flex-none rounded-full px-3 py-2 text-xs font-semibold transition",
-                tab === "shared" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"
+                tab === "shared" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100"
               )}
             >
               Pentru ședință
@@ -124,14 +129,14 @@ export default function JournalHeader({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Caută în jurnal…"
-              className="w-full rounded-full border border-white/60 bg-white/80 pl-5 pr-12 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-full border border-gray-200 bg-white pl-5 pr-12 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               aria-label="Caută în jurnal"
             />
             {query.trim() ? (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/80 text-gray-600 shadow-sm hover:bg-white transition"
+                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm hover:bg-gray-50 transition"
                 aria-label="Golește căutarea"
                 title="Golește"
               >

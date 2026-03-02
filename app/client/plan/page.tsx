@@ -341,7 +341,7 @@ export default function PlanPage() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-8">
+    <section className="mx-auto max-w-6xl px-6 lg:px-8 py-8 space-y-8">
       {error ? (
         <div className="rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-3 text-sm text-rose-800">
           {error}
@@ -385,44 +385,6 @@ export default function PlanPage() {
 
         <div className="space-y-6">
           <ResourcesSection loading={loading} resources={resources} onAdd={addResource} />
-
-          <div
-            className="rounded-[28px] border border-white/60 bg-white/60 p-5 shadow-sm"
-            style={{
-              background:
-                "radial-gradient(circle at 20% 10%, rgba(99,102,241,0.18), rgba(236,72,153,0.10), rgba(255,255,255,0.65))",
-            }}
-          >
-            <p className="text-sm font-semibold text-gray-900">Pasul de azi</p>
-            <p className="mt-1 text-sm text-gray-700/90 leading-relaxed">
-              Dacă totul pare mult, alege <span className="font-semibold">un singur lucru</span>: 1 minut respirație,
-              3 rânduri în jurnal, sau un exercițiu mic din listă.
-            </p>
-
-            <div className="mt-4 flex flex-col gap-3">
-              <Link
-                href="/client/today"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
-              >
-                Mergi la Today
-              </Link>
-
-              <Link
-                href="/client/progress"
-                className="inline-flex items-center justify-center rounded-xl border border-white/60 bg-white/70 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
-              >
-                Vezi progresul
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-[28px] border border-white/60 bg-white/60 p-5 shadow-sm">
-            <p className="text-sm font-semibold text-gray-900">Notă</p>
-            <p className="mt-1 text-sm text-gray-600 leading-relaxed">
-              Pagina e legată de backend prin <span className="font-semibold text-gray-800">/api/client/plan</span>.
-              Dacă unele secțiuni sunt goale, înseamnă că încă nu ai obiective/exerciții/resurse setate.
-            </p>
-          </div>
         </div>
       </div>
 

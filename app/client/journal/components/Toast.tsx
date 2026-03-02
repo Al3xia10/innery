@@ -16,7 +16,7 @@ export default function Toast({
     <div
       role="status"
       className={cn(
-        "fixed right-4 top-4 z-90 w-[min(92vw,380px)] rounded-2xl border bg-white/90 backdrop-blur shadow-lg p-4",
+        "fixed right-4 top-4 z-90 w-[min(92vw,380px)] rounded-2xl border border-black/5 bg-white shadow-lg p-4",
         kind === "error"
           ? "border-rose-200"
           : kind === "success"
@@ -44,7 +44,7 @@ export default function Toast({
         <button
           type="button"
           onClick={onClose}
-          className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-xl hover:bg-gray-100 transition"
+          className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 transition"
           aria-label="Închide"
           title="Închide"
         >

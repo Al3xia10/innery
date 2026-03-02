@@ -12,7 +12,13 @@ export function MinuteCard({
   setOpen: (v: boolean) => void;
 }) {
   return (
-    <section className="rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl shadow-sm overflow-hidden">
+    <section
+      className="rounded-3xl border border-black/5 shadow-sm overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+      }}
+    >
       <div className="flex items-center justify-between gap-3 p-6 sm:p-7">
         <div>
           <p className="text-sm font-semibold text-gray-900">Un minut pentru tine</p>
@@ -21,7 +27,7 @@ export function MinuteCard({
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="shrink-0 inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white/70 px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-white transition"
+          className="shrink-0 inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
         >
           {open ? "Ascunde" : "Deschide"}
         </button>
@@ -29,7 +35,7 @@ export function MinuteCard({
 
       {open ? (
         <div className="px-6 pb-6 sm:px-7 sm:pb-7">
-          <div className="rounded-2xl border border-white/60 bg-white/60 backdrop-blur p-5">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5">
             <p className="text-sm text-gray-700">
               Dacă vrei: inspiră 4 secunde, ține 4, expiră 6 — de 3 ori.
             </p>
@@ -49,7 +55,7 @@ export function MinuteCard({
         </div>
       ) : (
         <div className="px-6 pb-6 sm:px-7 sm:pb-7">
-          <div className="rounded-2xl border border-white/60 bg-white/50 backdrop-blur p-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
             <p className="text-sm text-gray-700">
               Uneori e suficient să te oprești o clipă. Dacă vrei, deschide când ai spațiu.
             </p>

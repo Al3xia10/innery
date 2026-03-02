@@ -46,12 +46,16 @@ export default function ConfirmDialog({
       <button
         type="button"
         aria-label="Close dialog"
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/30"
         onClick={onCancel}
       />
       <div
         ref={panelRef}
-        className="relative w-full max-w-md rounded-[28px] border border-white/60 bg-white/85 backdrop-blur-xl shadow-xl"
+        className="relative w-full max-w-md rounded-3xl border border-black/5 shadow-xl"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+        }}
       >
         <div className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
@@ -62,7 +66,7 @@ export default function ConfirmDialog({
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-xl border border-white/70 bg-white/70 px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 transition"
             >
               Închide
             </button>
@@ -82,7 +86,7 @@ export default function ConfirmDialog({
             <button
               type="button"
               onClick={onCancel}
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/60 bg-white/70 px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 transition"
             >
               {cancelText}
             </button>

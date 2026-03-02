@@ -32,7 +32,10 @@ export default function GoalCard({
         : "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100";
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm">
+    <div
+      className="relative bg-white/70 overflow-hidden rounded-2xl border border-black/5 shadow-sm p-4"
+      
+    >
       <div className={cn("absolute left-0 top-0 h-full w-1.5 bg-linear-to-b", accent)} aria-hidden="true" />
 
       <div className="pl-2.5 flex items-start justify-between gap-4">
@@ -48,7 +51,7 @@ export default function GoalCard({
           </span>
 
           <div className="w-28">
-            <div className="h-2 rounded-full bg-white/60 overflow-hidden">
+            <div className="h-2 rounded-full bg-black/5 overflow-hidden">
               <div
                 className="h-full rounded-full"
                 style={{
@@ -68,7 +71,7 @@ export default function GoalCard({
               <button
                 type="button"
                 onClick={onEdit}
-                className="text-xs font-semibold text-indigo-700 hover:text-indigo-800 transition"
+                className="text-xs font-semibold text-indigo-700 hover:text-indigo-700/80 transition"
               >
                 Editează
               </button>
@@ -78,7 +81,7 @@ export default function GoalCard({
               <button
                 type="button"
                 onClick={onDelete}
-                className="inline-flex items-center justify-center rounded-lg border border-white/60 bg-white/70 px-2 py-1 text-xs font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+                className="inline-flex items-center justify-center rounded-lg border border-black/10 bg-white/80 px-2 py-1 text-xs font-semibold text-gray-800 shadow-sm hover:bg-white transition"
                 aria-label="Șterge"
                 title="Șterge"
               >
