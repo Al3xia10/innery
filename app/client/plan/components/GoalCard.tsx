@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { Goal } from "../lib/goalTypes";
-import { cn, toNiceDate } from "../lib/goalTypes";
+import { cn } from "../lib/goalTypes";
 
 export default function GoalCard({
   goal,
@@ -19,59 +19,73 @@ export default function GoalCard({
 
   const accent =
     tone === "active"
-      ? "from-indigo-500/60 to-pink-500/40"
+      ? "before:absolute before:left-5 before:right-5 before:top-0 before:h-px before:bg-[linear-gradient(90deg,rgba(239,208,202,0.8),transparent)] before:content-['']"
       : tone === "paused"
-        ? "from-gray-400/50 to-gray-200/30"
-        : "from-emerald-500/45 to-emerald-200/20";
+        ? "before:absolute before:left-5 before:right-5 before:top-0 before:h-px before:bg-[linear-gradient(90deg,rgba(125,128,218,0.75),transparent)] before:content-['']"
+        : "before:absolute before:left-5 before:right-5 before:top-0 before:h-px before:bg-[linear-gradient(90deg,rgba(16,185,129,0.7),transparent)] before:content-['']";
 
   const badge =
     goal.status === "Activ"
-      ? "bg-indigo-50 text-indigo-800 ring-1 ring-indigo-100"
+      ? "border-[#ead7df] bg-[#fff9fb] text-[#7d5d6c]"
       : goal.status === "În pauză"
-        ? "bg-gray-100 text-gray-800 ring-1 ring-gray-200"
-        : "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100";
+        ? "border-[#dcdcf8] bg-[#f5f4ff] text-[#676cc8]"
+        : "border-[#cdeee2] bg-[#f3fbf7] text-[#2f7a63]";
 
   return (
     <div
-      className="relative bg-white/70 overflow-hidden rounded-2xl border border-black/5 shadow-sm p-4"
-      
+      className={cn(
+        "relative overflow-hidden rounded-[30px] border border-black/5 p-4 shadow-[0_12px_30px_rgba(31,23,32,0.06)] sm:px-5 sm:py-4.5",
+        accent
+      )}
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,249,251,0.98) 100%)",
+      }}
     >
-      <div className={cn("absolute left-0 top-0 h-full w-1.5 bg-linear-to-b", accent)} aria-hidden="true" />
-
-      <div className="pl-2.5 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{goal.title}</p>
-          {goal.subtitle ? <p className="mt-0.5 text-sm text-gray-600 truncate">{goal.subtitle}</p> : null}
-          <p className="mt-2 text-xs text-gray-500">Actualizat {toNiceDate(goal.updatedAt)}</p>
+      <div className="flex items-start justify-between gap-5">
+        <div className="min-w-0 flex-1 pr-2">
+          <p className="truncate text-[1.08rem] font-semibold tracking-tight text-foreground">{goal.title}</p>
+          {goal.subtitle ? (
+            <p className="mt-1 line-clamp-2 text-[15px] leading-7 text-(--color-foreground-muted,#6B5A63)">{goal.subtitle}</p>
+          ) : null}
         </div>
 
-        <div className="shrink-0 flex flex-col items-end gap-2">
-          <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold", badge)}>
+        <div className="shrink-0 flex w-31 flex-col items-end gap-2">
+          <span className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] uppercase shadow-[0_3px_8px_rgba(31,23,32,0.04)]", badge)}>
             {goal.status}
           </span>
 
-          <div className="w-28">
-            <div className="h-2 rounded-full bg-black/5 overflow-hidden">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${Math.min(100, Math.max(0, progress))}%`,
-                  background:
-                    tone === "done"
-                      ? "linear-gradient(90deg, rgba(16,185,129,0.65), rgba(16,185,129,0.25))"
-                      : "linear-gradient(90deg, rgba(99,102,241,0.70), rgba(236,72,153,0.35))",
-                }}
-              />
+          <div className="w-full pt-0.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="h-2.5 flex-1 rounded-full bg-black/5 overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, progress))}%`,
+                    background:
+                      tone === "done"
+                        ? "linear-gradient(90deg, rgba(16,185,129,0.75), rgba(16,185,129,0.35))"
+                        : "linear-gradient(90deg, rgba(239,208,202,0.9), rgba(125,128,218,0.45))",
+                  }}
+                />
+              </div>
+              <p className="text-[11px] font-medium text-(--color-foreground-muted,#6B5A63) tabular-nums">
+                {progress}%
+              </p>
             </div>
-            <p className="mt-1 text-[11px] text-gray-500 text-right tabular-nums">{progress}%</p>
           </div>
+        </div>
+      </div>
 
-          <div className="mt-1 flex items-center gap-2">
+      {(onEdit || onDelete) ? (
+        <>
+          <div className="mt-4 h-px w-full bg-[linear-gradient(90deg,rgba(31,23,32,0.08),transparent)]" />
+          <div className="mt-4 flex items-center gap-2.5">
             {onEdit ? (
               <button
                 type="button"
                 onClick={onEdit}
-                className="text-xs font-semibold text-indigo-700 hover:text-indigo-700/80 transition"
+                className="inline-flex items-center justify-center rounded-full border border-black/5 bg-white px-3 py-1.5 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-black/5 hover:text-foreground"
               >
                 Editează
               </button>
@@ -81,16 +95,16 @@ export default function GoalCard({
               <button
                 type="button"
                 onClick={onDelete}
-                className="inline-flex items-center justify-center rounded-lg border border-black/10 bg-white/80 px-2 py-1 text-xs font-semibold text-gray-800 shadow-sm hover:bg-white transition"
+                className="inline-flex items-center justify-center rounded-full border border-black/5 bg-white px-3 py-1.5 text-[11px] font-semibold text-[#8A7B83] shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-black/5 hover:text-foreground"
                 aria-label="Șterge"
                 title="Șterge"
               >
-                🗑️
+                Șterge
               </button>
             ) : null}
           </div>
-        </div>
-      </div>
+        </>
+      ) : null}
     </div>
   );
 }

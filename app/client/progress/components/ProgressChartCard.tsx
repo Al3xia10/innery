@@ -99,21 +99,21 @@ export function ProgressChartCard({
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="h-4 w-40 rounded bg-gray-200/60 animate-pulse" />
-        <div className="h-40 w-full rounded-2xl bg-gray-200/60 animate-pulse" />
-        <div className="h-3 w-64 rounded bg-gray-200/60 animate-pulse" />
+        <div className="h-4 w-40 rounded bg-(--color-soft)/60 animate-pulse" />
+        <div className="h-40 w-full rounded-3xl bg-(--color-soft)/50 animate-pulse" />
+        <div className="h-3 w-64 rounded bg-(--color-soft)/55 animate-pulse" />
       </div>
     );
   }
 
   if (empty) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-5">
-        <p className="text-sm font-semibold text-gray-900">Încă nu avem suficiente repere</p>
-        <p className="mt-1 text-sm text-gray-600">{hint}</p>
+      <div className="rounded-[26px] border border-dashed border-black/5 bg-white p-5 shadow-[0_8px_20px_rgba(31,23,32,0.04)]">
+        <p className="text-sm font-semibold text-foreground">Încă nu avem suficiente repere</p>
+        <p className="mt-1 text-sm text-(--color-foreground-muted,#6B5A63)">{hint}</p>
         <Link
           href="/client"
-          className="mt-4 inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+          className="mt-4 inline-flex w-full sm:w-auto items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(184,104,152,0.24)] transition hover:opacity-95"
         >
           Dacă vrei, fă un check-in azi
         </Link>
@@ -122,19 +122,19 @@ export function ProgressChartCard({
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+    <div className="rounded-[28px] border border-black/5 bg-(--color-card) p-4 sm:p-6 shadow-[0_10px_24px_rgba(31,23,32,0.05)]">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-gray-900">{label}</p>
+        <p className="text-[15px] font-semibold tracking-tight text-foreground">{label}</p>
 
         {hover ? (
-          <div className="hidden sm:flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+          <div className="hidden sm:flex items-center gap-2 rounded-full border border-black/5 bg-white px-3 py-1 text-xs font-semibold text-foreground shadow-[0_4px_12px_rgba(31,23,32,0.05)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-(--color-primary)" />
             {Math.round(hover.v * 10) / 10}
           </div>
         ) : null}
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-3xl bg-white ring-1 ring-black/5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="block h-44 sm:h-56 w-full"
@@ -144,8 +144,8 @@ export function ProgressChartCard({
         >
           <defs>
             <linearGradient id="inneryArea" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgb(99 102 241)" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="rgb(255 255 255)" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.10" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
             </linearGradient>
           </defs>
 
@@ -159,7 +159,7 @@ export function ProgressChartCard({
                 x2={padX + innerW}
                 y1={y}
                 y2={y}
-                stroke="rgba(17,24,39,0.06)"
+                stroke="rgba(125,128,218,0.08)"
                 strokeWidth="1"
               />
             );
@@ -175,8 +175,8 @@ export function ProgressChartCard({
                 key={`l_${i}`}
                 d={d}
                 fill="none"
-                stroke="rgb(99 102 241)"
-                strokeWidth="3"
+                stroke="var(--color-primary)"
+                strokeWidth="3.5"
                 strokeLinecap="round"
               />
             ) : null
@@ -189,13 +189,13 @@ export function ProgressChartCard({
                 cx={mainSeg[mainSeg.length - 1].x}
                 cy={mainSeg[mainSeg.length - 1].y}
                 r={7}
-                fill="rgba(255,255,255,0.9)"
+                fill="rgba(255,255,255,0.96)"
               />
               <circle
                 cx={mainSeg[mainSeg.length - 1].x}
                 cy={mainSeg[mainSeg.length - 1].y}
                 r={4}
-                fill="rgba(99,102,241,0.9)"
+                fill="var(--color-primary)"
               />
             </g>
           ) : null}
@@ -215,7 +215,7 @@ export function ProgressChartCard({
                 cx={p.x}
                 cy={p.y}
                 r={2.5}
-                fill={hover?.idx === p.idx ? "rgb(99 102 241)" : "rgba(99,102,241,0.45)"}
+                fill={hover?.idx === p.idx ? "var(--color-primary)" : "rgba(125,128,218,0.42)"}
               />
             </g>
           ))}
@@ -231,9 +231,9 @@ export function ProgressChartCard({
                   height="36"
                   rx="12"
                   fill="rgba(255,255,255,0.92)"
-                  stroke="rgba(17,24,39,0.10)"
+                  stroke="rgba(31,23,32,0.12)"
                 />
-                <text x="12" y="22" fontSize="12" fill="rgba(17,24,39,0.78)" fontWeight="600">
+                <text x="12" y="22" fontSize="12" fill="rgba(31,23,32,0.82)" fontWeight="600">
                   {label}: {Math.round(hover.v * 10) / 10}
                 </text>
               </g>
@@ -242,7 +242,7 @@ export function ProgressChartCard({
         </svg>
       </div>
 
-      <p className="mt-3 text-xs text-gray-500">
+      <p className="mt-3 text-[12px] leading-6 text-(--color-foreground-muted,#6B5A63)">
         Un detaliu mic: uită-te la perioadă, nu la o singură zi. Dacă vrei, notează contextul (somn, stres, oameni) în jurnal.
       </p>
     </div>

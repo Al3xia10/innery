@@ -1,30 +1,68 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 
 import PlanHeader from "./components/PlanHeader";
 import GoalsSection from "./components/GoalsSection";
 import GoalModal from "./components/GoalModal";
 import ExercisesSection from "./components/ExercisesSection";
-import ResourcesSection from "./components/ResourcesSection";
 
-import type { Goal, Exercise, Resource, GoalStatus } from "./lib/goalTypes";
+
+import type { Goal, Exercise, GoalStatus } from "./lib/goalTypes";
 import { uid, apiStatusToUi, mapApiGoalToGoal, pickUpdatedAt } from "./lib/goalTypes";
+
+const EXERCISES_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+
+function buildExercisesUrl(path: string) {
+  return new URL(path, EXERCISES_API_BASE).toString();
+}
+
+function isJwtExpired(token: string) {
+  try {
+    const payloadPart = token.split(".")[1];
+    if (!payloadPart) return true;
+
+    const payload = JSON.parse(atob(payloadPart));
+    if (!payload?.exp) return false;
+
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp <= now;
+  } catch {
+    return true;
+  }
+}
+
+function getStoredAccessToken() {
+  if (typeof window === "undefined") return null;
+
+  const preferredKeys = [
+    "innery_access_token_client",
+    "innery_access_token",
+    "innery_accessToken",
+    "token",
+    "accessToken",
+    "access_token",
+    "authToken",
+    "jwt",
+  ];
+
+  for (const key of preferredKeys) {
+    const value = window.localStorage.getItem(key);
+    if (value && typeof value === "string" && !isJwtExpired(value)) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+type ExerciseWithDone = Exercise & { done?: boolean };
 import { fetchPlan, fetchGoalsList, createGoal, updateGoal, deleteGoal as apiDeleteGoal } from "./lib/goalApi";
 
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl p-5 sm:p-6 shadow-sm">
-      {children}
-    </div>
-  );
-}
 
 export default function PlanPage() {
   const [goals, setGoals] = React.useState<Goal[]>([]);
-  const [exercises, setExercises] = React.useState<Exercise[]>([]);
-  const [resources, setResources] = React.useState<Resource[]>([]);
+  const [exercises, setExercises] = React.useState<ExerciseWithDone[]>([]);
 
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -36,6 +74,12 @@ export default function PlanPage() {
   const [goalDraftProgress, setGoalDraftProgress] = React.useState<number>(0);
   const [goalDraftStatus, setGoalDraftStatus] = React.useState<GoalStatus>("Activ");
   const [editingGoalId, setEditingGoalId] = React.useState<string | null>(null);
+  const [exerciseModalOpen, setExerciseModalOpen] = React.useState(false);
+  const [exerciseDraftTitle, setExerciseDraftTitle] = React.useState("");
+  const [exerciseDraftKind, setExerciseDraftKind] = React.useState<"Exercițiu" | "Rutină">("Exercițiu");
+  const [exerciseDraftMinutes, setExerciseDraftMinutes] = React.useState<number>(5);
+  const [exerciseDraftNote, setExerciseDraftNote] = React.useState("");
+  const [addingExercise, setAddingExercise] = React.useState(false);
 
   const closeGoalModal = React.useCallback(() => {
     setGoalModalOpen(false);
@@ -44,9 +88,36 @@ export default function PlanPage() {
     setGoalDraftProgress(0);
     setGoalDraftStatus("Activ");
   }, []);
+    function closeExerciseModal() {
+    setExerciseModalOpen(false);
+    setExerciseDraftTitle("");
+    setExerciseDraftKind("Exercițiu");
+    setExerciseDraftMinutes(5);
+    setExerciseDraftNote("");
+  }
+
+  function openCreateExerciseModal() {
+    setExerciseDraftTitle("");
+    setExerciseDraftKind("Exercițiu");
+    setExerciseDraftMinutes(5);
+    setExerciseDraftNote("");
+    setExerciseModalOpen(true);
+  }
 
   const loadPlan = React.useCallback(async () => {
-    const [data, listGoalsResult] = await Promise.all([fetchPlan(), fetchGoalsList()]);
+    const token = getStoredAccessToken();
+
+const [data, listGoalsResult, exercisesRes] = await Promise.all([
+  fetchPlan(),
+  fetchGoalsList(),
+  fetch(buildExercisesUrl("/api/client/exercises"), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }),
+]);
+
+const exercisesJson = await exercisesRes.json();
 
     setGoalsListSupported(listGoalsResult.supported);
 
@@ -83,80 +154,18 @@ export default function PlanPage() {
       setGoals(mappedNextGoals);
     }
 
-    const nextExercises: Exercise[] = Array.isArray((plan as any)?.exercises)
-      ? (plan as any).exercises.map((e: any) => ({
-          id: String(e?.id ?? uid("e")),
-          title: String(e?.title ?? "Exercițiu"),
-          kind:
-            e?.kind === "Experiment" || e?.kind === "Rutină" || e?.kind === "Exercițiu"
-              ? e.kind
-              : "Exercițiu",
-          minutes: typeof e?.minutes === "number" ? e.minutes : undefined,
-          note: typeof e?.note === "string" ? e.note : undefined,
-        }))
-      : Array.isArray((data as any)?.exercises)
-      ? (data as any).exercises.map((e: any) => ({
-          id: String(e?.id ?? uid("e")),
-          title: String(e?.title ?? "Exercițiu"),
-          kind:
-            e?.kind === "Experiment" || e?.kind === "Rutină" || e?.kind === "Exercițiu"
-              ? e.kind
-              : "Exercițiu",
-          minutes: typeof e?.minutes === "number" ? e.minutes : undefined,
-          note: typeof e?.note === "string" ? e.note : undefined,
-        }))
-      : [];
-
-    const nextResources: Resource[] = Array.isArray((plan as any)?.resources)
-      ? (plan as any).resources.map((r: any) => {
-          const added =
-            (typeof r?.addedAt === "string" && r.addedAt) ||
-            (typeof r?.added_at === "string" && r.added_at) ||
-            (typeof r?.createdAt === "string" && r.createdAt) ||
-            (typeof r?.created_at === "string" && r.created_at) ||
-            new Date().toISOString();
-
-          const type: Resource["type"] =
-            r?.type === "PDF" || r?.type === "Link" || r?.type === "Audio" || r?.type === "Fișă"
-              ? r.type
-              : "Link";
-
-          return {
-            id: String(r?.id ?? uid("r")),
-            title: String(r?.title ?? "Resursă"),
-            type,
-            description: typeof r?.description === "string" ? r.description : undefined,
-            href: typeof r?.href === "string" ? r.href : undefined,
-            addedAt: added,
-          };
-        })
-      : Array.isArray((data as any)?.resources)
-      ? (data as any).resources.map((r: any) => {
-          const added =
-            (typeof r?.addedAt === "string" && r.addedAt) ||
-            (typeof r?.added_at === "string" && r.added_at) ||
-            (typeof r?.createdAt === "string" && r.createdAt) ||
-            (typeof r?.created_at === "string" && r.created_at) ||
-            new Date().toISOString();
-
-          const type: Resource["type"] =
-            r?.type === "PDF" || r?.type === "Link" || r?.type === "Audio" || r?.type === "Fișă"
-              ? r.type
-              : "Link";
-
-          return {
-            id: String(r?.id ?? uid("r")),
-            title: String(r?.title ?? "Resursă"),
-            type,
-            description: typeof r?.description === "string" ? r.description : undefined,
-            href: typeof r?.href === "string" ? r.href : undefined,
-            addedAt: added,
-          };
-        })
-      : [];
+    const nextExercises: ExerciseWithDone[] = Array.isArray(exercisesJson?.exercises)
+  ? exercisesJson.exercises.map((e: any) => ({
+      id: String(e.id),
+      title: e.title,
+      kind: e.kind,
+      minutes: e.minutes ?? undefined,
+      note: e.note ?? undefined,
+      done: e.done,
+    }))
+  : [];
 
     setExercises(nextExercises);
-    setResources(nextResources);
   }, []);
 
   React.useEffect(() => {
@@ -317,28 +326,154 @@ export default function PlanPage() {
     }
   }
 
-  function addExercise() {
-    const next: Exercise = {
-      id: uid("e"),
-      title: "Exercițiu nou (local)",
-      kind: "Exercițiu",
-      minutes: 5,
-      note: "Completează când ești gata.",
-    };
-    setExercises((prev) => [next, ...prev]);
+    async function addExercise() {
+    const title = exerciseDraftTitle.trim();
+
+    if (!title) {
+      setError("Te rog scrie un titlu pentru exercițiu.");
+      return;
+    }
+
+    try {
+      setAddingExercise(true);
+      setError(null);
+
+      const token = getStoredAccessToken();
+      console.log("Using token:", token);
+
+      if (!token) {
+        setError("Sesiunea a expirat. Te rog reconectează-te.");
+        return;
+      }
+
+      const res = await fetch(buildExercisesUrl("/api/client/exercises"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title,
+          kind: exerciseDraftKind,
+          minutes: exerciseDraftMinutes,
+          note: exerciseDraftNote.trim() || undefined,
+        }),
+      });
+
+      if (res.status === 401) {
+        setError("Sesiunea a expirat. Te rog reconectează-te.");
+        return;
+      }
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(typeof json?.message === "string" ? json.message : "Nu am putut crea exercițiul.");
+      }
+
+      if (json?.exercise) {
+        const e = json.exercise;
+        const mapped: ExerciseWithDone = {
+          id: String(e.id),
+          title: e.title,
+          kind: e.kind,
+          minutes: e.minutes ?? undefined,
+          note: e.note ?? undefined,
+          done: e.done,
+        };
+
+        setExercises((prev) => [mapped, ...prev]);
+      }
+
+      closeExerciseModal();
+    } catch (e) {
+      console.error("Add exercise error", e);
+      setError("Nu am putut crea exercițiul.");
+    } finally {
+      setAddingExercise(false);
+    }
   }
 
-  function addResource() {
-    const next: Resource = {
-      id: uid("r"),
-      title: "Resursă nouă (local)",
-      type: "Link",
-      description: "Adaugă un link sau o fișă de lucru.",
-      href: "#",
-      addedAt: new Date().toISOString(),
-    };
-    setResources((prev) => [next, ...prev]);
+  async function handleToggleExerciseDone(id: number) {
+    const prev = exercises;
+
+    setExercises((exs) =>
+      exs.map((e) =>
+        Number(e.id) === id ? { ...e, done: !e.done } : e
+      )
+    );
+
+    try {
+      const target = prev.find((e) => Number(e.id) === id);
+      if (!target) return;
+
+      const token = getStoredAccessToken();
+      console.log("toggle token found:", token);
+
+      if (!token) {
+        throw new Error("Nu am găsit token-ul clientului în browser.");
+      }
+
+      console.log("PATCH exercise URL:", buildExercisesUrl(`/api/client/exercises/${id}`));
+      const res = await fetch(buildExercisesUrl(`/api/client/exercises/${id}`), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ done: !target.done }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(
+          typeof json?.message === "string"
+            ? json.message
+            : "Nu am putut actualiza exercițiul."
+        );
+      }
+    } catch (e) {
+      console.error("Toggle exercise error", e);
+      setExercises(prev);
+      setError("Nu am putut actualiza exercițiul.");
+    }
   }
+
+  async function deleteExercise(id: number) {
+    const ok = window.confirm("Ștergi exercițiul? Acțiunea nu poate fi anulată.");
+    if (!ok) return;
+
+    const prev = exercises;
+    setExercises((curr) => curr.filter((e) => Number(e.id) !== id));
+
+    try {
+      const token = getStoredAccessToken();
+      if (!token) {
+        throw new Error("Nu am găsit token-ul clientului în browser.");
+      }
+
+      const res = await fetch(buildExercisesUrl(`/api/client/exercises/${id}`), {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(
+          typeof json?.message === "string"
+            ? json.message
+            : "Nu am putut șterge exercițiul."
+        );
+      }
+    } catch (e) {
+      console.error("Delete exercise error", e);
+      setExercises(prev);
+      setError("Nu am putut șterge exercițiul.");
+    }
+  }
+
 
   return (
     <section className="mx-auto max-w-6xl px-6 lg:px-8 py-8 space-y-8">
@@ -349,12 +484,14 @@ export default function PlanPage() {
       ) : null}
 
       {loading ? (
-        <div className="rounded-3xl border border-white/60 bg-white/60 p-5 shadow-sm">
+        <div className="rounded-[28px] border border-black/5 bg-white/80 p-5 shadow-[0_6px_14px_rgba(31,23,32,0.05)]">
           <div className="flex items-center gap-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-indigo-500/70 animate-pulse" />
-            <p className="text-sm font-semibold text-gray-900">Se încarcă planul…</p>
+            <div className="h-2.5 w-2.5 rounded-full bg-(--color-accent)/70 animate-pulse" />
+            <p className="text-sm font-semibold text-foreground">Se încarcă planul…</p>
           </div>
-          <p className="mt-1 text-sm text-gray-600">Doar o clipă — adunăm obiectivele tale.</p>
+          <p className="mt-1 text-sm text-(--color-foreground-muted,#6B5A63)">
+            Doar o clipă — adunăm obiectivele tale.
+          </p>
         </div>
       ) : null}
 
@@ -366,8 +503,8 @@ export default function PlanPage() {
         onAddGoal={openCreateGoalModal}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="space-y-8">
+        <div className="space-y-8">
           <GoalsSection
             loading={loading}
             goals={goals}
@@ -380,11 +517,13 @@ export default function PlanPage() {
             onDelete={deleteGoal}
           />
 
-          <ExercisesSection loading={loading} exercises={exercises} onAdd={addExercise} />
-        </div>
-
-        <div className="space-y-6">
-          <ResourcesSection loading={loading} resources={resources} onAdd={addResource} />
+          <ExercisesSection
+            loading={loading}
+            exercises={exercises}
+            onAdd={openCreateExerciseModal}
+            onToggleDone={handleToggleExerciseDone}
+            onDelete={deleteExercise}
+          />
         </div>
       </div>
 
@@ -401,6 +540,106 @@ export default function PlanPage() {
         onChangeStatus={setGoalDraftStatus}
         onSave={saveGoalFromModal}
       />
+            {exerciseModalOpen ? (
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-[rgba(24,18,24,0.32)] px-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl overflow-hidden rounded-4xl border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(255,250,251,0.96)_100%)] shadow-[0_24px_60px_rgba(31,23,32,0.16)]">
+            <div className="flex items-start justify-between gap-4 border-b border-black/5 px-6 py-5 sm:px-7">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
+                  Exercițiu nou
+                </p>
+                <h2 className="mt-2 text-[1.45rem] font-semibold tracking-tight text-foreground sm:text-[1.7rem]">
+                  Adaugă un exercițiu
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-7 text-[#74656d]">
+                  Creează un exercițiu sau o rutină pe care vrei să o urmezi în perioada asta.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeExerciseModal}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/5 bg-white text-lg text-[#7d5d6c] shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-[#fff7fa]"
+                aria-label="Închide"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 px-6 py-6 sm:grid-cols-2 sm:px-7">
+              <label className="flex flex-col gap-2 sm:col-span-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
+                  Titlu
+                </span>
+                <input
+                  value={exerciseDraftTitle}
+                  onChange={(e) => setExerciseDraftTitle(e.target.value)}
+                  className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
+                  placeholder="De ex. Respirație 4-7-8"
+                />
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
+                  Tip
+                </span>
+                <select
+                  value={exerciseDraftKind}
+                  onChange={(e) => setExerciseDraftKind(e.target.value as "Exercițiu" | "Rutină")}
+                  className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
+                >
+                  <option value="Exercițiu">Exercițiu</option>
+                  <option value="Rutină">Rutină</option>
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
+                  Minute
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  value={exerciseDraftMinutes}
+                  onChange={(e) => setExerciseDraftMinutes(Number(e.target.value) || 0)}
+                  className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
+                />
+              </label>
+
+              <label className="flex flex-col gap-2 sm:col-span-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
+                  Notiță
+                </span>
+                <textarea
+                  value={exerciseDraftNote}
+                  onChange={(e) => setExerciseDraftNote(e.target.value)}
+                  rows={4}
+                  className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
+                  placeholder="De ex. Dimineața, după cafea."
+                />
+              </label>
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t border-black/5 px-6 py-5 sm:flex-row sm:justify-end sm:px-7">
+              <button
+                type="button"
+                onClick={closeExerciseModal}
+                className="inline-flex items-center justify-center rounded-full border border-black/5 bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-[0_6px_14px_rgba(31,23,32,0.05)] transition hover:bg-[#fffafb]"
+              >
+                Renunță
+              </button>
+              <button
+                type="button"
+                onClick={addExercise}
+                disabled={addingExercise}
+                className="inline-flex items-center justify-center rounded-full bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)] transition hover:opacity-90 disabled:opacity-50"
+              >
+                {addingExercise ? "Se salvează..." : "Salvează exercițiul"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

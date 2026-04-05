@@ -32,6 +32,7 @@ export default function JournalPage() {
 
   const DRAFT_KEY = "innery_journal_draft_v1";
   const saveTimerRef = useRef<number | null>(null);
+  const sessionStartedWithStoredDraftRef = useRef(false);
   const [draftFound, setDraftFound] = useState(false);
   const [draftSnapshot, setDraftSnapshot] = useState<{
     title: string;
@@ -41,25 +42,13 @@ export default function JournalPage() {
     savedAt: string;
   } | null>(null);
 
+  const [editorFocused, setEditorFocused] = useState(false);
+  const [draftSaveState, setDraftSaveState] = useState<"idle" | "saving" | "saved">("idle");
+
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Prevent background scroll when modal is open
-  useEffect(() => {
-    if (!modalOpen) return;
-
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-    };
-  }, [modalOpen]);
 
   // Load entries from backend
   useEffect(() => {
@@ -136,102 +125,176 @@ export default function JournalPage() {
   }, [visibleEntries, query, selectedTag]);
 
   function openNewEntry() {
+    let storedDraft: {
+      title: string;
+      content: string;
+      tags: string;
+      visibility: Visibility;
+      savedAt: string;
+    } | null = null;
+
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const snap = {
+          title: String(parsed?.title ?? ""),
+          content: String(parsed?.content ?? ""),
+          tags: String(parsed?.tags ?? ""),
+          visibility: (parsed?.visibility === "shared" ? "shared" : "private") as Visibility,
+          savedAt: String(parsed?.savedAt ?? new Date().toISOString()),
+        };
+
+        if (snap.title.trim() || snap.content.trim() || snap.tags.trim()) {
+          storedDraft = snap;
+        }
+      }
+    } catch {}
+
+    sessionStartedWithStoredDraftRef.current = Boolean(storedDraft);
+    setDraftFound(Boolean(storedDraft));
+    setDraftSnapshot(storedDraft);
     setEditingId(null);
     setDraftTitle("");
     setDraftContent("");
     setDraftTags("");
-    setDraftVisibility(tab);
+    setDraftVisibility(storedDraft ? storedDraft.visibility : tab);
     setModalOpen(true);
+    setEditorFocused(false);
+    setDraftSaveState("idle");
   }
 
   // Draft autosave (only for new notes, not when editing)
-  useEffect(() => {
-    if (!modalOpen) return;
-    if (editingId != null) return;
+useEffect(() => {
+  if (!modalOpen) {
+    setDraftSaveState("idle");
+    return;
+  }
+  if (editingId != null) {
+    setDraftSaveState("idle");
+    return;
+  }
 
-    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = window.setTimeout(() => {
-      try {
-        const payload = {
-          title: draftTitle,
-          content: draftContent,
-          tags: draftTags,
-          visibility: draftVisibility,
-          savedAt: new Date().toISOString(),
-        };
-        if (payload.title.trim() || payload.content.trim() || payload.tags.trim()) {
-          localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
-          setDraftFound(true);
-          setDraftSnapshot(payload);
-        } else {
-          localStorage.removeItem(DRAFT_KEY);
-          setDraftFound(false);
-          setDraftSnapshot(null);
-        }
-      } catch {}
-    }, 500);
+  if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
 
-    return () => {
-      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = null;
-    };
-  }, [modalOpen, editingId, draftTitle, draftContent, draftTags, draftVisibility]);
+  const hasDraftContent = Boolean(draftTitle.trim() || draftContent.trim() || draftTags.trim());
+if (!hasDraftContent) {
+  // Dacă sesiunea a început cu un draft deja salvat, nu-l ștergem automat.
+  // Îl păstrăm până când utilizatorul alege explicit:
+  // restore, discard sau save.
+  if (sessionStartedWithStoredDraftRef.current) {
+    setDraftFound(true);
+    setDraftSaveState("idle");
+    return;
+  }
 
-  // When opening the modal for a new note, check if we have a saved draft
-  useEffect(() => {
-    if (!modalOpen) return;
-    if (editingId != null) return;
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {}
+  setDraftSnapshot(null);
+  setDraftFound(false);
+  setDraftSaveState("idle");
+  return;
+}
 
+  setDraftSaveState("saving");
+
+  saveTimerRef.current = window.setTimeout(() => {
     try {
-      const raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) {
-        setDraftFound(false);
-        setDraftSnapshot(null);
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      const snap = {
-        title: String(parsed?.title ?? ""),
-        content: String(parsed?.content ?? ""),
-        tags: String(parsed?.tags ?? ""),
-        visibility: (parsed?.visibility === "shared" ? "shared" : "private") as Visibility,
-        savedAt: String(parsed?.savedAt ?? new Date().toISOString()),
+      const payload = {
+        title: draftTitle,
+        content: draftContent,
+        tags: draftTags,
+        visibility: draftVisibility,
+        savedAt: new Date().toISOString(),
       };
 
-      if (snap.title.trim() || snap.content.trim() || snap.tags.trim()) {
-        setDraftFound(true);
-        setDraftSnapshot(snap);
-      } else {
-        setDraftFound(false);
-        setDraftSnapshot(null);
-      }
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+      setDraftSnapshot(payload);
+      setDraftSaveState("saved");
     } catch {
-      setDraftFound(false);
-      setDraftSnapshot(null);
+      setDraftSaveState("idle");
     }
-  }, [modalOpen, editingId]);
+  }, 500);
 
-  const restoreDraft = () => {
-    if (!draftSnapshot) return;
-    setDraftTitle(draftSnapshot.title);
-    setDraftContent(draftSnapshot.content);
-    setDraftTags(draftSnapshot.tags);
-    setDraftVisibility(draftSnapshot.visibility);
-    setToast({ kind: "info", message: "Am restaurat draft-ul. Poți continua în ritmul tău." });
+  return () => {
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = null;
   };
+}, [modalOpen, editingId, draftTitle, draftContent, draftTags, draftVisibility]);
 
-  const discardDraft = () => {
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-    } catch {}
+  // Only when opening the editor, check if a previously unfinished draft already exists in storage.
+  // This banner should reflect an older unfinished note, not the draft created during the current session.
+useEffect(() => {
+  if (!modalOpen) {
+    sessionStartedWithStoredDraftRef.current = false;
+    return;
+  }
+  if (editingId != null) {
+    sessionStartedWithStoredDraftRef.current = false;
     setDraftFound(false);
     setDraftSnapshot(null);
-    setDraftTitle("");
-    setDraftContent("");
-    setDraftTags("");
-    setDraftVisibility(tab);
-    setToast({ kind: "info", message: "Ok — începem de la zero." });
-  };
+    return;
+  }
+
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) {
+      sessionStartedWithStoredDraftRef.current = false;
+      setDraftFound(false);
+      setDraftSnapshot(null);
+      return;
+    }
+
+    const parsed = JSON.parse(raw);
+    const snap = {
+      title: String(parsed?.title ?? ""),
+      content: String(parsed?.content ?? ""),
+      tags: String(parsed?.tags ?? ""),
+      visibility: (parsed?.visibility === "shared" ? "shared" : "private") as Visibility,
+      savedAt: String(parsed?.savedAt ?? new Date().toISOString()),
+    };
+
+    const hasStoredDraft = Boolean(snap.title.trim() || snap.content.trim() || snap.tags.trim());
+    sessionStartedWithStoredDraftRef.current = hasStoredDraft;
+    setDraftFound(hasStoredDraft);
+    setDraftSnapshot(hasStoredDraft ? snap : null);
+    if (hasStoredDraft) {
+      setDraftVisibility(snap.visibility);
+    }
+  } catch {
+    sessionStartedWithStoredDraftRef.current = false;
+    setDraftFound(false);
+    setDraftSnapshot(null);
+  }
+}, [modalOpen, editingId]);
+
+  const restoreDraft = () => {
+  if (!draftSnapshot) return;
+  sessionStartedWithStoredDraftRef.current = false;
+  setDraftTitle(draftSnapshot.title);
+  setDraftContent(draftSnapshot.content);
+  setDraftTags(draftSnapshot.tags);
+  setDraftVisibility(draftSnapshot.visibility);
+  setDraftFound(false);
+  setDraftSaveState("saved");
+  setToast({ kind: "info", message: "Am restaurat draft-ul. Poți continua în ritmul tău." });
+};
+
+  const discardDraft = () => {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {}
+  sessionStartedWithStoredDraftRef.current = false;
+  setDraftFound(false);
+  setDraftSnapshot(null);
+  setDraftTitle("");
+  setDraftContent("");
+  setDraftTags("");
+  setDraftVisibility(tab);
+  setDraftSaveState("idle");
+  setToast({ kind: "info", message: "Ok — începem de la zero." });
+};
 
   async function saveEntry() {
     if (!draftContent.trim() && !draftTitle.trim()) return;
@@ -309,8 +372,11 @@ export default function JournalPage() {
       setDraftFound(false);
       setDraftSnapshot(null);
 
+      sessionStartedWithStoredDraftRef.current = false;
       setModalOpen(false);
       setEditingId(null);
+      setEditorFocused(false);
+setDraftSaveState("idle");
     } catch (err) {
       console.error("Save entry failed", err);
       setToast({ kind: "error", message: "Nu s-a salvat. Textul tău e încă aici — încearcă din nou când ai spațiu." });
@@ -379,6 +445,196 @@ export default function JournalPage() {
           selectedTag={selectedTag}
           openNewEntry={openNewEntry}
         />
+        {modalOpen ? (
+          <div className="space-y-4">
+            <ModalShell
+              open={modalOpen}
+              onClose={() => {
+                setModalOpen(false);
+                setSaving(false);
+                setEditingId(null);
+                setEditorFocused(false);
+                setDraftSaveState("idle");
+              }}
+              title={editingId ? "Editează nota" : "Scrie în jurnal"}
+              subtitle={editingId ? "Fă mici ajustări. Nota rămâne a ta." : "Scrie liber. Ține minte: nu trebuie să fie perfect."}
+            >
+              <div className="space-y-5">
+                {editingId == null && draftFound && draftSnapshot ? (
+                  <div className="rounded-3xl border border-black/5 bg-white/80 p-4 shadow-[0_8px_20px_rgba(31,23,32,0.04)] backdrop-blur-sm sm:p-5">
+                    <p className="text-sm font-semibold text-[#1f1720]">Am găsit un draft salvat</p>
+                    <p className="mt-1 text-sm leading-7 text-[#6B5A63]">
+                      Dacă vrei, poți continua de unde ai rămas. Nimic nu se pierde.
+                    </p>
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                      <button
+                        type="button"
+                        onClick={restoreDraft}
+                        className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
+                      >
+                        Continui draft-ul
+                      </button>
+                      <button
+                        type="button"
+                        onClick={discardDraft}
+                        className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-[#1f1720] shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-black/5"
+                      >
+                        Încep de la zero
+                      </button>
+                    </div>
+                    <p className="mt-2 text-[11px] text-[#6B5A63]">Salvat: {toNiceDate(draftSnapshot.savedAt)}</p>
+                  </div>
+                ) : null}
+
+                <div
+                  className={cn(
+                    "flex flex-col gap-3 rounded-3xl border border-black/5 bg-white/88 p-3.5 shadow-[0_8px_20px_rgba(31,23,32,0.04)] transition sm:p-4",
+                    editorFocused && "opacity-55"
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d5d6c]">
+                      Vizibilitate
+                    </p>
+                    <p className="mt-1 text-sm leading-7 text-[#6B5A63]">
+                      {draftVisibility === "private"
+                        ? "Doar tu vezi această notiță."
+                        : "O poți păstra pentru ședință, dacă simți."}
+                    </p>
+                  </div>
+
+                  <div className="inline-flex w-fit items-center rounded-full border border-black/5 bg-[#fcf9fb] p-1.5 shadow-[0_6px_14px_rgba(31,23,32,0.04)]">
+                    <button
+                      type="button"
+                      onClick={() => setDraftVisibility("private")}
+                      className={cn(
+                        "rounded-full px-4 py-2 text-[12px] font-semibold transition",
+                        draftVisibility === "private"
+                          ? "bg-white text-[#1f1720] shadow-[0_6px_14px_rgba(31,23,32,0.06)]"
+                          : "bg-transparent text-[#6B5A63] hover:text-[#1f1720]"
+                      )}
+                    >
+                      🔒 Privat
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDraftVisibility("shared")}
+                      className={cn(
+                        "rounded-full px-4 py-2 text-[12px] font-semibold transition",
+                        draftVisibility === "shared"
+                          ? "bg-(--color-accent) text-white shadow-[0_10px_18px_rgba(239,135,192,0.18)]"
+                          : "bg-transparent text-[#6B5A63] hover:text-[#1f1720]"
+                      )}
+                    >
+                      🤝 Pentru ședință
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <textarea
+                  value={draftContent}
+                  onChange={(e) => setDraftContent(e.target.value)}
+                  onFocus={() => setEditorFocused(true)}
+                  onBlur={() => setEditorFocused(false)}
+                  placeholder="Scrie liber aici. Nu trebuie să iasă perfect."
+                  className={cn(
+                    "min-h-35 w-full rounded-[26px] border border-[#ead7df] bg-white px-5 py-4 text-[15px] leading-8 text-[#1f1720] shadow-[0_10px_24px_rgba(31,23,32,0.05)] outline-none transition placeholder:text-[#9b8d95] focus:border-[#e9c6d6] focus:ring-2 focus:ring-[#f3e3ea] focus:ring-offset-1",
+                    editorFocused && "shadow-[0_18px_40px_rgba(31,23,32,0.10)]"
+                  )}
+                />
+
+                    <div
+                    className={cn(
+                      "rounded-[20px] border border-black/5 bg-[#fcf9fb] p-3 transition shadow-[0_4px_10px_rgba(31,23,32,0.03)] sm:px-4 sm:py-3.5",
+                      editorFocused && "opacity-60"
+                    )}
+                  >
+                    <p className="text-xs font-medium text-[#6B5A63]">Dacă vrei, poți începe de aici:</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {["Simt…", "Am nevoie…", "Azi a fost greu pentru că…"].map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            setDraftContent((prev) => {
+                              const next = prev.trim() ? `${prev.replace(/\s$/g, "")}\n${p} ` : `${p} `;
+                              return next;
+                            });
+                          }}
+                          className="rounded-full border border-black/5 bg-white px-3.5 py-2 text-[11px] font-semibold tracking-[0.03em] text-[#1f1720] shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-black/5"
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className={cn(
+                    "rounded-[20px] border border-black/5 bg-[#fffdfd] p-3 shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition sm:p-4",
+                    editorFocused && "opacity-60"
+                  )}
+                >
+                  <input
+                    value={draftTitle}
+                    onChange={(e) => setDraftTitle(e.target.value)}
+                    placeholder="Adaugă un titlu (opțional)…"
+                    className="w-full rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-[#1f1720] shadow-[0_4px_10px_rgba(31,23,32,0.04)] outline-none transition placeholder:text-[#9b8d95] focus:border-[#ead7df] focus:ring-2 focus:ring-[#f3e3ea]"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-[#8a7b83]">
+                  <span>
+                    {draftSaveState === "saving"
+                      ? "Se salvează automat..."
+                      : draftSaveState === "saved"
+                        ? "Salvat automat"
+                        : ""}
+                  </span>
+                </div>
+
+                <div className="flex flex-col-reverse gap-4 border-t border-black/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalOpen(false);
+                        setSaving(false);
+                        setEditingId(null);
+                        setEditorFocused(false);
+                        setDraftSaveState("idle");
+                      }}
+                      className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-[#1f1720] shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-black/5"
+                    >
+                      Continuă mai târziu
+                    </button>
+
+                    {editingId ? (
+                      <button
+                        type="button"
+                        onClick={deleteEntry}
+                        disabled={saving}
+                        className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-rose-100 disabled:opacity-50"
+                      >
+                        Șterge
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={saveEntry}
+                    disabled={saving || !draftContent.trim()}
+                    className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(239,135,192,0.22)] transition hover:opacity-95 disabled:opacity-50"
+                  >
+                    {saving ? "Se salvează…" : editingId ? "Salvează modificările" : "Salvează nota"}
+                  </button>
+                </div>
+              </div>
+            </ModalShell>
+          </div>
+        ) : null}
 
         {/* LIST */}
         {loading ? (
@@ -442,7 +698,7 @@ export default function JournalPage() {
               <button
                 type="button"
                 onClick={openNewEntry}
-                className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+                className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
               >
                 Scrie prima notă
               </button>
@@ -469,156 +725,6 @@ export default function JournalPage() {
         )}
       </div>
 
-      {/* MODAL */}
-      <ModalShell
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setSaving(false);
-          setEditingId(null);
-          setDraftVisibility(tab);
-        }}
-        title={editingId ? "Editează nota" : "Scrie în jurnal"}
-        subtitle={editingId ? "Fă mici ajustări. Nota rămâne a ta." : "Scrie liber. Ține minte: nu trebuie să fie perfect."}
-      >
-        <div className="space-y-4">
-          {editingId == null && draftFound && draftSnapshot ? (
-            <div className="rounded-2xl border border-white/60 bg-white/60 backdrop-blur p-4">
-              <p className="text-sm font-semibold text-gray-900">Am găsit un draft salvat</p>
-              <p className="mt-1 text-sm text-gray-600">
-                Dacă vrei, poți continua de unde ai rămas. Nimic nu se pierde.
-              </p>
-              <div className="mt-3 flex flex-col sm:flex-row gap-3">
-                <button
-                  type="button"
-                  onClick={restoreDraft}
-                  className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
-                >
-                  Continui draft-ul
-                </button>
-                <button
-                  type="button"
-                  onClick={discardDraft}
-                  className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/60 bg-white/70 px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
-                >
-                  Încep de la zero
-                </button>
-              </div>
-              <p className="mt-2 text-[11px] text-gray-500">Salvat: {toNiceDate(draftSnapshot.savedAt)}</p>
-            </div>
-          ) : null}
-
-          <div>
-            <label className="text-xs font-semibold text-gray-600"></label>
-            <input
-              value={draftTitle}
-              onChange={(e) => setDraftTitle(e.target.value)}
-              placeholder="Ex: Azi am observat…"
-              className="mt-2 w-full rounded-2xl border border-white/60 bg-white/70 px-4 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-gray-600">Conținut</label>
-            <textarea
-              value={draftContent}
-              onChange={(e) => setDraftContent(e.target.value)}
-              placeholder="Scrie liber. 3–5 rânduri sunt suficiente."
-              className="mt-2 w-full min-h-40 rounded-2xl border border-white/60 bg-white/70 px-4 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <p className="mt-2 text-xs text-gray-500">Tip: începe cu “Simt…” sau “Observ…”.</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {["Simt…", "Am nevoie…", "Azi a fost greu pentru că…"].map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => {
-                    setDraftContent((prev) => {
-                      const next = prev.trim() ? `${prev.replace(/\s$/g, "")}\n${p} ` : `${p} `;
-                      return next;
-                    });
-                  }}
-                  className="rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-gray-600">Tags</label>
-              <input
-                value={draftTags}
-                onChange={(e) => setDraftTags(e.target.value)}
-                placeholder="#anxietate, #somn, #relații"
-                className="mt-2 w-full rounded-2xl border border-white/60 bg-white/70 px-4 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <p className="mt-2 text-xs text-gray-500">Separate prin virgulă.</p>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-600">Vizibilitate</label>
-              <div className="mt-2 inline-flex w-full items-center rounded-2xl border border-white/60 bg-white/70 p-1 shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => setDraftVisibility("private")}
-                  className={cn(
-                    "flex-1 rounded-2xl px-3 py-2 text-xs font-semibold transition",
-                    draftVisibility === "private" ? "bg-gray-900 text-white shadow-sm" : "text-gray-700 hover:bg-white"
-                  )}
-                >
-                  Privat
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDraftVisibility("shared")}
-                  className={cn(
-                    "flex-1 rounded-2xl px-3 py-2 text-xs font-semibold transition",
-                    draftVisibility === "shared" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"
-                  )}
-                >
-                  Pentru ședință
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Pentru ședință = o notă pe care ai putea să o aduci în discuție, dacă simți.
-              </p>
-            </div>
-          </div>
-
-          <div className="pt-2 flex flex-col sm:flex-row gap-3">
-            <button
-              type="button"
-              onClick={saveEntry}
-              disabled={saving || (!draftTitle.trim() && !draftContent.trim())}
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition disabled:opacity-50"
-            >
-              {saving ? "Se salvează…" : editingId ? "Salvează modificările" : "Salvează nota"}
-            </button>
-
-            {editingId ? (
-              <button
-                type="button"
-                onClick={deleteEntry}
-                disabled={saving}
-                className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition disabled:opacity-50"
-              >
-                Șterge
-              </button>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={() => setModalOpen(false)}
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/60 bg-white/70 px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
-            >
-              Renunță
-            </button>
-          </div>
-        </div>
-      </ModalShell>
     </section>
   );
 }

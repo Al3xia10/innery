@@ -30,56 +30,41 @@ export default function JournalEntryCard({
     <article
       style={{
         background:
-          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+          "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,249,251,0.98) 100%)",
       }}
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-black/5 p-6 shadow-sm",
+        "relative overflow-hidden rounded-[30px] border border-black/5 p-5 shadow-[0_12px_30px_rgba(31,23,32,0.06)] sm:p-6",
         e.visibility === "private"
-          ? "before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-linear-to-b before:from-gray-300 before:to-transparent before:content-['']"
-          : "before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-linear-to-b before:from-indigo-400 before:to-transparent before:content-['']"
+          ? "before:absolute before:left-5 before:right-5 before:top-0 before:h-px before:bg-[linear-gradient(90deg,rgba(239,208,202,0.8),transparent)] before:content-['']"
+          : "before:absolute before:left-5 before:right-5 before:top-0 before:h-px before:bg-[linear-gradient(90deg,rgba(125,128,218,0.75),transparent)] before:content-['']"
       )}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-5">
         <div className="min-w-0">
-          <h3 className="text-base font-semibold text-gray-900 truncate">{e.title ?? "Un gând"}</h3>
-          <p className="mt-1 text-xs text-gray-500">{toNiceDate(e.createdAt)}</p>
+          <h3 className="truncate text-[1.12rem] font-semibold tracking-tight text-gray-900">{e.title ?? "Un gând"}</h3>
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-gray-400">{toNiceDate(e.createdAt)}</p>
         </div>
         <span
           className={cn(
-            "rounded-full border px-2.5 py-1 text-xs font-semibold shadow-sm",
+            "shrink-0 rounded-full border px-3 py-1 text-[10px] font-semibold tracking-widset shadow-[0_3px_8px_rgba(31,23,32,0.04)]",
             e.visibility === "private"
-              ? "border-gray-100 bg-gray-50 text-gray-800"
-              : "border-indigo-100 bg-indigo-50 text-indigo-800"
+              ? "border-[#ead7df] bg-[#fff9fb] text-[#7d5d6c]"
+              : "border-[#dcdcf8] bg-[#f5f4ff] text-[#676cc8]"
           )}
         >
           {e.visibility === "private" ? "Privat" : "Pentru ședință"}
         </span>
       </div>
 
-      <p className="mt-4 text-sm text-gray-700 leading-relaxed line-clamp-5">{e.content}</p>
+      <p className="mt-5 line-clamp-4 text-[15px] leading-7 text-gray-800">{e.content}</p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {e.tags.length === 0 ? (
-          <span className="text-xs text-gray-400">fără tag-uri</span>
-        ) : (
-          e.tags.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => onToggleTag(t)}
-              className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
-            >
-              #{t}
-            </button>
-          ))
-        )}
-      </div>
+      <div className="mt-5 h-px w-full bg-[linear-gradient(90deg,rgba(31,23,32,0.08),transparent)]" />
 
-      <div className="mt-5 flex flex-col sm:flex-row gap-3">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={() => onOpen(e)}
-          className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 transition"
+          className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-black/5 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-[0_5px_12px_rgba(31,23,32,0.05)] transition hover:bg-black/5"
         >
           Continuă
         </button>
@@ -88,7 +73,7 @@ export default function JournalEntryCard({
           <button
             type="button"
             disabled={true}
-            className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition opacity-50 cursor-not-allowed"
+            className="inline-flex w-full sm:w-auto cursor-not-allowed items-center justify-center rounded-full border border-[rgba(239,135,192,0.28)] bg-[rgba(239,135,192,0.10)] px-3.5 py-2 text-[13px] font-semibold text-[rgba(190,90,150,0.92)] shadow-[0_4px_10px_rgba(239,135,192,0.12)] transition"
             onClick={onInfoShare}
           >
             Împărtășesc cu terapeutul

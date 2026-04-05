@@ -5,25 +5,30 @@ export function DangerZoneCard({
 }) {
   return (
     <div
-      className="rounded-3xl border border-black/5 shadow-sm p-6"
+      className="rounded-[28px] border border-black/5 p-6 shadow-[0_10px_24px_rgba(31,23,32,0.05)]"
       style={{
         background:
-          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+          "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,250,251,0.95) 100%)",
       }}
     >
-      <h2 className="text-sm font-semibold text-gray-900">Account & data</h2>
-      <p className="mt-2 text-sm text-gray-600">
-        If you choose to leave, you can permanently delete your account and all associated data.
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
+        Zonă sensibilă
+      </p>
+      <h2 className="mt-2 text-[1.2rem] font-semibold tracking-tight text-foreground">
+        Cont & date personale
+      </h2>
+      <p className="mt-2 text-sm leading-7 text-[#74656d]">
+        Poți șterge definitiv contul și toate datele asociate.
       </p>
 
-      <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="text-xs text-gray-500">Demo action • does not change data</div>
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-xs text-[#8a7b84]">Acțiune demo • nu modifică datele</div>
         <button
           type="button"
-          onClick={() => onToast?.("Delete account (demo)")}
-          className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white/70 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition"
+          onClick={() => onToast?.("Ștergere cont (demo)")}
+          className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white/80 px-5 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
         >
-          Delete my account
+          Șterge contul
         </button>
       </div>
     </div>

@@ -15,15 +15,15 @@ export function PillToggle({
   onChange: (v: RangeKey) => void;
 }) {
   return (
-    <div className="inline-flex items-center rounded-full border border-black/5 bg-white p-1 shadow-sm">
+    <div className="inline-flex items-center rounded-full border border-(--color-soft) bg-background p-1 shadow-[0_6px_14px_rgba(31,23,32,0.06)]">
       <button
         type="button"
         onClick={() => onChange("7")}
         className={cn(
-          "rounded-full px-3 py-1.5 text-xs font-semibold transition",
+          "rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition",
           value === "7"
-            ? "bg-indigo-600 text-white shadow-sm"
-            : "text-gray-700 hover:bg-gray-100"
+            ? "bg-(--color-accent) text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)]"
+            : "text-foreground bg-transparent hover:bg-(--color-card)"
         )}
       >
         7 zile
@@ -32,10 +32,10 @@ export function PillToggle({
         type="button"
         onClick={() => onChange("30")}
         className={cn(
-          "rounded-full px-3 py-1.5 text-xs font-semibold transition",
+          "rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition",
           value === "30"
-            ? "bg-indigo-600 text-white shadow-sm"
-            : "text-gray-700 hover:bg-gray-100"
+            ? "bg-(--color-accent) text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)]"
+            : "text-foreground bg-transparent hover:bg-(--color-card)"
         )}
       >
         30 zile

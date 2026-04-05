@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { cn } from "./utils";
 
 export default function Toast({
@@ -12,16 +12,40 @@ export default function Toast({
   message: string;
   onClose: () => void;
 }) {
+  const [shown, setShown] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  useEffect(() => {
+    const leaveTimer = window.setTimeout(() => {
+      setLeaving(true);
+    }, 2600);
+
+    const closeTimer = window.setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(leaveTimer);
+      window.clearTimeout(closeTimer);
+    };
+  }, [onClose]);
+
   return (
     <div
       role="status"
       className={cn(
-        "fixed right-4 top-4 z-90 w-[min(92vw,380px)] rounded-2xl border border-black/5 bg-white shadow-lg p-4",
+        "fixed right-4 top-4 z-90 w-[min(92vw,380px)] rounded-[22px] border border-black/5 bg-white shadow-[0_14px_40px_rgba(31,23,32,0.12)] p-4 transition-all duration-300 ease-out",
+        shown && !leaving ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
         kind === "error"
           ? "border-rose-200"
           : kind === "success"
             ? "border-emerald-200"
-            : "border-indigo-200"
+            : "border-(--color-soft)"
       )}
     >
       <div className="flex items-start gap-3">
@@ -32,23 +56,23 @@ export default function Toast({
               ? "bg-rose-500"
               : kind === "success"
                 ? "bg-emerald-500"
-                : "bg-indigo-500"
+                : "bg-(--color-primary)"
           )}
         />
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-sm font-semibold text-foreground">
             {kind === "error" ? "Ups" : kind === "success" ? "Gata" : "Info"}
           </p>
-          <p className="mt-0.5 text-sm text-gray-600 leading-relaxed">{message}</p>
+          <p className="mt-0.5 text-sm text-(--color-foreground-muted,#6B5A63) leading-relaxed">{message}</p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 transition"
+          className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-xl border border-transparent hover:border-black/5 hover:bg-(--color-soft) transition"
           aria-label="Închide"
           title="Închide"
         >
-          <span className="text-gray-500">✕</span>
+          <span className="text-[#6B5A63]">✕</span>
         </button>
       </div>
     </div>

@@ -13,15 +13,15 @@ export default function EmptyCard({
 }) {
   return (
     <div
-      className="rounded-3xl border border-dashed border-black/10 p-6 sm:p-7 shadow-sm"
+      className="rounded-[28px] border border-black/5 p-6 sm:p-7 shadow-[0_10px_30px_rgba(31,23,32,0.06)]"
       style={{
         background:
-          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+          "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
       }}
     >
-      <p className="text-sm font-semibold text-gray-900">{title}</p>
-      <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
-      <div className="mt-4">{cta}</div>
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-1 text-sm text-(--color-foreground-muted,#6B5A63)">{subtitle}</p>
+      <div className="mt-5 flex items-center gap-3">{cta}</div>
     </div>
   );
 }

@@ -33,59 +33,40 @@ export default function ModalShell({
     first?.focus();
   }, [open]);
 
-  // ✅ Scroll lock (body)
-  useEffect(() => {
-    if (!open) return;
-
-    const prevOverflow = document.body.style.overflow;
-    const prevPaddingRight = document.body.style.paddingRight;
-
-    // avoid layout shift when scrollbar disappears
-    const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
-    if (scrollbarW > 0) document.body.style.paddingRight = `${scrollbarW}px`;
-
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
-    };
-  }, [open]);
-
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <button
-        type="button"
-        aria-label="Close modal"
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div className="w-full">
       <div
         ref={panelRef}
-        className="relative w-full max-w-xl rounded-[28px] border border-white/60 bg-white/80 backdrop-blur-xl shadow-xl max-h-[calc(100dvh-2rem)] overflow-hidden"
+        className="relative w-full overflow-hidden rounded-4xl border border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,rgba(239,208,202,0.12)_58%,rgba(125,128,218,0.06)_100%)] shadow-[0_18px_50px_rgba(31,23,32,0.08)]"
       >
-        <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
-          <div className="sticky top-0 z-10 border-b border-white/60 bg-white/75 backdrop-blur-xl">
-            <div className="p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-                  {subtitle ? <p className="mt-1 text-sm text-gray-600">{subtitle}</p> : null}
-                </div>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="rounded-xl border border-white/70 bg-white/70 px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
-                >
-                  Închide
-                </button>
-              </div>
+        <div className="sticky top-0 z-10 border-b border-black/5 bg-[rgba(255,255,255,0.92)] backdrop-blur-md">
+          <div className="flex items-start justify-between gap-4 px-5 pb-4 pt-5 sm:px-7 sm:pb-5 sm:pt-6">
+            <div className="min-w-0">
+              <h2 className="text-[1.55rem] font-semibold leading-[1.05] tracking-tight text-[#1f1720] sm:text-[1.9rem]">
+                {title}
+              </h2>
+              {subtitle ? (
+                <p className="mt-2 max-w-2xl text-[15px] leading-7 text-[#6B5A63] sm:text-[17px]">
+                  {subtitle}
+                </p>
+              ) : null}
             </div>
-          </div>
 
-          <div className="p-5 sm:p-6">
-            <div className="mt-2">{children}</div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="shrink-0 inline-flex items-center justify-center rounded-2xl border border-black/5 bg-white px-4 py-2 text-sm font-semibold text-[#7d5d6c] shadow-[0_6px_14px_rgba(31,23,32,0.05)] transition hover:bg-black/5"
+            >
+              Închide
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5 pb-5 pt-4 sm:px-7 sm:pb-7 sm:pt-5">
+          <div className="rounded-[28px] border border-black/5 bg-white/82 p-4 shadow-[0_8px_20px_rgba(31,23,32,0.04)] sm:p-5 md:p-6">
+            {children}
           </div>
         </div>
       </div>

@@ -10,10 +10,10 @@ function TagChip({ tag, active, onClick }: { tag: string; active: boolean; onCli
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex snap-start items-center rounded-full border px-3 py-1 text-xs font-semibold shadow-sm transition",
+        "inline-flex snap-start items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.03em] shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition",
         active
-          ? "border-indigo-200 bg-indigo-50 text-indigo-800"
-          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+          ? "border-[#ead7df] bg-[#fff9fb] text-[#7d5d6c]"
+          : "border-black/5 bg-white text-foreground hover:bg-[#fffafb]"
       )}
     >
       {tag === "all" ? "Toate" : `#${tag}`}
@@ -40,40 +40,39 @@ export default function JournalHeader({
   selectedTag: string | null;
   openNewEntry: () => void;
 }) {
+  const [searchOpen, setSearchOpen] = React.useState(false);
+
   return (
     <header
-      className="rounded-3xl border border-black/5 shadow-sm overflow-hidden"
+      className="overflow-hidden rounded-4xl border border-black/5 shadow-[0_10px_28px_rgba(31,23,32,0.05)]"
       style={{
         background:
-          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+          "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
       }}
     >
-     <div className="mx-auto max-w-6xl px-6 lg:px-8 py-8 space-y-8">
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+     <div className="mx-auto max-w-6xl space-y-8 px-6 py-8 lg:px-8">
+        <div className="relative grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                Spatiul tau de jurnal
-              </div>
-            <h1 className="mt-3 text-2xl sm:text-3xl font-semibold text-gray-900">
+      
+            <h1 className="mt-4 text-[2rem] font-semibold leading-[1.02] tracking-tight text-foreground sm:text-[2.55rem]">
               Jurnalul tău, în ritmul tău
             </h1>
-            <p className="mt-2 text-sm text-gray-600 max-w-2xl">
+            <p className="mt-3 max-w-2xl text-[15px] leading-8 text-(--color-foreground-muted,#6B5A63) sm:text-[17px]">
               Scrie ca să te auzi. Păstrează privat sau împărtășește cu terapeutul când simți.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:justify-end xl:mt-4">
             <button
               type="button"
               onClick={openNewEntry}
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-[18px] bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
             >
-              Scrie în jurnal
+              {tab === "private" ? "Scrie privat" : "Scrie pentru ședință"}
             </button>
             <Link
               href="/client"
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 transition"
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-foreground shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-[#fffafb]"
             >
               Înapoi la Azi
             </Link>
@@ -81,8 +80,8 @@ export default function JournalHeader({
         </div>
 
         {/* Tabs */}
-        <div className="relative mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-sm w-full sm:w-auto">
+        <div className="relative grid grid-cols-1 gap-4 xl:grid-cols-[auto_minmax(0,1fr)] xl:items-center">
+          <div className="inline-flex w-full items-center rounded-full border border-(--color-soft) bg-background p-1 shadow-[0_6px_14px_rgba(31,23,32,0.06)] sm:w-auto">
             <button
               type="button"
               onClick={() => {
@@ -90,8 +89,8 @@ export default function JournalHeader({
                 setSelectedTag(null);
               }}
               className={cn(
-                "flex-1 sm:flex-none rounded-full px-3 py-2 text-xs font-semibold transition",
-                tab === "private" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100"
+                "flex-1 sm:flex-none rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition",
+                tab === "private" ? "bg-(--color-accent) text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
               )}
             >
               Privat
@@ -103,71 +102,29 @@ export default function JournalHeader({
                 setSelectedTag(null);
               }}
               className={cn(
-                "flex-1 sm:flex-none rounded-full px-3 py-2 text-xs font-semibold transition",
-                tab === "shared" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100"
+                "flex-1 sm:flex-none rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition",
+                tab === "shared" ? "bg-(--color-accent) text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
               )}
             >
               Pentru ședință
             </button>
           </div>
 
-          <div className="text-xs text-gray-600">
+          <div className="text-xs leading-6 text-(--color-foreground-muted,#6B5A63) xl:pl-2">
             {tab === "private" ? (
-              <span>Privat: doar pentru tine. Nimeni nu vede fără acordul tău.</span>
-            ) : (
-              <span>
-                Pentru ședință: note pe care alegi să le împărtășești. Doar tu decizi. Nimic nu se trimite automat.
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* SEARCH & TAGS */}
-        <div className="relative mt-4 flex flex-col gap-3">
-          <div className="relative w-full sm:max-w-md">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Caută în jurnal…"
-              className="w-full rounded-full border border-gray-200 bg-white pl-5 pr-12 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              aria-label="Caută în jurnal"
-            />
-            {query.trim() ? (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm hover:bg-gray-50 transition"
-                aria-label="Golește căutarea"
-                title="Golește"
-              >
-                ✕
-              </button>
-            ) : null}
-          </div>
-
-          {/* tags */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 snap-x snap-mandatory">
-            {allTags.length === 0 ? (
-              <span className="text-xs text-gray-500 whitespace-nowrap">
-                Tag-urile apar după ce adaugi câteva note.
+              <span className="inline-flex items-center gap-2">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-black/5 bg-white text-[10px] opacity-90">
+                  🔒
+                </span>
+                <span>Privat: doar tu vezi această notiță. Nimic nu se trimite fără acordul tău.</span>
               </span>
             ) : (
-              <>
-                <TagChip tag="all" active={selectedTag == null} onClick={() => setSelectedTag(null)} />
-                {allTags.map((t) => (
-                  <TagChip
-                    key={t}
-                    tag={t}
-                    active={selectedTag === t}
-                    onClick={() => setSelectedTag((prev) => (prev === t ? null : t))}
-                  />
-                ))}
-                {allTags.length > 7 ? (
-                  <span className="ml-2 text-xs text-gray-500 whitespace-nowrap snap-start">
-                    derulează pentru mai multe tag-uri →
-                  </span>
-                ) : null}
-              </>
+              <span className="inline-flex items-center gap-2">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-black/5 bg-white text-[10px] opacity-90">
+                  🤝
+                </span>
+                <span>Pentru ședință: o poți păstra pentru terapie. Doar tu decizi ce împărtășești.</span>
+              </span>
             )}
           </div>
         </div>

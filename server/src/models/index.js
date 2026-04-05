@@ -8,6 +8,7 @@ import { initGoalModel } from "./Goal.js";
 import { initGoalUpdateModel } from "./GoalUpdate.js";
 import { initJournalEntryModel } from "./JournalEntry.js";
 import initClientSettingsModel from "./ClientSettings.js";
+import { initExerciseModel } from "./Exercise.js";
 
 export const models = {};
 models.User = initUserModel(sequelize);
@@ -19,6 +20,7 @@ models.Goal = initGoalModel(sequelize);
 models.GoalUpdate = initGoalUpdateModel(sequelize);
 models.JournalEntry = initJournalEntryModel(sequelize);
 models.ClientSettings = initClientSettingsModel(sequelize);
+models.Exercise = initExerciseModel(sequelize);
 
 // Associations
 // Un terapeut (User) are mai mulți clienți (Client rows)
@@ -146,6 +148,25 @@ models.User.hasMany(models.Goal, {
   as: "therapistGoals",
 });
 models.Goal.belongsTo(models.User, {
+  foreignKey: "therapistId",
+  as: "therapist",
+});
+
+// Exercises
+models.User.hasMany(models.Exercise, {
+  foreignKey: "clientUserId",
+  as: "exercises",
+});
+models.Exercise.belongsTo(models.User, {
+  foreignKey: "clientUserId",
+  as: "clientUser",
+});
+
+models.User.hasMany(models.Exercise, {
+  foreignKey: "therapistId",
+  as: "therapistExercises",
+});
+models.Exercise.belongsTo(models.User, {
   foreignKey: "therapistId",
   as: "therapist",
 });

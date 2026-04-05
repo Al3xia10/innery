@@ -3,13 +3,18 @@
 import * as React from "react";
 import type { Exercise } from "../lib/goalTypes";
 
+type ExerciseWithDone = Exercise & {
+  id: string | number;
+  done?: boolean;
+};
+
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="rounded-3xl border border-black/5 shadow-sm p-5 sm:p-6"
+      className="rounded-[28px] border border-black/5 p-5 shadow-[0_6px_14px_rgba(31,23,32,0.05)] sm:p-6"
       style={{
         background:
-          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+          "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
       }}
     >
       {children}
@@ -29,8 +34,8 @@ function CardHeader({
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <p className="text-base font-semibold text-gray-900">{title}</p>
-        <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
+        <p className="text-[1rem] font-semibold text-foreground">{title}</p>
+        <p className="mt-1 text-[13px] text-(--color-foreground-muted,#6B5A63)">{subtitle}</p>
       </div>
       {right ? <div className="shrink-0">{right}</div> : null}
     </div>
@@ -49,13 +54,13 @@ function EmptyState({
   onClick: () => void;
 }) {
   return (
-    <div className="mt-5 rounded-3xl border border-dashed border-black/10 bg-white/70 p-8 text-center">
-      <p className="text-sm font-semibold text-gray-900">{title}</p>
-      <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
+    <div className="mt-5 rounded-3xl border border-black/5 bg-white/80 p-8 text-center shadow-[0_6px_14px_rgba(31,23,32,0.05)]">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-1 text-sm text-(--color-foreground-muted,#6B5A63)">{subtitle}</p>
       <button
         type="button"
         onClick={onClick}
-        className="mt-4 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+        className="mt-4 inline-flex items-center justify-center rounded-2xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
       >
         {cta}
       </button>
@@ -63,51 +68,78 @@ function EmptyState({
   );
 }
 
-function ExerciseCard({ ex }: { ex: Exercise }) {
+function ExerciseCard({
+  ex,
+  onToggleDone,
+  onDelete,
+}: {
+  ex: ExerciseWithDone;
+  onToggleDone: (id: number) => void;
+  onDelete: (id: number) => void;
+}) {
   const chip =
     ex.kind === "Rutină"
-      ? "bg-indigo-50 text-indigo-800 ring-1 ring-indigo-100"
+      ? "border-[#ead7df] bg-[#fff9fb] text-[#7d5d6c]"
       : ex.kind === "Experiment"
-      ? "bg-pink-50 text-pink-800 ring-1 ring-pink-100"
-      : "bg-gray-100 text-gray-800 ring-1 ring-gray-200";
+      ? "border-[#dcdcf8] bg-[#f5f4ff] text-[#676cc8]"
+      : "border-[#d8ece2] bg-[#f5fbf8] text-[#4f7d6b]";
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-black/5 shadow-sm p-4"
+      className={`relative overflow-hidden rounded-3xl border p-4 shadow-[0_6px_14px_rgba(31,23,32,0.05)] ${
+        ex.done ? "border-green-200 opacity-90" : "border-black/5"
+      }`}
       style={{
         background:
-          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.45) 100%)",
+          "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,249,251,0.98) 100%)",
       }}
     >
       <div
-        className="absolute inset-x-0 top-0 h-0.5"
+        className="absolute inset-x-5 top-0 h-px"
         style={{
           background:
-            "linear-gradient(90deg, rgba(99,102,241,0.55), rgba(236,72,153,0.30), rgba(255,255,255,0))",
+            ex.kind === "Experiment"
+              ? "linear-gradient(90deg, rgba(125,128,218,0.75), transparent)"
+              : "linear-gradient(90deg, rgba(239,208,202,0.8), transparent)",
         }}
         aria-hidden="true"
       />
 
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-semibold text-gray-900 min-w-0 truncate">{ex.title}</p>
-        <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${chip}`}>
+        <p className="min-w-0 truncate text-[1rem] font-semibold tracking-tight text-foreground">{ex.title}</p>
+        <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${chip}`}>
           {ex.kind}
         </span>
       </div>
 
-      <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+      <div className="mt-2 flex items-center justify-between text-xs text-(--color-foreground-muted,#6B5A63)">
         <span>{typeof ex.minutes === "number" ? `${ex.minutes} min` : "—"}</span>
         <span>între ședințe</span>
       </div>
 
-      {ex.note ? <p className="mt-3 text-sm text-gray-700 leading-relaxed">{ex.note}</p> : null}
+      {ex.note ? <p className="mt-3 text-sm leading-relaxed text-(--color-foreground-muted,#6B5A63)">{ex.note}</p> : null}
 
-      <button
-        type="button"
-        className="mt-4 inline-flex items-center justify-center rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-white transition w-full"
-      >
-        Marchează ca făcut (demo)
-      </button>
+      <div className="mt-4 flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => onToggleDone(Number(ex.id))}
+          className={`inline-flex flex-1 items-center justify-center rounded-2xl border px-3 py-2 text-sm font-semibold shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition ${
+            ex.done
+              ? "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+              : "border-black/5 bg-white text-foreground hover:bg-[#fffafb]"
+          }`}
+        >
+          {ex.done ? "Marcat ✓" : "Marchează ca făcut"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDelete(Number(ex.id))}
+          className="inline-flex items-center justify-center rounded-2xl border border-black/5 bg-white px-3 py-2 text-sm font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-black/5 hover:text-foreground"
+        >
+          Șterge
+        </button>
+      </div>
     </div>
   );
 }
@@ -116,10 +148,14 @@ export default function ExercisesSection({
   loading,
   exercises,
   onAdd,
+  onToggleDone,
+  onDelete,
 }: {
   loading: boolean;
-  exercises: Exercise[];
+  exercises: ExerciseWithDone[];
   onAdd: () => void;
+  onToggleDone: (id: number) => void;
+  onDelete: (id: number) => void;
 }) {
   return (
     <Card>
@@ -130,7 +166,7 @@ export default function ExercisesSection({
           <button
             type="button"
             onClick={onAdd}
-            className="text-sm font-semibold text-indigo-700 hover:text-indigo-700/80 transition"
+            className="inline-flex items-center justify-center rounded-2xl bg-(--color-accent) px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
           >
             Adaugă
           </button>
@@ -140,7 +176,7 @@ export default function ExercisesSection({
       {loading ? (
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[1, 2].map((i) => (
-            <div key={i} className="animate-pulse rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm">
+            <div key={i} className="animate-pulse rounded-3xl border border-black/5 bg-white/80 p-4 shadow-[0_6px_14px_rgba(31,23,32,0.05)]">
               <div className="h-4 w-2/3 rounded bg-gray-200" />
               <div className="mt-3 h-3 w-1/3 rounded bg-gray-100" />
               <div className="mt-4 h-3 w-full rounded bg-gray-200" />
@@ -157,7 +193,12 @@ export default function ExercisesSection({
       ) : (
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {exercises.map((e) => (
-            <ExerciseCard key={e.id} ex={e} />
+            <ExerciseCard
+              key={e.id}
+              ex={e}
+              onToggleDone={onToggleDone}
+              onDelete={onDelete}
+            />
           ))}
         </div>
       )}

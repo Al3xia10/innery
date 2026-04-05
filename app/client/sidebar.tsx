@@ -11,6 +11,7 @@ export default function Sidebar() {
 
   // Mobile draggable dock position (Y axis)
   const [dockY, setDockY] = useState<number | null>(null);
+  const [desktopExpanded, setDesktopExpanded] = useState(false);
 
   const [clientProfile, setClientProfile] = useState<{
     name?: string;
@@ -84,206 +85,150 @@ export default function Sidebar() {
   const sidebarContent = useMemo(
     () => (
       <>
-        {/* BRAND */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-indigo-600/10 ring-1 ring-indigo-600/10 flex items-center justify-center">
-              <span className="text-indigo-700 font-semibold">in</span>
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-lg font-semibold tracking-tight text-gray-900 leading-tight">
-                innery
-              </h2>
-              <p className="mt-0.5 text-xs text-gray-500">client workspace</p>
-            </div>
-          </div>
+        {/* HEADER / BRAND */}
+                <div className="mb-6">
+          {desktopExpanded ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 shrink-0 rounded-xl bg-white shadow-sm ring-1 ring-[#ece2e7] flex items-center justify-center">
+                  <span className="text-[#7c5c6c] font-semibold">in</span>
+                </div>
 
-          <div className="mt-5 rounded-xl bg-linear-to-br from-indigo-50 to-white border border-indigo-100 p-3">
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Keep your work calm, structured, and client-centered.
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#2d1f27] truncate">innery</p>
+                  <p className="text-[11px] text-[#a08a95] truncate">client space</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDesktopExpanded((v) => !v)}
+                aria-label="Collapse sidebar"
+                title="Collapse"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#7c5c6c] shadow-sm ring-1 ring-[#ece2e7] transition hover:bg-[#fffafb]"
+              >
+                <IconSidebarToggle expanded={desktopExpanded} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-white shadow-sm ring-1 ring-[#ece2e7] flex items-center justify-center">
+                <span className="text-[#7c5c6c] font-semibold">in</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDesktopExpanded((v) => !v)}
+                aria-label="Expand sidebar"
+                title="Expand"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#7c5c6c] shadow-sm ring-1 ring-[#ece2e7] transition hover:bg-[#fffafb]"
+              >
+                <IconSidebarToggle expanded={desktopExpanded} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {desktopExpanded ? (
+          <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#eee3ea]">
+            <p className="text-[11px] uppercase tracking-wide text-[#b8a5af]">today</p>
+            <p className="mt-2 text-sm leading-5 text-[#2d1f27]">
+              take one small step for yourself
             </p>
           </div>
-        </div>
+        ) : null}
 
-        {/* MAIN NAV */}
-        <div className="mb-3 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
-          Workspace
-        </div>
-        <nav className="mt-3 flex flex-col gap-1 text-sm">
+        {/* NAV */}
+        <nav className="mt-2 flex flex-col gap-2">
           <NavItem
             href={`/client`}
             label="Today"
             icon={<IconHome />}
             active={isActive(`/client`, { exact: true })}
+            compact={!desktopExpanded}
           />
           <NavItem
             href={`/client/progress`}
             label="Progress"
             icon={<IconCalendar />}
             active={isActive(`/client/progress`)}
+            compact={!desktopExpanded}
           />
           <NavItem
             href={`/client/journal`}
             label="Journal"
             icon={<IconNote />}
             active={isActive(`/client/journal`)}
+            compact={!desktopExpanded}
           />
           <NavItem
             href={`/client/plan`}
             label="Plan"
             icon={<IconSpark />}
             active={isActive(`/client/plan`)}
+            compact={!desktopExpanded}
           />
         </nav>
 
-        {/* DIVIDER */}
-        <div className="my-8 h-px bg-gray-100" />
+        <div className="mt-7 pt-5 border-t border-[#eadfe5]">
+          {desktopExpanded ? (
+            <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a08a95]">
+              preferences
+            </p>
+          ) : null}
 
-        {/* SECONDARY NAV */}
-        <div className="mb-3 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
-          Preferences
-        </div>
-        <nav className="flex flex-col gap-1 text-sm">
           <NavItem
             href={`/client/settings`}
             label="Settings"
             icon={<IconSettings />}
             active={isActive(`/client/settings`)}
             secondary
+            compact={!desktopExpanded}
           />
-        </nav>
+        </div>
 
-        {/* FOOTER */}
+        {/* PROFILE */}
         <div className="mt-auto pt-8">
-          <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-indigo-600/10 ring-1 ring-indigo-600/10 flex items-center justify-center">
-                <span className="text-indigo-700 font-semibold text-sm">
+          {desktopExpanded ? (
+            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#eee3ea]">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-[#f3e8ee] flex items-center justify-center text-[#7c5c6c] font-semibold shrink-0">
                   {(clientProfile?.name?.trim()?.[0] || "C").toUpperCase()}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 leading-tight truncate">
-                  {clientProfile?.name || "Client"}
-                </p>
-                {clientProfile?.email ? (
-                  <p className="text-xs text-gray-500 truncate">{clientProfile.email}</p>
-                ) : null}
-                <p className="text-xs text-gray-500 truncate">ID: {String(clientProfile?.id ?? "—")}</p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#2d1f27] truncate">
+                    {clientProfile?.name || "Client"}
+                  </p>
+                  <p className="text-xs text-[#a08a95] truncate">
+                    {clientProfile?.email || "no email"}
+                  </p>
+                </div>
               </div>
             </div>
-
-            <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-              <span>© 2025 innery</span>
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-[#eee3ea] text-sm font-medium text-[#7c5c6c] opacity-90 transition hover:shadow-[0_8px_18px_rgba(120,92,108,0.08)]">
+              {(clientProfile?.name?.trim()?.[0] || "C").toUpperCase()}
             </div>
-          </div>
+          )}
         </div>
       </>
     ),
-    [pathname, clientProfile]
+    [pathname, clientProfile, desktopExpanded]
   );
 
   return (
     <>
-      {/* MOBILE: side dock navigation (icon-only, draggable) */}
-      <nav
-        aria-label="Workspace navigation"
-        className={["md:hidden fixed -right-1.5 z-50", hideMobileDock ? "hidden" : ""].join(" ")}
-        style={{
-          top: dockY ?? "50%",
-          transform: dockY ? "translateY(0)" : "translateY(-50%)",
-        }}
-        onTouchStart={(e) => {
-          const startY = e.touches[0].clientY;
-          const startDockY = dockY ?? window.innerHeight / 2;
-
-          const onMove = (ev: TouchEvent) => {
-            const delta = ev.touches[0].clientY - startY;
-            const next = Math.min(
-              window.innerHeight - 120,
-              Math.max(80, startDockY + delta)
-            );
-            setDockY(next);
-          };
-
-          const onEnd = () => {
-            window.removeEventListener("touchmove", onMove);
-            window.removeEventListener("touchend", onEnd);
-          };
-
-          window.addEventListener("touchmove", onMove);
-          window.addEventListener("touchend", onEnd);
-        }}
-      >
-        <div className="rounded-2xl border border-gray-200 bg-white/70 backdrop-blur shadow-md p-1.5 active:opacity-100 opacity-85 transition">
-          <div className="grid grid-rows-5 gap-1.5">
-            <MobileNavItem
-              href={`/client`}
-              ariaLabel="Today"
-              active={isActive(`/client`, { exact: true })}
-              icon={<IconHome />}
-            />
-            <MobileNavItem
-              href={`/client/progress`}
-              ariaLabel="Progress"
-              active={isActive(`/client/progress`)}
-              icon={<IconCalendar />}
-            />
-            <MobileNavItem
-              href={`/client/journal`}
-              ariaLabel="Journal"
-              active={isActive(`/client/journal`)}
-              icon={<IconNote />}
-            />
-            <MobileNavItem
-              href={`/client/plan`}
-              ariaLabel="Plan"
-              active={isActive(`/client/plan`)}
-              icon={<IconSpark />}
-            />
-            <MobileNavItem
-              href={`/client/settings`}
-              ariaLabel="Settings"
-              active={isActive(`/client/settings`)}
-              icon={<IconSettings />}
-            />
-          </div>
-        </div>
-      </nav>
-
       {/* DESKTOP/TABLET: unchanged */}
-      <aside className="hidden md:flex w-72 flex-col border-r border-gray-100 bg-white/80 backdrop-blur px-6 py-7">
+
+      <aside
+  className={[
+    "hidden md:flex flex-col border-r border-[#eee3ea] bg-[linear-gradient(180deg,#fbf9fb,#f6f1f5)] px-4 py-6 shadow-[inset_-1px_0_0_#f0e6ec] transition-all duration-300",
+    desktopExpanded ? "w-72" : "w-22",
+  ].join(" ")}
+>
         {sidebarContent}
       </aside>
     </>
-  );
-}
-
-
-function MobileNavItem({
-  href,
-  ariaLabel,
-  icon,
-  active,
-}: {
-  href: string;
-  ariaLabel: string;
-  icon: React.ReactNode;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-label={ariaLabel}
-      className={[
-        "group flex h-9 w-9 select-none items-center justify-center rounded-lg transition",
-        active
-          ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100"
-          : "text-gray-600 hover:bg-gray-50 hover:text-indigo-700",
-      ].join(" ")}
-    >
-      <span className="h-5 w-5 flex items-center justify-center">{icon}</span>
-    </Link>
   );
 }
 
@@ -293,53 +238,59 @@ function NavItem({
   icon,
   active,
   secondary,
+  compact,
 }: {
   href: string;
   label: string;
   icon: React.ReactNode;
   active: boolean;
   secondary?: boolean;
+  compact?: boolean;
 }) {
   return (
     <Link
       href={href}
       className={[
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition",
+        "group relative flex items-center rounded-xl py-2.5 transition-all duration-200",
+        compact ? "justify-center px-0 overflow-visible" : "gap-3 px-3",
         active
           ? secondary
-            ? "bg-gray-100 text-gray-900"
-            : "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100"
+            ? "bg-white text-[#2d1f27] shadow-[0_10px_22px_rgba(120,92,108,0.08)] ring-1 ring-[#eadfe5]"
+            : "bg-white text-[#6b4c5c] shadow-[0_10px_22px_rgba(120,92,108,0.08)] ring-1 ring-[#eadfe5]"
           : secondary
-            ? "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-            : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700",
+            ? "text-[#8a7b84] hover:bg-white hover:text-[#2d1f27] hover:shadow-[0_10px_22px_rgba(120,92,108,0.06)] hover:ring-1 hover:ring-[#f0e6ec]"
+            : "text-[#7c5c6c] hover:bg-white hover:text-[#2d1f27] hover:shadow-[0_10px_22px_rgba(120,92,108,0.06)] hover:ring-1 hover:ring-[#f0e6ec]",
       ].join(" ")}
     >
-      {/* Active accent bar */}
-      <span
-        className={[
-          "absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-full transition",
-          active
-            ? secondary
-              ? "bg-gray-300"
-              : "bg-indigo-500"
-            : "bg-transparent group-hover:bg-indigo-200",
-        ].join(" ")}
-      />
+      {!compact ? (
+        <span
+          className={[
+            "absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1.5 rounded-full transition",
+            active
+              ? "bg-[#dcaec6]"
+              : "bg-transparent group-hover:bg-[#ead4e0]",
+          ].join(" ")}
+        />
+      ) : null}
 
       <span
-        className={[
-          "inline-flex h-9 w-9 items-center justify-center rounded-lg transition",
+      className={[
+        "inline-flex h-9 w-9 items-center justify-center rounded-lg transition shrink-0",
           active
-            ? secondary
-              ? "bg-white text-gray-700"
-              : "bg-white text-indigo-700"
-            : "bg-gray-50 text-gray-600 group-hover:bg-white group-hover:text-indigo-700",
+            ? "bg-white text-[#6b4c5c] shadow-[0_6px_14px_rgba(120,92,108,0.08)]"
+            : "bg-white/85 text-[#7c5c6c] group-hover:bg-white group-hover:text-[#2d1f27] group-hover:shadow-[0_6px_14px_rgba(120,92,108,0.06)]",
         ].join(" ")}
       >
         {icon}
       </span>
 
-      <span className="font-medium">{label}</span>
+      {!compact ? (
+        <span className="font-medium truncate">{label}</span>
+      ) : (
+        <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-30 -translate-y-1/2 whitespace-nowrap rounded-xl border border-[#eee3ea] bg-white px-3 py-2 text-sm font-medium text-[#2d1f27] opacity-0 shadow-[0_12px_30px_rgba(120,92,108,0.12)] transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100">
+          {label}
+        </span>
+      )}
     </Link>
   );
 }
@@ -416,10 +367,26 @@ function IconNote() {
 function IconSpark() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path
-        d="M12 2.75l1.5 4.5h4.75l-3.85 2.8 1.5 4.5L12 14.55l-3.9 2.8 1.5-4.5L5.75 7.25h4.75L12 2.75Z"
+      <rect
+        x="6"
+        y="4"
+        width="12"
+        height="16"
+        rx="3"
         stroke="currentColor"
         strokeWidth="1.7"
+      />
+      <path
+        d="M9 9h6M9 13h6"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <path
+        d="M9 17l1.2 1.2L13 15.5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
@@ -440,6 +407,34 @@ function IconSettings() {
         strokeWidth="1.7"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function SidebarImageIcon({ src, alt }: { src: string; alt: string }) {
+  return <img src={src} alt={alt} className="h-4.5 w-4.5 object-contain" />;
+}
+
+function IconSidebarToggle({ expanded }: { expanded: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+      {expanded ? (
+        <path
+          d="M15 6 9 12l6 6"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <path
+          d="M9 6l6 6-6 6"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
     </svg>
   );
 }

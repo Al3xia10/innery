@@ -4,7 +4,6 @@ import * as React from "react";
 import { useParams } from "next/navigation";
 
 import { SettingsHeader } from "./components/SettingsHeader";
-import { ProfileCard } from "./components/ProfileCard";
 import { SecurityCard } from "./components/SecurityCard";
 import { PreferencesSection } from "./components/PreferencesSection";
 import { DangerZoneCard } from "./components/DangerZoneCard";
@@ -33,17 +32,64 @@ export default function ClientSettingsPage() {
     meError,
     meUser,
     editingProfile,
-    draftName,
     setDraftName,
-    draftEmail,
     setDraftEmail,
-    profileSaving,
     openProfileEdit,
-    cancelProfileEdit,
     saveProfileEdit,
   } = useMeProfile({ onToast });
 
   const { prefs, update } = useClientPrefs({ clientId, onToast });
+
+  const privacyModeLabel =
+    prefs.privacyMode === "private"
+      ? "Private"
+      : prefs.privacyMode === "open"
+        ? "Open"
+        : "Balanced";
+
+  const notificationsLabel = prefs.emailNotifications
+    ? "Active"
+    : "Oprite";
+
+  const handleSaveProfileFromHeader = React.useCallback(
+    async (values: {
+      name: string;
+      email: string;
+      privacyMode: string;
+      notificationsLabel: string;
+    }) => {
+      const nextPrivacyMode = values.privacyMode.toLowerCase().startsWith("private")
+        ? "private"
+        : values.privacyMode.toLowerCase().startsWith("open")
+          ? "open"
+          : "balanced";
+
+      const nextEmailNotifications = values.notificationsLabel !== "Oprite";
+
+      if (!editingProfile) {
+        openProfileEdit();
+      }
+
+      setDraftName(values.name);
+      setDraftEmail(values.email);
+
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      await saveProfileEdit();
+
+      await update({
+        privacyMode: nextPrivacyMode,
+        emailNotifications: nextEmailNotifications,
+      });
+    },
+    [
+      editingProfile,
+      openProfileEdit,
+      saveProfileEdit,
+      setDraftName,
+      setDraftEmail,
+      update,
+    ],
+  );
 
   if (meLoading) {
     return (
@@ -78,24 +124,18 @@ export default function ClientSettingsPage() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-      <SettingsHeader />
+      <SettingsHeader
+        name={meUser.name}
+        email={meUser.email}
+        clientId={clientId}
+        privacyMode={privacyModeLabel}
+        notificationsLabel={notificationsLabel}
+        onEditProfile={openProfileEdit}
+        onSaveProfile={handleSaveProfileFromHeader}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="min-w-0 lg:col-span-7 flex flex-col gap-6 lg:min-h-[calc(100vh-220px)]">
-          <ProfileCard
-            clientId={clientId}
-            meUser={meUser}
-            prefs={prefs}
-            editingProfile={editingProfile}
-            draftName={draftName}
-            setDraftName={setDraftName}
-            draftEmail={draftEmail}
-            setDraftEmail={setDraftEmail}
-            profileSaving={profileSaving}
-            openProfileEdit={openProfileEdit}
-            cancelProfileEdit={cancelProfileEdit}
-            saveProfileEdit={saveProfileEdit}
-          />
           <SecurityCard onToast={onToast} />
           <div className="mt-auto">
             <DangerZoneCard onToast={onToast} />

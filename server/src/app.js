@@ -18,6 +18,7 @@ import clientPlanRoutes from "./routes/client.plan.routes.js";
 import clientJournalRoutes from "./routes/client.journal.routes.js";
 import clientCheckinsRoutes from "./routes/client.checkins.routes.js";
 import clientSettingsRoutes from "./routes/client.settings.routes.js";
+import clientExercisesRoutes from "./routes/client.exercises.routes.js";
 
 export const app = express();
 
@@ -108,6 +109,7 @@ app.use("/api/client", clientJournalRoutes);
 app.use("/api/client", clientCheckinsRoutes);
 // Client settings
 app.use("/api", clientSettingsRoutes);
+app.use("/api/client/exercises", clientExercisesRoutes);
 
 // ---- Errors (CORS) ----
 app.use((err, req, res, next) => {

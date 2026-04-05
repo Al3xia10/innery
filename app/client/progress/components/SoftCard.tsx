@@ -24,10 +24,15 @@ export function SoftCard({
   return (
     <section
       className={cn(
-        "rounded-3xl border border-black/5 bg-white p-6 sm:p-7 shadow-sm",
+        "rounded-3xl border border-black/5 p-6 sm:p-7 shadow-sm",
         className
       )}
-      style={style}
+      style={
+        style ?? {
+          background:
+            "linear-gradient(135deg,#ffffff 0%,rgba(239,208,202,0.18) 60%,rgba(125,128,218,0.08) 100%)",
+        }
+      }
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>

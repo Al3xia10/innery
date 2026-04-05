@@ -340,8 +340,8 @@ export default function ProgressPage() {
       {/* soft canvas */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <div className="absolute -top-10 -left-10 h-72 w-72 rounded-full bg-white/60 blur-3xl" />
-        <div className="absolute top-24 -right-10 h-80 w-80 rounded-full bg-indigo-200/40 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-rose-200/40 blur-3xl" />
+        <div className="absolute top-24 -right-10 h-80 w-80 rounded-full bg-(--color-primary)/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-(--color-soft)/15 blur-3xl" />
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-7">
@@ -356,7 +356,7 @@ export default function ProgressPage() {
             className="lg:col-span-2 rounded-3xl border border-black/5 shadow-sm"
             style={{
               background:
-                "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+                "linear-gradient(135deg,#ffffff 0%,rgba(239,208,202,0.18) 60%,rgba(125,128,218,0.08) 100%)",
             }}
             title={
               range === "7"

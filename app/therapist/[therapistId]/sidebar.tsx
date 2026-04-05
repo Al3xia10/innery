@@ -11,17 +11,6 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
 
-  ///TEMP: Therapist area is still in development.
-  // We hide the therapist navigation entirely so visitors only see the
-  // "under construction" content from the pages.
-  const THERAPIST_UNDER_CONSTRUCTION = true;
-
-  if (THERAPIST_UNDER_CONSTRUCTION) {
-    return null;
-  }
-
-  const [hideMobileDock, setHideMobileDock] = useState(false);
-
   // Mobile draggable dock position (Y axis)
   const [dockY, setDockY] = useState<number | null>(null);
 
@@ -31,44 +20,6 @@ export default function Sidebar({
     role?: string;
     id?: number;
   } | null>(null);
-
-  // If the top navbar (marketing) opens a full-screen mobile menu,
-  // we temporarily hide the dashboard dock so the UI doesn't clash.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const root = document.documentElement;
-
-    const sync = () => {
-      const isOpen = root.dataset.inneryNavOpen === "1";
-      setHideMobileDock(isOpen);
-    };
-
-    sync();
-
-    // Listen to explicit events (recommended)
-    const onOpen = () => {
-      root.dataset.inneryNavOpen = "1";
-      setHideMobileDock(true);
-    };
-    const onClose = () => {
-      root.dataset.inneryNavOpen = "0";
-      setHideMobileDock(false);
-    };
-
-    window.addEventListener("innery:nav-open", onOpen);
-    window.addEventListener("innery:nav-close", onClose);
-
-    // Also observe attribute changes as a fallback
-    const obs = new MutationObserver(sync);
-    obs.observe(root, { attributes: true, attributeFilter: ["data-innery-nav-open"] });
-
-    return () => {
-      window.removeEventListener("innery:nav-open", onOpen);
-      window.removeEventListener("innery:nav-close", onClose);
-      obs.disconnect();
-    };
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -203,105 +154,11 @@ export default function Sidebar({
 
   return (
     <>
-      {/* MOBILE: side dock navigation (icon-only, draggable) */}
-      <nav
-        aria-label="Workspace navigation"
-        className={["md:hidden fixed -right-1.5 z-50", hideMobileDock ? "hidden" : ""].join(" ")}
-        style={{
-          top: dockY ?? "50%",
-          transform: dockY ? "translateY(0)" : "translateY(-50%)",
-        }}
-        onTouchStart={(e) => {
-          const startY = e.touches[0].clientY;
-          const startDockY = dockY ?? window.innerHeight / 2;
-
-          const onMove = (ev: TouchEvent) => {
-            const delta = ev.touches[0].clientY - startY;
-            const next = Math.min(
-              window.innerHeight - 120,
-              Math.max(80, startDockY + delta)
-            );
-            setDockY(next);
-          };
-
-          const onEnd = () => {
-            window.removeEventListener("touchmove", onMove);
-            window.removeEventListener("touchend", onEnd);
-          };
-
-          window.addEventListener("touchmove", onMove);
-          window.addEventListener("touchend", onEnd);
-        }}
-      >
-        <div className="rounded-2xl border border-gray-200 bg-white/70 backdrop-blur shadow-md p-1.5 active:opacity-100 opacity-85 transition">
-          <div className="grid grid-rows-5 gap-1.5">
-            <MobileNavItem
-              href={`/therapist/${therapistId}`}
-              ariaLabel="Dashboard"
-              active={isActive(`/therapist/${therapistId}`, { exact: true })}
-              icon={<IconHome />}
-            />
-            <MobileNavItem
-              href={`/therapist/${therapistId}/clients`}
-              ariaLabel="Clients"
-              active={isActive(`/therapist/${therapistId}/clients`)}
-              icon={<IconUsers />}
-            />
-            <MobileNavItem
-              href={`/therapist/${therapistId}/sessions`}
-              ariaLabel="Sessions"
-              active={isActive(`/therapist/${therapistId}/sessions`)}
-              icon={<IconCalendar />}
-            />
-            <MobileNavItem
-              href={`/therapist/${therapistId}/notes`}
-              ariaLabel="Notes"
-              active={isActive(`/therapist/${therapistId}/notes`)}
-              icon={<IconNote />}
-            />
-            <MobileNavItem
-              href={`/therapist/${therapistId}/settings`}
-              ariaLabel="Settings"
-              active={isActive(`/therapist/${therapistId}/settings`)}
-              icon={<IconSettings />}
-            />
-          </div>
-        </div>
-      </nav>
-
       {/* DESKTOP/TABLET: unchanged */}
       <aside className="hidden md:flex w-72 flex-col border-r border-gray-100 bg-white/80 backdrop-blur px-6 py-7">
         {sidebarContent}
       </aside>
     </>
-  );
-}
-
-
-function MobileNavItem({
-  href,
-  ariaLabel,
-  icon,
-  active,
-}: {
-  href: string;
-  ariaLabel: string;
-  icon: React.ReactNode;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-label={ariaLabel}
-      className={[
-        "group flex h-9 w-9 select-none items-center justify-center rounded-lg transition",
-        active
-          ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100"
-          : "text-gray-600 hover:bg-gray-50 hover:text-indigo-700",
-      ].join(" ")}
-    >
-      <span className="h-5 w-5 flex items-center justify-center">{icon}</span>
-    </Link>
   );
 }
 

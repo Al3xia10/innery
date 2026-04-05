@@ -1,4 +1,3 @@
-// app/client/progress/components/ProgressHeader.tsx
 "use client";
 
 import React from "react";
@@ -14,49 +13,60 @@ export function ProgressHeader({
   setRange: (v: RangeKey) => void;
 }) {
   return (
-    <header
-      className="rounded-3xl border border-black/5 shadow-sm overflow-hidden"
+       <header
+      className="rounded-4xl p-6 border border-black/5 shadow-sm sm:p-7 lg:p-8"
       style={{
         background:
-          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
+          "linear-gradient(135deg,#ffffff 0%,rgba(239,208,202,0.18) 60%,rgba(125,128,218,0.08) 100%)",
       }}
     >
-      <div className="mx-auto max-w-6xl px-6 lg:px-8 py-8 space-y-8">
+      <div className="flex flex-col gap-8">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_260px] xl:items-start">
+          <div className="max-w-2xl">
+            
 
-        <div className="relative flex flex-col gap-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                Progress
-              </div>
+            <h1 className="mt-4 text-[2rem] font-semibold leading-[1.02] tracking-tight text-foreground sm:text-[2.55rem]">
+              Progresul tău
+            </h1>
+            <p className="mt-3 max-w-2xl text-[15px] leading-8 text-(--color-foreground-muted,#6B5A63) sm:text-[17px]">
+              Vezi cum se așază ritmul tău în timp.
+            </p>
 
-              <h1 className="mt-3 text-2xl sm:text-3xl font-semibold text-gray-900">
-                Observă cu blândețe
-              </h1>
+          
+          </div>
 
-              <p className="mt-2 text-sm text-gray-600 max-w-2xl">
-                Aici nu urmărim perfecțiune. Urmărim să te înțelegi. Numerele sunt doar repere — contextul e mai important.
-              </p>
-
-              <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-5">
-                <p className="text-sm font-semibold text-gray-900">Un reminder mic</p>
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                  E normal ca starea să fie în valuri. Progresul nu e o linie dreaptă.
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex items-start justify-start xl:justify-end">
+            <div className="mt-2 rounded-[22px] border border-(--color-soft) bg-white p-1 shadow-[0_8px_18px_rgba(31,23,32,0.06)] xl:mt-4">
               <PillToggle value={range} onChange={setRange} />
-              <Link
-                href="/client/journal"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
-              >
-                Scriu un rând
-              </Link>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <div className="rounded-[30px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] p-4 shadow-[0_16px_34px_rgba(210,140,180,0.16)] sm:p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-foreground-muted, #6B5A63)]">
+              cum să te uiți la date
+            </p>
+            <p className="mt-4 max-w-2xl text-[15px] leading-8 text-[var(--color-foreground-muted, #6B5A63)]">
+              Privește progresul cu blândețe.
+            </p>
+            <ul className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3 text-sm leading-6 text-foreground">
+              <li>
+                <div className="rounded-[18px] bg-(--color-card) px-3 py-2.5 text-[13px] font-medium text-foreground shadow-[0_6px_12px_rgba(180,120,150,0.14)]">
+                  vezi evoluția în timp
+                </div>
+              </li>
+              <li>
+                <div className="rounded-[18px] bg-(--color-card) px-3 py-2.5 text-[13px] font-medium text-foreground shadow-[0_6px_12px_rgba(180,120,150,0.14)]">
+                  compară ultimele zile
+                </div>
+              </li>
+              <li>
+                <div className="rounded-[18px] bg-(--color-card) px-3 py-2.5 text-[13px] font-medium text-foreground shadow-[0_6px_12px_rgba(180,120,150,0.14)]">
+                  caută tipare repetate
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
