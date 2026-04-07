@@ -2,17 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { apiFetch, setAccessToken } from "@/app/_lib/authClient";
 
 export default function SignupPageAlt() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const requestedRole = searchParams.get("role");
-  const [role, setRole] = useState<"therapist" | "client">(
-    requestedRole === "client" ? "client" : "therapist"
-  );
+  const [requestedRole, setRequestedRole] = useState<string | null>(null);
+  const [role, setRole] = useState<"therapist" | "client">("therapist");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,6 +21,13 @@ export default function SignupPageAlt() {
   const [showSessionLoader, setShowSessionLoader] = useState(false);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   const [sessionNoticeProgress, setSessionNoticeProgress] = useState(100);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    setRequestedRole(params.get("role"));
+  }, []);
 
   useEffect(() => {
     if (requestedRole === "client") {

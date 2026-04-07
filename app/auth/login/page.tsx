@@ -1,18 +1,31 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch, setAccessToken } from "@/app/_lib/authClient";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [requestedRole, setRequestedRole] = useState<string | null>(null);
+  const [role, setRole] = useState<"therapist" | "client">("therapist");
 
-  const requestedRole = searchParams.get("role");
-  const [role, setRole] = useState<"therapist" | "client">(
-    requestedRole === "client" ? "client" : "therapist"
-  );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [showSessionLoader, setShowSessionLoader] = useState(false);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const [sessionNoticeProgress, setSessionNoticeProgress] = useState(100);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    setRequestedRole(params.get("role"));
+  }, []);
 
   useEffect(() => {
     if (requestedRole === "client") {
@@ -24,16 +37,6 @@ export default function LoginPage() {
       setRole("therapist");
     }
   }, [requestedRole]);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
-  const [showSessionLoader, setShowSessionLoader] = useState(false);
-  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
-  const [sessionNoticeProgress, setSessionNoticeProgress] = useState(100);
 
   const copy = useMemo(() => {
     if (role === "therapist") {
@@ -379,7 +382,7 @@ export default function LoginPage() {
             <div className="mt-8 border-t border-(--color-soft) pt-6 text-sm text-gray-600">
               <span>Don’t have an account?</span>{" "}
               <Link
-                href="/auth/signup"
+                href={`/auth/signup?role=${role}`}
                 className="font-medium text-(--color-accent) hover:opacity-90"
               >
                 Sign up
