@@ -7,8 +7,18 @@ import { apiFetch, setAccessToken } from "@/app/_lib/authClient";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [requestedRole, setRequestedRole] = useState<string | null>(null);
-  const [role, setRole] = useState<"therapist" | "client">("therapist");
+  const [requestedRole] = useState<string | null>(() => {
+  if (typeof window === "undefined") return null;
+
+  const params = new URLSearchParams(window.location.search);
+  return params.get("role");
+});
+const [role, setRole] = useState<"therapist" | "client">(() => {
+  if (typeof window === "undefined") return "therapist";
+
+  const params = new URLSearchParams(window.location.search);
+  return params.get("role") === "client" ? "client" : "therapist";
+});
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,13 +30,7 @@ export default function LoginPage() {
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   const [sessionNoticeProgress, setSessionNoticeProgress] = useState(100);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const params = new URLSearchParams(window.location.search);
-    setRequestedRole(params.get("role"));
-  }, []);
-
+  
   useEffect(() => {
     if (requestedRole === "client") {
       setRole("client");
@@ -56,10 +60,17 @@ export default function LoginPage() {
     };
   }, [role]);
 
+  // Removed the line: const targetRole = requestedRole ?? role;
+
   useEffect(() => {
     let cancelled = false;
 
     const checkSession = async () => {
+      const requestedRoleFromUrl =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("role")
+          : null;
+
       try {
         const rawUser = localStorage.getItem("innery_user");
 
@@ -75,7 +86,7 @@ export default function LoginPage() {
         const user = me?.user ?? me;
 
         if (user?.role === "therapist" && user?.id) {
-          if (requestedRole === "client") {
+          if (requestedRoleFromUrl === "client") {
             setSessionNotice(
               "You’re already signed in as a therapist, not a client. Redirecting you to your therapist workspace..."
             );
@@ -91,7 +102,7 @@ export default function LoginPage() {
         }
 
         if (user?.role === "client") {
-          if (requestedRole === "therapist") {
+          if (requestedRoleFromUrl === "therapist") {
             setSessionNotice(
               "You’re already signed in as a client, not a therapist. Redirecting you to your client space..."
             );
@@ -108,6 +119,7 @@ export default function LoginPage() {
       } catch {
         try {
           localStorage.removeItem("innery_user");
+          localStorage.removeItem("innery_token");
         } catch {}
       }
 

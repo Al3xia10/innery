@@ -7,8 +7,19 @@ import { apiFetch, setAccessToken } from "@/app/_lib/authClient";
 
 export default function SignupPageAlt() {
   const router = useRouter();
-  const [requestedRole, setRequestedRole] = useState<string | null>(null);
-  const [role, setRole] = useState<"therapist" | "client">("therapist");
+  const [requestedRole] = useState<string | null>(() => {
+  if (typeof window === "undefined") return null;
+
+  const params = new URLSearchParams(window.location.search);
+  return params.get("role");
+});
+
+const [role, setRole] = useState<"therapist" | "client">(() => {
+  if (typeof window === "undefined") return "therapist";
+
+  const params = new URLSearchParams(window.location.search);
+  return params.get("role") === "client" ? "client" : "therapist";
+});
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,28 +33,17 @@ export default function SignupPageAlt() {
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   const [sessionNoticeProgress, setSessionNoticeProgress] = useState(100);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const params = new URLSearchParams(window.location.search);
-    setRequestedRole(params.get("role"));
-  }, []);
-
-  useEffect(() => {
-    if (requestedRole === "client") {
-      setRole("client");
-      return;
-    }
-
-    if (requestedRole === "therapist") {
-      setRole("therapist");
-    }
-  }, [requestedRole]);
+  // const targetRole = requestedRole ?? role;
 
   useEffect(() => {
     let cancelled = false;
 
     const checkSession = async () => {
+      const requestedRoleFromUrl =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("role")
+          : null;
+
       try {
         const rawUser = localStorage.getItem("innery_user");
 
@@ -59,7 +59,7 @@ export default function SignupPageAlt() {
         const user = me?.user ?? me;
 
         if (user?.role === "therapist" && user?.id) {
-          if (requestedRole === "client") {
+          if (requestedRoleFromUrl === "client") {
             setSessionNotice(
               "You’re already signed in as a therapist, not a client. Redirecting you to your therapist workspace..."
             );
@@ -75,7 +75,7 @@ export default function SignupPageAlt() {
         }
 
         if (user?.role === "client") {
-          if (requestedRole === "therapist") {
+          if (requestedRoleFromUrl === "therapist") {
             setSessionNotice(
               "You’re already signed in as a client, not a therapist. Redirecting you to your client space..."
             );
@@ -92,6 +92,7 @@ export default function SignupPageAlt() {
       } catch {
         try {
           localStorage.removeItem("innery_user");
+          localStorage.removeItem("innery_token");
         } catch {}
       }
 
@@ -105,7 +106,7 @@ export default function SignupPageAlt() {
     return () => {
       cancelled = true;
     };
-  }, [requestedRole, router]);
+  }, [router]);
 
   useEffect(() => {
     if (!isCheckingSession) {
