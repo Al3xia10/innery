@@ -56,7 +56,7 @@ export default function PricingTeaser() {
   ] as const;
 
   return (
-    <section className="bg-[#F7F8FC]">
+    <section className="bg-(--color-card)/40">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="max-w-2xl">
           <h2 className="mt-2 text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
@@ -68,14 +68,14 @@ export default function PricingTeaser() {
 
           <div className="mt-8 flex items-center justify-center md:justify-start">
             <div
-              className="relative inline-flex rounded-2xl border border-gray-200 bg-white/80 p-1 shadow-sm backdrop-blur"
+              className="relative inline-flex rounded-2xl border border-(--color-soft) bg-white p-1 shadow-sm"
               role="group"
               aria-label="Billing period"
             >
               {/* sliding thumb */}
               <span
                 aria-hidden="true"
-                className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-indigo-600 shadow-sm transition-transform duration-200 ease-out ${
+                className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-(--color-accent) shadow-sm transition-transform duration-200 ease-out ${
                   isYearly ? "translate-x-full" : "translate-x-0"
                 }`}
               />
@@ -83,7 +83,7 @@ export default function PricingTeaser() {
               <button
                 type="button"
                 onClick={() => setBilling("monthly")}
-                className={`relative z-10 inline-flex min-w-38 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 ${
+                className={`relative z-10 inline-flex min-w-38 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-primary)/60 ${
                   !isYearly
                     ? "text-white"
                     : "text-gray-700 hover:text-gray-900"
@@ -96,7 +96,7 @@ export default function PricingTeaser() {
               <button
                 type="button"
                 onClick={() => setBilling("yearly")}
-                className={`relative z-10 inline-flex min-w-38 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 ${
+                className={`relative z-10 inline-flex min-w-38 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-primary)/60 ${
                   isYearly
                     ? "text-white"
                     : "text-gray-700 hover:text-gray-900"
@@ -108,7 +108,7 @@ export default function PricingTeaser() {
                   className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold transition ${
                     isYearly
                       ? "bg-white/20 text-white"
-                      : "bg-[#FAD2C8] text-gray-900"
+                      : "bg-(--color-card) text-gray-900"
                   }`}
                 >
                   Save 20%
@@ -124,8 +124,8 @@ export default function PricingTeaser() {
               key={p.name}
               className={`group rounded-2xl border bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${
                 p.highlight
-                  ? "border-indigo-200 ring-1 ring-indigo-200 hover:border-indigo-300"
-                  : "border-gray-200 hover:border-indigo-300"
+                  ? "border-(--color-soft) ring-1 ring-(--color-soft) hover:border-(--color-accent)"
+                  : "border-(--color-soft) hover:border-(--color-accent)"
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -135,7 +135,7 @@ export default function PricingTeaser() {
                 </div>
 
                 {p.highlight && (
-                  <span className="inline-flex items-center rounded-full bg-indigo-600/10 px-3 py-1 text-xs font-semibold text-indigo-700">
+                  <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
                     Best value
                   </span>
                 )}
@@ -161,7 +161,7 @@ export default function PricingTeaser() {
               <ul className="mt-6 space-y-3 text-sm text-gray-700">
                 {p.features.map((f) => (
                   <li key={f} className="flex gap-3">
-                    <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700">
+                    <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center text-(--color-accent)">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -188,8 +188,8 @@ export default function PricingTeaser() {
                   href={p.cta.href}
                   className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition ${
                     p.highlight
-                      ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                      : "border border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
+                      ? "bg-(--color-accent) text-white hover:opacity-90"
+                      : "border border-(--color-soft) bg-white text-gray-900 hover:bg-(--color-card)"
                   }`}
                 >
                   {p.cta.label}

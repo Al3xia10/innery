@@ -30,7 +30,7 @@ export default function PainPoints() {
   ];
 
   return (
-    <section className="bg-[#F7F8FC]">
+    <section className="bg-(--color-card)/40">
       <div className="mx-auto max-w-6xl px-6 py-18 md:py-20">
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
@@ -43,12 +43,12 @@ export default function PainPoints() {
 
         <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* LESS */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
-              <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500">
+              <h3 className="text-xs uppercase tracking-wide font-semibold text-(--color-primary)">
                 Less of this
               </h3>
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
+              <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
                 friction
               </span>
             </div>
@@ -56,7 +56,7 @@ export default function PainPoints() {
             <ul className="mt-5 space-y-4">
               {less.map((item) => (
                 <li key={item.title} className="flex gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-600">
+                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-(--color-accent) text-white">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -88,12 +88,12 @@ export default function PainPoints() {
           </div>
 
           {/* MORE */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
-              <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500">
+              <h3 className="text-xs uppercase tracking-wide font-semibold text-(--color-primary)">
                 More of this
               </h3>
-              <span className="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+              <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
                 clarity
               </span>
             </div>
@@ -101,7 +101,7 @@ export default function PainPoints() {
             <ul className="mt-5 space-y-4">
               {more.map((item) => (
                 <li key={item.title} className="flex gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700">
+                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-(--color-accent) border border-(--color-accent)">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"

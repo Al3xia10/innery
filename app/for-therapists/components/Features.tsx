@@ -23,7 +23,7 @@ export default function Features() {
   ];
 
   return (
-    <section className="bg-[#F7F8FC]">
+    <section className="bg-(--color-card)/40">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-tight">
@@ -38,31 +38,27 @@ export default function Features() {
           {features.map((f) => (
             <div
               key={f.title}
-              className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="group rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="flex items-start gap-4">
-                <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600/10 text-indigo-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    className="h-5 w-5"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9Z"
-                    />
-                  </svg>
-                </div>
+                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-(--color-accent) text-white">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-4 w-4"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </span>
+              
 
                 <div>
                   <h3 className="text-base font-semibold text-gray-900">

@@ -19,7 +19,7 @@ const topics = [
 
 export default function Topics() {
   return (
-    <div className="mt-10">
+    <div className="mt-20">
       <div className="max-w-2xl">
         <h2 className="text-lg md:text-xl font-semibold text-gray-900">
           Common topics
@@ -33,7 +33,7 @@ export default function Topics() {
         {topics.map((t) => (
           <div
             key={t.title}
-            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+            className="rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm"
           >
             <p className="text-sm font-semibold text-gray-900">{t.title}</p>
             <p className="mt-2 text-sm text-gray-600 leading-relaxed">{t.text}</p>

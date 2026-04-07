@@ -25,7 +25,7 @@ export default function Hero() {
           <div className="flex flex-wrap gap-4 mt-4">
             <Link
               href="/auth/login?role=therapist"
-              className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-md text-sm md:text-base transition"
+              className="rounded-xl bg-(--color-accent) px-6 py-3 text-[0.95rem] font-medium text-white shadow-sm transition hover:opacity-95"
               role="button"
             >
               For therapists
@@ -33,7 +33,7 @@ export default function Hero() {
 
             <Link
               href="/auth/login?role=client"
-              className="bg-white hover:bg-gray-100 text-gray-900 border border-gray-300 px-6 py-3 rounded-md text-sm md:text-base transition"
+              className="rounded-xl border border-(--color-soft) bg-white px-6 py-3 text-[0.95rem] font-medium text-gray-900 shadow-sm transition hover:bg-(--color-card)"
               role="button"
             >
               For clients
@@ -42,15 +42,20 @@ export default function Hero() {
         </div>
 
         {/* RIGHT – IMAGE */}
-        <div className="w-full md:w-1/2 flex justify-center md:mt-2">
-          <Image
-            src="/hero.png"
-            alt="Illustration representing online therapy and reflection"
-            width={520}
-            height={520}
-            className="object-contain"
-            priority
-          />
+                <div className="w-full md:w-1/2 flex justify-center md:mt-2 relative">
+          <div className="relative flex justify-center items-center">
+
+            <div className="absolute -z-10 w-[90%] h-[90%] bg-(--color-soft)/60 rounded-[45%] blur-3xl" />
+
+            <Image
+              src="/hero.png"
+              alt="Illustration representing online therapy and reflection"
+              width={520}
+              height={520}
+              className="object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.08)]"
+              priority
+            />
+          </div>
         </div>
 
       </div>

@@ -3,13 +3,13 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden w-full bg-[#FAD2C8]">
+    <footer className="relative overflow-hidden w-full bg-(--color-card)">
 
       {/* WAVE – transition from blue to pink */}
       <svg
         viewBox="0 0 1200 200"
         preserveAspectRatio="none"
-        className="absolute -top-px left-0 w-full h-36 fill-indigo-500"
+        className="absolute -top-px left-0 w-full h-36 fill-[#ffffff]"
       >
         <path
           d="
@@ -24,12 +24,12 @@ export default function Footer() {
       </svg>
 
       {/* FOOTER CONTENT */}
-      <div className="relative z-10 pt-36 mx-auto max-w-6xl px-6">
+      <div className="relative z-10 pt-32 mx-auto max-w-6xl px-6 sm:pt-36">
 
-        <div className="flex flex-col md:flex-row justify-between gap-12">
+        <div className="flex flex-col gap-12 md:flex-row md:justify-between">
 
           {/* LEFT – BRAND + SOCIAL */}
-          <div className="flex flex-col gap-6 max-w-sm">
+          <div className="flex max-w-sm flex-col items-center gap-6 text-center md:items-start md:text-left">
             <div>
               <h4 className="text-lg font-semibold text-gray-900">Innery</h4>
               <p className="mt-2 text-sm text-gray-700 leading-relaxed">
@@ -39,14 +39,14 @@ export default function Footer() {
             </div>
 
             {/* SOCIAL ICONS */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center gap-4 md:justify-start">
               {/* Instagram */}
               <a
                 href="https://instagram.com/_.alexiaaa.____/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="w-10 h-10 rounded-full bg-black/80 flex items-center justify-center hover:bg-black transition"
+                className="h-11 w-11 rounded-full bg-black/80 flex items-center justify-center transition hover:bg-black active:scale-[0.97]"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -65,7 +65,7 @@ export default function Footer() {
               {/* LinkedIn */}
               <a
                 href="#"
-                className="w-10 h-10 rounded-full bg-black/80 flex items-center justify-center hover:bg-black transition"
+                className="h-11 w-11 rounded-full bg-black/80 flex items-center justify-center transition hover:bg-black active:scale-[0.97]"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -80,7 +80,7 @@ export default function Footer() {
               {/* Twitter */}
               <a
                 href="#"
-                className="w-10 h-10 rounded-full bg-black/80 flex items-center justify-center hover:bg-black transition"
+                className="h-11 w-11 rounded-full bg-black/80 flex items-center justify-center transition hover:bg-black active:scale-[0.97]"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -95,22 +95,22 @@ export default function Footer() {
           </div>
 
           {/* RIGHT – NAV */}
-          <div className="flex flex-col gap-4 text-sm">
+          <div className="flex flex-col items-center gap-4 text-sm text-center md:items-start md:text-left">
             <span className="text-gray-900 uppercase tracking-wide text-xs">
               Explore
             </span>
-            <nav className="flex flex-col gap-3 font-medium text-gray-700">
-              <Link href="/therapist" className="hover:text-gray-900 transition">For therapists</Link>
-              <Link href="/client" className="hover:text-gray-900 transition">For clients</Link>
-              <Link href="/about" className="hover:text-gray-900 transition">About Innery</Link>
-              <Link href="/contact" className="hover:text-gray-900 transition">Contact</Link>
+            <nav className="flex flex-col gap-3.5 font-medium text-gray-700">
+              <Link href="/therapist" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">For therapists</Link>
+              <Link href="/client" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">For clients</Link>
+              <Link href="/about" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">About Innery</Link>
+              <Link href="/contact" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">Contact</Link>
             </nav>
           </div>
 
         </div>
 
         {/* COPYRIGHT */}
-        <div className="mt-12 mb-6 pt-6 border-t border-indigo-500 text-xs text-gray-700 text-center">
+        <div className="mt-12 mb-6 pt-6 border-t border-(--color-accent) text-[0.75rem] text-gray-700 text-center">
           © 2025 Innery. All rights reserved.
         </div>
 

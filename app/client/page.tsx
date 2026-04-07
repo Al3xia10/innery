@@ -58,6 +58,16 @@ export default function ClientTodayPage() {
   const [saving, setSaving] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
   const [errorToast, setErrorToast] = useState<string | null>(null);
+  const [accessToast, setAccessToast] = useState<string | null>(() => {
+  try {
+    const rawNotice = localStorage.getItem("innery_redirect_notice");
+    if (!rawNotice) return null;
+    localStorage.removeItem("innery_redirect_notice");
+    return rawNotice;
+  } catch {
+    return null;
+  }
+});
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [repereOpen, setRepereOpen] = useState(false);
   const checkinSectionRef = useRef<HTMLElement | null>(null);
@@ -67,45 +77,68 @@ export default function ClientTodayPage() {
   const lastCheckin = data?.today.checkin.last ?? null;
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const meRes = await apiFetch("/api/me");
-        setMe(meRes);
+  const load = async () => {
+    try {
+      const meRes = await apiFetch("/api/me");
+      setMe(meRes);
 
-        const role = getMeRole(meRes);
-        if (role !== "client") {
+      const role = getMeRole(meRes);
+      if (role !== "client") {
+        try {
+          localStorage.setItem(
+            "innery_redirect_notice",
+            "You don’t have access to the client workspace."
+          );
+        } catch {}
+
+        if (role === "therapist") {
+          const therapistId = (meRes as any)?.id ?? (meRes as any)?.user?.id;
+          router.replace(therapistId ? `/therapist/${therapistId}` : "/");
+        } else {
           router.replace("/");
-          return;
         }
-
-        const today = await apiFetch("/api/client/today");
-        setData(today);
-
-        // Prefill inputs with last check-in (nice UX)
-        const last = today?.today?.checkin?.last;
-        if (last) {
-          setMood(Number(last.mood ?? 7));
-          setAnxiety(Number(last.anxiety ?? 4));
-          setEnergy(Number(last.energy ?? 6));
-          const sh = Number(last.sleepHours ?? 6.5);
-          setSleepHours(Number.isFinite(sh) ? sh : 6.5);
-          setNote((last.note ?? "").toString());
-        }
-      } catch (e: any) {
-        const msg = String(e?.message ?? "");
-        const unauthorized =
-          e?.status === 401 || msg.includes("401") || msg.toLowerCase().includes("unauthorized");
-        if (unauthorized) {
-          router.replace("/login");
-          return;
-        }
-        setError("Nu s-a putut încărca pagina Today.");
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
-    load();
-  }, [router]);
+
+      const today = await apiFetch("/api/client/today");
+      setData(today);
+
+      const last = today?.today?.checkin?.last;
+      if (last) {
+        setMood(Number(last.mood ?? 7));
+        setAnxiety(Number(last.anxiety ?? 4));
+        setEnergy(Number(last.energy ?? 6));
+        const sh = Number(last.sleepHours ?? 6.5);
+        setSleepHours(Number.isFinite(sh) ? sh : 6.5);
+        setNote((last.note ?? "").toString());
+      }
+    } catch (e: any) {
+      const msg = String(e?.message ?? "");
+      const unauthorized =
+        e?.status === 401 || msg.includes("401") || msg.toLowerCase().includes("unauthorized");
+      if (unauthorized) {
+        router.replace("/login");
+        return;
+      }
+      setError("Nu s-a putut încărca pagina Today.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  load();
+}, [router]);
+useEffect(() => {
+  if (!accessToast) return;
+
+  const timeout = window.setTimeout(() => {
+    setAccessToast(null);
+  }, 12000);
+
+  return () => {
+    window.clearTimeout(timeout);
+  };
+}, [accessToast]);
   
 
   const rawDate = data?.today.date;
@@ -158,7 +191,33 @@ export default function ClientTodayPage() {
   });
 }
 
-  if (loading) return <div className="p-8">Se încarcă…</div>;
+  if (loading)
+  return (
+    <section className="min-h-screen bg-background">
+      {accessToast ? (
+        <div className="fixed inset-x-4 top-4 z-50 flex justify-center sm:inset-x-0">
+          <div className="w-full max-w-md rounded-3xl border border-(--color-soft) bg-white px-5 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-1 ring-(--color-soft)">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-soft) text-(--color-primary)">
+                <span className="text-base font-semibold">i</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Access notice</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{accessToast}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex min-h-screen items-center justify-center px-6">
+        <div className="flex items-center gap-3 rounded-2xl border border-(--color-soft) bg-white px-5 py-4 text-sm text-gray-600 shadow-sm">
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-(--color-soft) border-t-(--color-accent)" />
+          <span>Se încarcă…</span>
+        </div>
+      </div>
+    </section>
+  );
   if (error || !data) return <div className="p-8 text-red-600">{error ?? "Eroare"}</div>;
 
   const nextSessionLabel = data.today.nextSession?.startsAt
@@ -174,6 +233,22 @@ export default function ClientTodayPage() {
           <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
             <p className="text-sm font-semibold text-gray-900">✔️ Ai făcut loc pentru tine.</p>
             <p className="text-xs text-gray-600">Chiar și un minut contează.</p>
+          </div>
+        </div>
+      ) : null}
+
+      {accessToast ? (
+        <div className="fixed inset-x-4 top-4 z-50 flex justify-center sm:inset-x-0">
+          <div className="w-full max-w-md rounded-3xl border border-(--color-soft) bg-white px-5 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-1 ring-(--color-soft)">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-soft) text-(--color-primary)">
+                <span className="text-base font-semibold">i</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Access notice</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{accessToast}</p>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
@@ -197,7 +272,7 @@ export default function ClientTodayPage() {
                     {initialsFromName(getMeName(me))}
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#b17d72]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-(--color-primary)">
                       welcome back
                     </p>
                     <h1 className="mt-1 text-[1.5rem] font-semibold leading-none tracking-tight text-slate-900 sm:text-[1.7rem]">
@@ -250,14 +325,14 @@ export default function ClientTodayPage() {
           <div className="px-4 sm:px-5 lg:px-7">
           <div className="space-y-8">
              <section className="bg-transparent p-0 shadow-none">
-                <div className="flex items-center justify-between gap-3 rounded-4xl bg-white border border-black/15 px-5 py-5  shadow-[0_16px_32px_rgba(31,23,32,0.08)] sm:px-6">
+                <div className="flex items-center justify-between gap-3 rounded-4xl bg-white border border-black/5 px-5 py-5  shadow-[0_16px_32px_rgba(31,23,32,0.08)] sm:px-6">
                   <div>
                     <p className="text-lg font-semibold tracking-tight text-foreground">Scrie o notiță nouă în jurnal</p>
                     <p className="mt-1 text-sm text-foreground/85">Un rând mic e suficient.</p>
                   </div>
                   <Link
                     href="/client/journal"
-                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#fff6fb] text-2xl font-medium text-[#9a5d77] shadow-[0_10px_24px_rgba(180,112,140,0.18)] transition hover:bg-white"
+                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-(--color-card) text-2xl font-medium text-[#9a5d77] transition hover:bg-(--color-soft)"
                     aria-label="Deschide jurnalul"
                     title="Deschide jurnalul"
                   >
@@ -274,7 +349,7 @@ export default function ClientTodayPage() {
                   </div>
                 </div>
 
-                                <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <SoftFeatureCard
                     badge="plan"
                     title="Planul tău"
@@ -397,7 +472,7 @@ export default function ClientTodayPage() {
               ) : null}
             </div>
 
-             <section className="mt-10 rounded-[28px] bg-[linear-gradient(180deg,var(--color-card)_0%,var(--background)_100%)] p-6 shadow-[0_16px_36px_rgba(186,137,159,0.10)] ring-1 ring-(--color-soft)">
+             <section className="mt-10 rounded-[28px] bg-[linear-gradient(135deg,#ffffff_0%,rgba(239,208,202,0.18)_60%,rgba(125,128,218,0.08)_100%)] p-6  border border-black/5">
                 <div>
                   <p className="text-lg font-semibold tracking-tight text-slate-900">Ultimul tău check-in</p>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
@@ -407,7 +482,7 @@ export default function ClientTodayPage() {
 
                 {lastCheckin ? (
                   <>
-                    <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4 ">
                       <Metric label="Stare" value={`${lastCheckin.mood}/10`} />
                       <Metric label="Anxietate" value={`${lastCheckin.anxiety}/10`} />
                       <Metric label="Energie" value={`${lastCheckin.energy}/10`} />
@@ -415,14 +490,14 @@ export default function ClientTodayPage() {
                     </div>
 
                     {lastCheckin.note ? (
-                      <div className="mt-6 rounded-3xl border border-[#ecd7e1] bg-[linear-gradient(180deg,#fffdfd_0%,#fff6fa_100%)] p-5 text-sm text-gray-700 shadow-sm">
+                      <div className="mt-6 rounded-3xl border border-(--color-card) bg-(--color-card) p-5 text-sm text-gray-700 shadow-sm">
                         <span className="font-semibold text-gray-900">Notiță: </span>
                         {lastCheckin.note}
                       </div>
                     ) : null}
                   </>
                 ) : (
-                  <div className="mt-4 rounded-3xl border border-dashed border-[#e9ced9] bg-white/80 p-4 text-sm text-slate-500">
+                  <div className="mt-4 rounded-3xl border border-dashed border-(--color-card) bg-white/80 p-4 text-sm text-slate-500">
                     Încă nu ai un check-in salvat. Poți începe chiar de sus.
                   </div>
                 )}
@@ -437,7 +512,7 @@ export default function ClientTodayPage() {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-(--color-soft) bg-[linear-gradient(180deg,var(--color-card)_0%,var(--background)_100%)] p-5 shadow-[0_10px_22px_rgba(31,23,32,0.06)]">
+    <div className="rounded-3xl border border-black/5 bg-(--color-card) p-5 ">
       <p className="text-xs font-medium text-[#8f7e86]">{label}</p>
       <p className="mt-2 text-sm font-semibold text-slate-900">{value}</p>
     </div>
@@ -506,7 +581,7 @@ function SoftFeatureCard({
       </div>
       <div className="mt-3 flex items-center justify-between rounded-[20px] bg-white px-4 py-3 shadow-[0_8px_18px_rgba(31,23,32,0.08)]">
         <span className="text-sm font-semibold text-slate-900">{actionLabel}</span>
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#fff6fb] text-lg text-[#9c5d77] shadow-sm">+</span>
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(--color-card) text-2xl font-medium text-[#9a5d77] transition hover:bg-(--color-soft)">+</span>
       </div>
     </>
   );

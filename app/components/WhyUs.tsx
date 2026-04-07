@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function WhyUs() {
   return (
-    <section className="relative overflow-hidden bg-[#FAD2C8]">
+    <section className="relative overflow-hidden bg-(--color-card)">
     <svg
       aria-hidden="true"
       viewBox="0 0 1200 200"
@@ -19,7 +19,7 @@ export default function WhyUs() {
         L0,0
         Z
       "
-      fill="#FFFFFF"
+      fill="#ffffff"
     />
   </svg>
 
@@ -30,7 +30,7 @@ export default function WhyUs() {
           <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
             Why Innery? <br /> Built for therapist–client work
           </h2>
-          <p className="mt-4 text-gray-700 text-base leading-relaxed max-w-xl mx-auto">
+          <p className="mt-4 text-gray-600 text-base leading-relaxed max-w-xl mx-auto">
             Innery supports the ongoing work of therapy — notes, reflections, and follow‑ups
             that bring clarity before, during, and between sessions.
           </p>
@@ -59,7 +59,7 @@ export default function WhyUs() {
               },
             ].map((item, index) => (
               <li key={index} className="flex gap-6">
-                <span className="shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-semibold">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-(--color-accent) text-white flex items-center justify-center font-semibold">
                   {index + 1}
                 </span>
 
@@ -76,8 +76,8 @@ export default function WhyUs() {
           </ul>
 
           {/* RIGHT – FLOATING CARD */}
-          <div className="relative md:mt-16 z-20">
-            <div className="bg-white rounded-xl shadow-lg p-10 max-w-md mx-auto">
+          <div className="relative md:mt-10 z-20">
+            <div className="bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] rounded-xl shadow-md border border-(--color-soft) p-10 max-w-md mx-auto">
               <h3 className="font-semibold text-gray-900 mb-4 leading-snug">
                 Built with therapists
               </h3>
@@ -89,7 +89,7 @@ export default function WhyUs() {
 
               <Link
                 href="/about"
-                className="inline-block bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-3 rounded-md text-sm transition"
+                className="inline-block bg-white hover:bg-(--color-card) text-forceground px-5 py-3 rounded-md text-sm transition"
               >
                 About the approach
               </Link>

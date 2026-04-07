@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/app/_lib/authClient";
 
 type SessionStatus = "Scheduled" | "Completed" | "Canceled" | "NoShow";
@@ -54,6 +54,7 @@ function getSessionTypeLabel(type?: Session["type"]) {
 
 export default function TherapistDashboard() {
   const params = useParams() as { therapistId?: string };
+  const router = useRouter();
   const therapistId = (params?.therapistId as string) ?? "t1";
 
   const [clients, setClients] = React.useState<Client[]>([]);
@@ -62,8 +63,9 @@ export default function TherapistDashboard() {
   const [notesCountLoading, setNotesCountLoading] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [therapistName, setTherapistName] = React.useState<string>(therapistId);
+  const [accessToast, setAccessToast] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
+    React.useEffect(() => {
     let alive = true;
 
     (async () => {
@@ -71,7 +73,47 @@ export default function TherapistDashboard() {
         setLoading(true);
 
         const me = await apiFetch("/api/me", { method: "GET" });
-        const meName = me?.user?.name;
+        const meUser = me?.user ?? me;
+        const meRole = meUser?.role;
+        const meId = meUser?.id != null ? String(meUser.id) : null;
+        const meName = meUser?.name;
+
+        if (meRole !== "therapist") {
+          const message = "You don’t have access to the therapist workspace.";
+
+          try {
+            localStorage.setItem("innery_redirect_notice", message);
+          } catch {}
+
+          if (alive) {
+            setAccessToast(message);
+            setLoading(false);
+          }
+
+          window.setTimeout(() => {
+            router.replace(meRole === "client" ? "/client" : "/");
+          }, 1400);
+          return;
+        }
+
+        if (meId && meId !== therapistId) {
+          const message = "You’ve been redirected to your therapist workspace.";
+
+          try {
+            localStorage.setItem("innery_redirect_notice", message);
+          } catch {}
+
+          if (alive) {
+            setAccessToast(message);
+            setLoading(false);
+          }
+
+          window.setTimeout(() => {
+            router.replace(`/therapist/${meId}`);
+          }, 5400);
+          return;
+        }
+
         if (alive && typeof meName === "string" && meName.trim()) {
           setTherapistName(meName);
         }
@@ -128,7 +170,24 @@ export default function TherapistDashboard() {
     return () => {
       alive = false;
     };
-  }, [therapistId]);
+  }, [router, therapistId]);
+    React.useEffect(() => {
+    try {
+      const rawNotice = localStorage.getItem("innery_redirect_notice");
+      if (!rawNotice) return;
+
+      setAccessToast(rawNotice);
+      localStorage.removeItem("innery_redirect_notice");
+
+      const timeout = window.setTimeout(() => {
+        setAccessToast(null);
+      }, 3200);
+
+      return () => {
+        window.clearTimeout(timeout);
+      };
+    } catch {}
+  }, []);
 
   const displayTherapistName = therapistName || therapistId;
 
@@ -247,8 +306,26 @@ export default function TherapistDashboard() {
 
 
   return (
-    <section className="min-h-screen p-2 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
+  <section className="min-h-screen p-2 sm:p-6 lg:p-8">
+    {accessToast ? (
+        <div className="fixed inset-x-4 top-4 z-50 flex justify-center sm:inset-x-0">
+          <div className="w-full max-w-md rounded-3xl border border-(--color-soft) bg-white px-5 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-2 ring-(--color-soft)">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-soft) text-(--color-primary)">
+                <span className="text-base font-semibold">i</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Access notice</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{accessToast}</p>
+                <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.16em] text-(--color-primary)">
+                  Redirecting...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
         <div className="rounded-3xl border border-[#e7e6f2] bg-[#f8f7fc] px-4 py-5 shadow-[0_14px_32px_rgba(31,29,26,0.06)] sm:rounded-[34px] sm:px-8 sm:py-8 lg:px-10">
           <div className="max-w-3xl space-y-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#d9d5ff] bg-white px-3 py-1 text-[11px] font-semibold text-[#5b4ce6] shadow-sm">

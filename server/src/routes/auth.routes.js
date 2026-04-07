@@ -75,6 +75,7 @@ router.post("/signup", async (req, res) => {
 const loginSchema = z.object({
   email: z.string().email().max(190),
   password: z.string().min(1).max(72),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 router.post("/login", async (req, res) => {
@@ -87,7 +88,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const { email, password } = parsed.data;
+    const { email, password, rememberMe } = parsed.data;
 
     const user = await models.User.findOne({ where: { email } });
     if (!user) {
@@ -99,14 +100,20 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    const accessTokenExpiresIn = rememberMe ? "30d" : "1d";
+
     const accessToken = jwt.sign(
       { sub: String(user.id), role: user.role },
       env.jwt.accessSecret,
-      { expiresIn: "1d" },
+      { expiresIn: accessTokenExpiresIn },
     );
 
     return res.json({
       accessToken,
+      session: {
+        rememberMe,
+        expiresIn: accessTokenExpiresIn,
+      },
       user: {
         id: user.id,
         role: user.role,

@@ -47,15 +47,15 @@ function StepList({
 }) {
   const badge =
     tone === "indigo"
-      ? "bg-indigo-600 text-white"
-      : "bg-slate-900 text-white";
+      ? "bg-(--color-accent) text-white"
+      : "bg-white text-(--color-accent) border border-(--color-accent)";
 
   return (
     <ol className="mt-6 space-y-5">
       {items.map((s, idx) => (
         <li key={s.title} className="flex gap-4">
           <div className="shrink-0">
-            <div className={`h-8 w-8 rounded-xl grid place-items-center text-xs font-semibold ${badge}`}>
+            <div className={`h-8 w-8 rounded-full grid place-items-center text-xs font-semibold ${badge}`}>
               {idx + 1}
             </div>
           </div>
@@ -72,7 +72,7 @@ function StepList({
 
 export default function Steps() {
   return (
-    <section className="bg-[#F7F8FC]">
+    <section className="bg-(--color-card)/40">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="mt-2 text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
@@ -86,17 +86,17 @@ export default function Steps() {
 
         <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2">
           {/* Therapists */}
-          <div className="rounded-2xl border border-gray-200 bg-white/60 p-6 md:p-7">
+          <div className="rounded-2xl border border-(--color-soft) bg-white p-6 md:p-7">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-(--color-primary)">
                   For therapists
                 </p>
                 <p className="mt-1 text-sm text-gray-700">
                   A private workspace for client continuity.
                 </p>
               </div>
-              <span className="hidden sm:inline-flex rounded-full bg-white px-3 py-1 text-xs border border-gray-200 text-gray-600">
+              <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
                 Notes • Timeline • Context
               </span>
             </div>
@@ -106,25 +106,26 @@ export default function Steps() {
             <div className="mt-10">
               <Link
                 href="/auth/signup"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-xl border border-(--color-soft) bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-(--color-card)"
               >
                 Create therapist account
+                
               </Link>
             </div>
           </div>
 
           {/* Clients */}
-          <div className="rounded-2xl border border-gray-200 bg-white/60 p-6 md:p-7">
+          <div className="rounded-2xl border border-(--color-soft) bg-white p-6 md:p-7">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-(--color-primary)">
                   For clients
                 </p>
                 <p className="mt-1 text-sm text-gray-700">
                   A calm place to reflect between sessions.
                 </p>
               </div>
-              <span className="hidden sm:inline-flex rounded-full bg-white px-3 py-1 text-xs border border-gray-200 text-gray-600">
+              <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
                 Reflections • History • Clarity
               </span>
             </div>
@@ -134,7 +135,7 @@ export default function Steps() {
             <div className="mt-10">
               <Link
                 href="/auth/signup"
-                className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
+                className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
               >
                 Create client account
               </Link>
@@ -142,9 +143,7 @@ export default function Steps() {
           </div>
         </div>
 
-        <div className="mt-10 text-xs text-gray-500">
-          Note: Client access is typically connected by their therapist (invite / code) once you add backend.
-        </div>
+        
       </div>
     </section>
   );

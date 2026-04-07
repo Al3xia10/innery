@@ -36,7 +36,7 @@ export default function FAQ() {
   const [open, setOpen] = React.useState<number | null>(null);
 
   return (
-    <section className="bg-[#F7F8FC]">
+    <section className="bg-(--color-card)/40">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:items-start">
           {/* LEFT – intro */}
@@ -51,13 +51,13 @@ export default function FAQ() {
             <div className="mt-6 flex flex-col gap-3">
               <Link
                 href="/for-therapists#pricing"
-                className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
+                className="inline-flex items-center justify-center rounded-xl border border-(--color-soft) bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
               >
                 See pricing
               </Link>
               <Link
                 href="/support"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
               >
                 Ask a question
               </Link>
@@ -66,8 +66,8 @@ export default function FAQ() {
 
           {/* RIGHT – list */}
           <div className="md:col-span-8">
-            <div className="rounded-2xl border border-gray-200 bg-[#F7F8FC] p-2">
-              <div className="divide-y divide-gray-200 rounded-xl bg-white">
+            <div className="rounded-2xl border border-(--color-soft) bg-(--color-card) p-2">
+              <div className="divide-y divide-(--color-soft) rounded-xl bg-white">
                 {faqs.map((item, idx) => {
                   const isOpen = open === idx;
                   return (
@@ -85,8 +85,8 @@ export default function FAQ() {
                         <span
                           className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-xl border transition ${
                             isOpen
-                              ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                              : "border-gray-200 bg-white text-gray-700"
+                              ? "border-(--color-soft) bg-(--color-card) text-[#9a5d77]"
+                              : "border-(--color-soft) bg-white text-[#9a5d77]"
                           }`}
                           aria-hidden="true"
                         >
@@ -119,10 +119,6 @@ export default function FAQ() {
                 })}
               </div>
             </div>
-
-            <p className="mt-4 text-xs text-gray-500">
-              Tip: Keep this page simple. You can expand the FAQ later when onboarding and invites are live.
-            </p>
           </div>
         </div>
       </div>

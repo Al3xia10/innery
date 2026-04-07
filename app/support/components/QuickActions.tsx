@@ -30,9 +30,9 @@ export default function QuickActions() {
       {actions.map((a) => (
         <div
           key={a.title}
-          className="rounded-2xl border border-gray-200 bg-white/70 p-6 shadow-sm"
+          className="rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm"
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <p className="text-xs font-semibold uppercase tracking-wide text-(--color-primary)">
             {a.eyebrow}
           </p>
 
@@ -42,7 +42,7 @@ export default function QuickActions() {
 
           <Link
             href={a.href}
-            className="mt-4 inline-flex text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+            className="mt-4 inline-flex text-sm font-semibold text-(--color-accent) hover:opacity-90"
           >
             {a.cta}
           </Link>
