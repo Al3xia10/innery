@@ -8,6 +8,7 @@ import { initGoalModel } from "./Goal.js";
 import { initGoalUpdateModel } from "./GoalUpdate.js";
 import { initJournalEntryModel } from "./JournalEntry.js";
 import initClientSettingsModel from "./ClientSettings.js";
+import TherapistSettingsModel from "./TherapistSettings.js";
 import { initExerciseModel } from "./Exercise.js";
 
 export const models = {};
@@ -20,6 +21,7 @@ models.Goal = initGoalModel(sequelize);
 models.GoalUpdate = initGoalUpdateModel(sequelize);
 models.JournalEntry = initJournalEntryModel(sequelize);
 models.ClientSettings = initClientSettingsModel(sequelize);
+models.TherapistSettings = TherapistSettingsModel(sequelize);
 models.Exercise = initExerciseModel(sequelize);
 
 // Associations
@@ -205,6 +207,21 @@ models.User.hasOne(models.ClientSettings, {
 models.ClientSettings.belongsTo(models.User, {
   foreignKey: "clientUserId",
   as: "clientUser",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+// Therapist Settings (1:1 with User - therapist)
+models.User.hasOne(models.TherapistSettings, {
+  foreignKey: "therapistUserId",
+  as: "therapistSettings",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+models.TherapistSettings.belongsTo(models.User, {
+  foreignKey: "therapistUserId",
+  as: "therapistUser",
   onDelete: "CASCADE",
   onUpdate: "CASCADE",
 });

@@ -96,11 +96,11 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
         const createdAt = String(n.createdAt ?? n.updatedAt ?? nowISO());
         const session = n.session ?? {};
         const client = session.clientUser ?? {};
-        const clientName = String(client.name ?? "Unknown client");
+        const clientName = String(client.name ?? "Client necunoscut");
         const sessionType = "Individual";
 
         const content = String(n.content ?? "");
-        const title = `Session note – ${clientName}`;
+        const title = `Notiță ședință – ${clientName}`;
 
         const dateLabel = toLabel(createdAt);
         const tags: NoteTag[] = [dateLabel, toSessionTag()];
@@ -132,7 +132,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
         setFilter("all");
       }
     } catch (e: any) {
-      if (alive) setError(e?.message || "Failed to load notes");
+      if (alive) setError(e?.message || "Nu am putut încărca notițele");
     } finally {
       if (alive) setLoading(false);
     }
@@ -267,10 +267,10 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
         therapistId,
         sessionId: String(createSessionId),
         clientId: String(createClientId),
-        clientName: String(clientPick?.name ?? "Unknown client"),
+        clientName: String(clientPick?.name ?? "Client necunoscut"),
         sessionType: "Unknown",
         scheduledAtISO: "",
-        title: `Session note – ${String(clientPick?.name ?? "Client")}`,
+        title: `Notiță ședință – ${String(clientPick?.name ?? "Client")}`,
         dateLabel: "Today",
         preview: makePreview(content),
         tags: ["Today"],
@@ -287,7 +287,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
 
       closeCreateModal();
     } catch (e: any) {
-      setCreateError(e?.message || "Failed to save note");
+      setCreateError(e?.message || "Nu am putut salva notița");
     } finally {
       setCreateLoading(false);
     }
@@ -304,7 +304,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
     const newNote: Note = {
       ...selectedNote,
       id,
-      title: `${selectedNote.title} (copy)`,
+      title: `${selectedNote.title} (copie)`,
       content,
       preview: makePreview(content),
       updatedAtISO: nowISO(),
@@ -357,7 +357,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
 
       // Drafts must be linked to a session to be created
       if (!selectedNote.sessionId) {
-        alert("This note is not linked to a session yet. Use New note to pick a client/session.");
+        alert("Această notiță nu este încă asociată unei ședințe. Folosește Notiță nouă pentru a alege clientul și ședința.");
         return;
       }
 
@@ -387,7 +387,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
       setDraftById((prev) => ({ ...prev, [nextNote.id]: content }));
       setSelectedId(nextNote.id);
     } catch (e: any) {
-      alert(e?.message || "Failed to save note");
+      alert(e?.message || "Nu am putut salva notița");
     }
   }
   React.useEffect(() => {
@@ -414,102 +414,132 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
   }, [createOpen, createClientId]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <section className="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-6 lg:px-8">
       {/* PAGE HEADER */}
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            Therapist notes • {displayTherapistName}
-          </div>
-          <h1 className="mt-2 text-2xl sm:text-2xl font-semibold tracking-tight text-gray-900">Clinical notes</h1>
-          <p className="mt-1 text-sm text-gray-600 max-w-2xl">
-            A quiet space to document sessions, reflections, and therapeutic insights — organized and easy to revisit.
+      {/* PAGE HEADER */}
+<section
+  className="overflow-hidden rounded-[28px] border border-black/5 shadow-sm sm:rounded-4xl"
+  style={{
+    background:
+      "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
+  }}
+>
+  <div className="flex flex-col gap-4 p-4 sm:p-7 lg:flex-row lg:items-start lg:justify-between">
+    <div className="max-w-3xl">
+      <h1 className="mt-1 w-full text-[2rem] font-semibold leading-[1.02] tracking-tight text-slate-900 sm:text-4xl">
+        Notițe clinice
+      </h1>
+      <p className="mt-3 max-w-[30ch] text-[14px] leading-7 text-[#6B5A63] sm:max-w-2xl sm:text-base">
+        Un spațiu liniștit pentru a documenta ședințe, reflecții și observații terapeutice pentru{" "}
+        <span className="font-semibold text-slate-900">{displayTherapistName}</span>.
+      </p>
+
+      <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+        <div className="rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Total</p>
+          <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">{notes.length}</p>
+          <p className="mt-1.5 text-xs text-[#6B5A63]">notițe</p>
+        </div>
+        <div className="rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Afișate</p>
+          <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">{filteredNotes.length}</p>
+          <p className="mt-1.5 text-xs text-[#6B5A63]">rezultate</p>
+        </div>
+        <div className="col-span-2 rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm sm:col-span-1">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Recente</p>
+          <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">
+            {notes.filter((n) => n.dateLabel === "Today" || n.dateLabel === "Yesterday").length}
           </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onNewNote}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
-          >
-            <PlusIcon />
-            New note
-          </button>
-        </div>
-      </header>
-
-      {/* TOOLBAR */}
-      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
-          <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">
-            <SearchIcon />
-          </div>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search notes…"
-            aria-label="Search notes"
-            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 text-sm">
-          <button
-            type="button"
-            onClick={() => setFilter("all")}
-            className={
-              "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium shadow-sm transition " +
-              (filter === "all"
-                ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50")
-            }
-          >
-            <TagIcon />
-            All
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter("recent")}
-            className={
-              "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium shadow-sm transition " +
-              (filter === "recent"
-                ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50")
-            }
-          >
-            <ClockIcon />
-            Recent
-          </button>
+          <p className="mt-1.5 text-xs text-[#6B5A63]">ultimele intrări</p>
         </div>
       </div>
+    </div>
+
+    <div className="mt-2 grid w-full grid-cols-1 gap-2.5 self-start sm:flex sm:w-auto sm:items-center sm:gap-3">
+      <button
+        type="button"
+        onClick={onNewNote}
+        className="mt-1 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[18px] bg-(--color-accent) px-4 py-3 text-center text-sm font-semibold leading-5 text-white shadow-[0_10px_24px_rgba(184,104,152,0.22)] transition hover:-translate-y-px hover:opacity-90 disabled:opacity-50 sm:min-w-36 sm:w-auto sm:whitespace-nowrap sm:rounded-2xl sm:px-5"
+      >
+        <PlusIcon />
+        Notiță nouă
+      </button>
+    </div>
+  </div>
+</section>
+
+      {/* TOOLBAR */}
+      {/* TOOLBAR */}
+<div className="mt-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+  <label className="relative block w-full xl:max-w-115">
+    <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">
+      <SearchIcon />
+    </div>
+    <input
+      type="text"
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      placeholder="Caută în notițe…"
+      aria-label="Caută în notițe"
+      className="w-full rounded-2xl border border-black/5 bg-white/90 py-3 pl-10 pr-3 text-sm text-gray-900 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-(--color-soft)/45 placeholder:text-gray-400 outline-none transition focus:border-(--color-soft) focus:bg-white focus:ring-2 focus:ring-(--color-soft)"
+    />
+  </label>
+
+  <div className="flex flex-wrap items-center gap-2">
+    <button
+      type="button"
+      onClick={() => setFilter("all")}
+      className={
+        "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition " +
+        (filter === "all"
+          ? "border-(--color-soft) bg-(--color-card) text-(--color-primary)"
+          : "border-black/5 bg-white/85 text-gray-700 hover:bg-white")
+      }
+    >
+      <TagIcon />
+      Toate
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setFilter("recent")}
+      className={
+        "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition " +
+        (filter === "recent"
+          ? "border-(--color-soft) bg-(--color-card) text-(--color-primary)"
+          : "border-black/5 bg-white/85 text-gray-700 hover:bg-white")
+      }
+    >
+      <ClockIcon />
+      Recente
+    </button>
+  </div>
+</div>
 
       {/* MAIN GRID */}
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-12 xl:grid-cols-[1.08fr_1.92fr]">
         {/* NOTES LIST */}
-        <aside className="lg:col-span-4 rounded-2xl border border-gray-100 bg-white shadow-sm">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <aside className="overflow-hidden rounded-[28px] border border-black/5 bg-white/90 shadow-[0_12px_28px_rgba(31,23,32,0.05)] sm:rounded-4xl xl:col-span-1">
+          <div className="flex items-center justify-between border-b border-black/5 px-5 py-4">
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">Your notes</h2>
-              <p className="mt-0.5 text-xs text-gray-500">Quick access to recent entries</p>
+              <h2 className="text-sm font-semibold text-gray-900">Notițele tale</h2>
+              <p className="mt-0.5 text-xs text-[#6B5A63]">Acces rapid la intrările recente</p>
             </div>
             <span className="text-xs font-semibold text-gray-400">{filteredNotes.length}</span>
           </div>
 
-          <div className="p-4 space-y-3 max-h-90 lg:max-h-[calc(100vh-260px)] overflow-auto">
+          <div className="max-h-90 space-y-3 overflow-auto p-3 sm:p-4 lg:max-h-[calc(100vh-260px)]">
   {loading ? (
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-700">
-      Loading notes…
+    <div className="rounded-2xl border border-black/5 bg-white/85 p-6 text-sm text-gray-700 shadow-[0_4px_12px_rgba(31,23,32,0.04)]">
+      Se încarcă notițele…
     </div>
   ) : error ? (
-    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+    <div className="rounded-2xl border border-dashed border-black/10 bg-(--color-card) p-6 text-sm text-[#6B5A63] shadow-[0_4px_12px_rgba(31,23,32,0.03)]">
       {error}
     </div>
   ) : filteredNotes.length === 0 ? (
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-700">
-      No notes yet. Create your first note from <span className="font-medium">Sessions</span>.
+    <div className="rounded-2xl border border-dashed border-black/10 bg-(--color-card) p-6 text-sm text-[#6B5A63] shadow-[0_4px_12px_rgba(31,23,32,0.03)]">
+      Nu există încă notițe. Creează prima notiță din <span className="font-medium">Ședințe</span>.
     </div>
   ) : (
     filteredNotes.map((n) => (
@@ -517,7 +547,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
         key={n.id}
         title={n.title}
         date={n.dateLabel}
-        preview={n.preview || "(No content yet)"}
+        preview={n.preview || "(Fără conținut încă)"}
         selected={n.id === selectedId}
         onClick={() => selectNote(n.id)}
       />
@@ -527,23 +557,23 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
         </aside>
 
         {/* NOTE EDITOR */}
-        <div className="lg:col-span-8 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+        <div className="overflow-hidden rounded-[28px] border border-black/5 bg-white/90 shadow-[0_12px_28px_rgba(31,23,32,0.05)] sm:rounded-4xl xl:col-span-1">
           {!selectedNote ? (
             <div className="p-10 text-center">
-              <h3 className="text-base font-semibold text-gray-900">Select a note</h3>
-              <p className="mt-2 text-sm text-gray-600">Choose a note on the left, or create a new one.</p>
+              <h3 className="text-base font-semibold text-gray-900">Selectează o notiță</h3>
+              <p className="mt-2 text-sm text-gray-600">Alege o notiță din stânga sau creează una nouă.</p>
               <button
                 type="button"
                 onClick={onNewNote}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(184,104,152,0.22)] transition hover:opacity-95"
               >
                 <PlusIcon />
-                New note
+                Notiță nouă
               </button>
             </div>
           ) : (
             <>
-              <div className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-gray-100 px-6 py-4">
+              <div className="sticky top-0 z-10 border-b border-black/5 bg-white/90 px-6 py-4 backdrop-blur">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="text-base font-semibold text-gray-900">{selectedNote.title}</h2>
@@ -558,10 +588,10 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
                     <button
                       type="button"
                       onClick={onDuplicate}
-                      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                      className="inline-flex items-center gap-2 rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
                     >
                       <CopyIcon />
-                      Duplicate
+                      Duplică
                     </button>
                   </div>
                 </div>
@@ -571,32 +601,32 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
                 <textarea
                   value={draftById[selectedNote.id] ?? selectedNote.content}
                   onChange={(e) => onChangeDraft(e.target.value)}
-                  placeholder="Write your session notes here..."
-                  aria-label="Session note editor"
-                  className="w-full min-h-80 lg:min-h-105 rounded-2xl border border-gray-200 bg-white p-4 text-sm leading-relaxed text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  placeholder="Scrie aici notițele de ședință..."
+                  aria-label="Editor notiță de ședință"
+                  className="w-full min-h-80 resize-none rounded-2xl border border-black/5 bg-white p-4 text-sm leading-relaxed text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] placeholder:text-gray-400 outline-none transition focus:border-(--color-soft) lg:min-h-105"
                 />
 
                 <div className="mt-5 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
                   <button
                     type="button"
                     onClick={onDiscard}
-                    className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                    className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-card) ring-1 ring-(--color-soft)"
                   >
-                    Discard
+                    Șterge
                   </button>
 
                   <button
                     type="button"
                     onClick={onSave}
-                    className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
+                    className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(184,104,152,0.22)] transition hover:opacity-90"
                   >
-                    Save note
+                    Salvează notița
                   </button>
                 </div>
 
-                <p className="mt-3 text-xs text-gray-400">
-  Saved to your private workspace • therapist: <span className="font-medium">{displayTherapistName}</span>
-</p>
+                <p className="mt-3 text-xs text-[#6B5A63]">
+                  Salvat în workspace-ul tău privat • terapeut: <span className="font-medium">{displayTherapistName}</span>
+                </p>
               </div>
             </>
           )}
@@ -611,22 +641,25 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
           onMouseDown={closeCreateModal}
         >
           <div
-            className="mx-auto mt-24 w-[92%] max-w-lg rounded-2xl bg-white shadow-xl border border-gray-100"
+            className="mx-auto mt-24 w-[92%] max-w-lg overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_20px_48px_rgba(31,23,32,0.18)]"
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">New note</h3>
-                <p className="mt-1 text-sm text-gray-600">Choose a client + session, then write your note.</p>
+            <div className="border-b border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,rgba(239,208,202,0.14)_65%,rgba(125,128,218,0.06)_100%)] px-6 py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="mt-3 text-[1.05rem] font-semibold text-gray-900">Notiță nouă</h3>
+                  <p className="mt-1 text-sm text-gray-600">Alege un client și o ședință, apoi scrie notița.</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={closeCreateModal}
+                  className="rounded-xl p-2 text-gray-500 transition hover:bg-gray-100"
+                  aria-label="Close"
+                >
+                  <XIcon />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={closeCreateModal}
-                className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 transition"
-                aria-label="Close"
-              >
-                <XIcon />
-              </button>
             </div>
 
             <div className="px-6 py-5 space-y-4">
@@ -636,10 +669,10 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
                   <select
                     value={createClientId}
                     onChange={(e) => setCreateClientId(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
                   >
                     <option value="" disabled>
-                      {createClients.length ? "Select a client" : "No linked clients"}
+                      {createClients.length ? "Selectează un client" : "Nu există clienți conectați"}
                     </option>
                     {createClients.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -650,15 +683,19 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-semibold text-gray-500">Session</span>
+                  <span className="text-xs font-semibold text-gray-500">Ședință</span>
                   <select
                     value={createSessionId}
                     onChange={(e) => setCreateSessionId(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
                     disabled={!createClientId}
                   >
                     <option value="" disabled>
-                      {createClientId ? (createSessions.length ? "Select a session" : "No sessions for this client") : "Select a client first"}
+                      {createClientId
+                        ? createSessions.length
+                          ? "Selectează o ședință"
+                          : "Nu există ședințe pentru acest client"
+                        : "Selectează mai întâi un client"}
                     </option>
                     {createSessions.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -669,37 +706,37 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-semibold text-gray-500">Note</span>
+                  <span className="text-xs font-semibold text-gray-500">Notiță</span>
                   <textarea
                     value={createContent}
                     onChange={(e) => setCreateContent(e.target.value)}
-                    placeholder={`Write your note… (${defaultNowLocal()})`}
+                    placeholder={`Scrie notița… (${defaultNowLocal()})`}
                     rows={6}
-                    className="mt-2 w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full rounded-xl border border-black/5 bg-white p-3 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
                   />
                 </label>
 
                 {createError ? (
-                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{createError}</div>
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 shadow-[0_4px_12px_rgba(31,23,32,0.03)]">{translateCreateError(createError)}</div>
                 ) : null}
 
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+                <div className="flex flex-col-reverse gap-3 border-t border-black/5 pt-4 sm:flex-row sm:justify-end">
                   <button
                     type="button"
                     onClick={closeCreateModal}
-                    className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                    className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
                     disabled={createLoading}
                   >
-                    Cancel
+                    Renunță
                   </button>
 
                   <button
                     type="button"
                     onClick={onCreateNoteConfirm}
-                    className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 transition disabled:opacity-50"
+                    className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(184,104,152,0.22)] transition hover:opacity-95 disabled:opacity-50"
                     disabled={createLoading}
                   >
-                    {createLoading ? "Saving…" : "Save note"}
+                    {createLoading ? "Se salvează…" : "Salvează notița"}
                   </button>
                 </div>
               </div>
@@ -710,6 +747,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
     </section>
   );
 }
+
 
 /* NOTE CARD */
 function NoteCard({
@@ -730,22 +768,24 @@ function NoteCard({
       type="button"
       onClick={onClick}
       className={[
-        "group relative w-full text-left rounded-2xl border p-4 shadow-sm transition cursor-pointer",
+        "group relative w-full overflow-hidden rounded-[20px] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(31,23,32,0.06)] transition cursor-pointer",
         selected
-          ? "border-indigo-200 bg-indigo-50/40 shadow-md"
-          : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-md",
+          ? "border-[#ead7df] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,249,251,0.98)_100%)] shadow-[0_12px_28px_rgba(31,23,32,0.08)]"
+          : "border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,249,251,0.98)_100%)] hover:shadow-[0_12px_28px_rgba(31,23,32,0.08)]",
       ].join(" ")}
     >
       <span
         className={[
-          "absolute left-0 top-3 bottom-3 w-1 rounded-full transition",
-          selected ? "bg-indigo-500" : "bg-transparent group-hover:bg-indigo-200",
+          "absolute left-4 right-4 top-0 h-px transition",
+          selected
+            ? "bg-[linear-gradient(90deg,rgba(239,208,202,0.8),transparent)]"
+            : "bg-[linear-gradient(90deg,rgba(125,128,218,0.35),transparent)] group-hover:bg-[linear-gradient(90deg,rgba(125,128,218,0.55),transparent)]",
         ].join(" ")}
       />
 
-      <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
-      <p className="text-xs text-gray-500 mb-2">{date}</p>
-      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{preview}</p>
+      <h3 className="mb-1 truncate text-[1.02rem] font-semibold tracking-tight text-gray-900">{title}</h3>
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-gray-400">{date}</p>
+      <p className="line-clamp-2 text-[14px] leading-7 text-gray-700">{preview}</p>
     </button>
   );
 }
@@ -760,12 +800,25 @@ function TagPill({ tag }: { tag: NoteTag }) {
       ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
       : "bg-gray-50 text-gray-700 ring-gray-200";
 
-  return <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${cls}`}>{tag}</span>;
+  const label =
+    tag === "Today"
+      ? "Astăzi"
+      : tag === "Yesterday"
+      ? "Ieri"
+      : tag === "3 days ago"
+      ? "Acum 3 zile"
+      : tag === "Individual session"
+      ? "Ședință individuală"
+      : tag === "Couple session"
+      ? "Ședință de cuplu"
+      : "Ciornă";
+
+  return <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${cls}`}>{label}</span>;
 }
 
 function PlusIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
       <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
@@ -773,7 +826,7 @@ function PlusIcon() {
 
 function SearchIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
       <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" strokeWidth="1.8" />
       <path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
@@ -828,4 +881,14 @@ function XIcon() {
       <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
+}
+// Helper to translate create modal errors
+function translateCreateError(msg: string) {
+  if (msg === "Select a client.") return "Selectează un client.";
+  if (msg === "Select a session for this client.") return "Selectează o ședință pentru acest client.";
+  if (msg === "Write something in the note.") return "Scrie ceva în notiță.";
+  if (msg === "Failed to load clients") return "Nu am putut încărca clienții";
+  if (msg === "Failed to load sessions") return "Nu am putut încărca ședințele";
+  if (msg === "Failed to save note") return "Nu am putut salva notița";
+  return msg;
 }

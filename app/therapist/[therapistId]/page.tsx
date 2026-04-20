@@ -47,9 +47,9 @@ function initials(name: string) {
 
 
 function getSessionTypeLabel(type?: Session["type"]) {
-  if (type === "Couple") return "Couple";
-  if (type === "Group") return "Group";
-  return "Individual";
+  if (type === "Couple") return "Cuplu";
+  if (type === "Group") return "Grup";
+  return "Individuală";
 }
 
 export default function TherapistDashboard() {
@@ -223,31 +223,30 @@ export default function TherapistDashboard() {
 
     if (todayCount > 0) {
       items.push({
-        title: `You have ${todayCount} session${todayCount === 1 ? "" : "s"} today`,
+        title: `Ai ${todayCount} ședinț${todayCount === 1 ? "ă" : "e"} astăzi`,
         tone: "info",
         href: `/therapist/${therapistId}/sessions`,
       });
     }
 
-      if (scheduledSorted[0]) {
-    const upcomingClient = clients.find((c) => c.id === scheduledSorted[0].clientUserId);
-
-    items.push({
-      title: `Next session: ${upcomingClient?.name ?? "Client"}`,
-      tone: "info",
-      href: `/therapist/${therapistId}/sessions`,
-    });
-  } else {
-    items.push({
-      title: "No scheduled sessions yet",
-      tone: "ok",
-      href: `/therapist/${therapistId}/sessions`,
-    });
-  }
+    if (scheduledSorted[0]) {
+      const upcomingClient = clients.find((c) => c.id === scheduledSorted[0].clientUserId);
+      items.push({
+        title: `Următoarea ședință: ${upcomingClient?.name ?? "Client"}`,
+        tone: "info",
+        href: `/therapist/${therapistId}/sessions`,
+      });
+    } else {
+      items.push({
+        title: "Nu există încă ședințe programate",
+        tone: "ok",
+        href: `/therapist/${therapistId}/sessions`,
+      });
+    }
 
     if (clients.length === 0) {
       items.push({
-        title: "Invite your first client",
+        title: "Invită primul tău client",
         tone: "warn",
         href: `/therapist/${therapistId}/clients`,
       });
@@ -255,7 +254,7 @@ export default function TherapistDashboard() {
 
     if (notesCount == null) {
       items.push({
-        title: "Notes counter not available yet",
+        title: "Contorul pentru notițe nu este disponibil încă",
         tone: "ok",
         href: `/therapist/${therapistId}/notes`,
       });
@@ -283,30 +282,30 @@ export default function TherapistDashboard() {
 
   const quickActions = [
     {
-      title: "Add new client",
-      subtitle: "Invite someone to your workspace",
+      title: "Adaugă client nou",
+      subtitle: "Invită pe cineva în workspace-ul tău",
       href: `/therapist/${therapistId}/clients`,
     },
     {
-      title: "Assign session",
-      subtitle: "Open the schedule and plan ahead",
+      title: "Programează ședință",
+      subtitle: "Deschide programul și planifică din timp",
       href: `/therapist/${therapistId}/sessions`,
     },
     {
-      title: "View client data",
-      subtitle: "Jump into profiles and progress",
+      title: "Vezi datele clientului",
+      subtitle: "Intră rapid în profiluri și progres",
       href: `/therapist/${therapistId}/clients`,
     },
     {
-      title: "Write weekly summary",
-      subtitle: "Capture notes and key observations",
+      title: "Scrie rezumatul săptămânal",
+      subtitle: "Notează observațiile și ideile importante",
       href: `/therapist/${therapistId}/notes`,
     },
   ];
 
 
   return (
-  <section className="min-h-screen p-2 sm:p-6 lg:p-8">
+  <section className="min-h-screen px-3 py-3 sm:p-6 lg:p-8">
     {accessToast ? (
         <div className="fixed inset-x-4 top-4 z-50 flex justify-center sm:inset-x-0">
           <div className="w-full max-w-md rounded-3xl border border-(--color-soft) bg-white px-5 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-2 ring-(--color-soft)">
@@ -315,142 +314,249 @@ export default function TherapistDashboard() {
                 <span className="text-base font-semibold">i</span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-900">Access notice</p>
+                <p className="text-sm font-semibold text-slate-900">Notificare acces</p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">{accessToast}</p>
                 <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.16em] text-(--color-primary)">
-                  Redirecting...
+                  Redirecționare...
                 </p>
               </div>
             </div>
           </div>
         </div>
       ) : null}
-    <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
-        <div className="rounded-3xl border border-[#e7e6f2] bg-[#f8f7fc] px-4 py-5 shadow-[0_14px_32px_rgba(31,29,26,0.06)] sm:rounded-[34px] sm:px-8 sm:py-8 lg:px-10">
-          <div className="max-w-3xl space-y-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#d9d5ff] bg-white px-3 py-1 text-[11px] font-semibold text-[#5b4ce6] shadow-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#5b4ce6]" />
-              workspace overview
-            </div>
-            <h1 className="mt-4 text-[1.85rem] font-semibold tracking-tight text-slate-900 sm:mt-5 sm:text-4xl">
-              Bună, {displayTherapistName}
-            </h1>
-            <p className="mt-3 max-w-2xl text-[14px] leading-7 text-slate-500 sm:text-base">
-              Aici vezi doar lucrurile importante pentru ziua de azi: programul, ce are nevoie de atenție și intrările rapide către paginile utile.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-medium text-slate-500 sm:mt-5 sm:text-xs">
-              <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">{todayCount} sesiuni azi</span>
-              <span className="rounded-full bg-[#ece9ff] px-2.5 py-1 text-[#5b4ce6]">{activeClientsCount} clienți activi</span>
-              <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">{scheduledSorted.length} programate</span>
-            </div>
-            <div className="mt-5 grid grid-cols-1 gap-2.5 sm:mt-7 sm:flex sm:flex-row sm:flex-wrap">
-              <Link
-                href={`/therapist/${therapistId}/sessions`}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-[18px] bg-[#5b4ce6] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4d3fde] sm:w-auto sm:rounded-2xl"
-              >
-                Vezi programul
-              </Link>
-              <Link
-                href={`/therapist/${therapistId}/clients`}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-[18px] border border-[#ddd8ea] bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto sm:rounded-2xl"
-              >
-                Deschide clienții
-              </Link>
-              <Link
-                href={`/therapist/${therapistId}/notes`}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-[18px] border border-[#ddd8ea] bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto sm:rounded-2xl"
-              >
-                Note
-              </Link>
+      <div className="w-full px-1 pb-16 pt-4 sm:px-6 lg:px-10 lg:pt-10">
+        <div className="space-y-5 lg:mx-auto lg:max-w-5xl lg:space-y-8">
+        <header className="space-y-6">
+          <div className="px-1 sm:px-2 lg:px-1">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e7edf8_0%,#f2e8ff_100%)] text-sm font-semibold text-slate-700 shadow-sm">
+                  {initials(displayTherapistName)}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-(--color-primary)">
+                    bine ai revenit
+                  </p>
+                  <h1 className="mt-1 text-[1.5rem] font-semibold leading-none tracking-tight text-slate-900 sm:text-[1.7rem]">
+                    {displayTherapistName}
+                  </h1>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="grid items-start gap-4 sm:gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <PanelCard title="Astăzi" subtitle="Sesiunile zilei și următorii pași" tone="light">
-            {loading ? (
-              <div className="mt-4 space-y-3">
-                <div className="h-24 rounded-[22px] bg-[#f1eff8]" />
-                <div className="h-24 rounded-[22px] bg-[#f1eff8]" />
-                <div className="h-24 rounded-[22px] bg-[#f1eff8]" />
+
+          <div className="space-y-4 px-0 sm:px-2 lg:px-1">
+            <div className="space-y-3">
+              <p className="w-full text-[2rem] font-semibold leading-[1.02] tracking-tight text-slate-900 sm:text-[1.8rem]">
+                Cum arată ziua ta astăzi?
+              </p>
+            </div>
+
+            <div className="w-full rounded-[28px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] p-5 text-white shadow-[0_28px_60px_rgba(184,104,152,0.24)] sm:rounded-4xl sm:p-7">
+              <div className="inline-flex rounded-full bg-white/40 px-3 py-1 text-[11px] font-semibold text-white">
+                privire de ansamblu
               </div>
-            ) : todayAgenda.length === 0 ? (
-              <EmptySoftState
-                title="Nu ai sesiuni azi"
-                description="Poți folosi timpul pentru a revizui notițele, clienții sau programările viitoare."
-                href={`/therapist/${therapistId}/sessions`}
-                cta="Deschide programul"
-              />
-            ) : (
-              <div className="mt-4 space-y-2.5">
-                {todayAgenda.slice(0, 2).map((session) => {
-                  const client = clients.find((c) => c.id === session.clientUserId);
-                  return (
-                    <div
-                      key={session.id}
-                      className="flex flex-col gap-2.5 rounded-[20px] border border-[#e3e0ef] bg-white px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="min-w-0 flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#f7f6fc] text-sm font-semibold text-slate-900 ring-1 ring-[#ece9ff]">
-                          {initials(client?.name ?? "C")}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900">
-                            {client?.name ?? "Unknown client"}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {getSessionTypeLabel(session.type)} • {toNiceDate(session.startsAt)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
-                        <Link
-                          href={`/therapist/${therapistId}/clients/${session.clientUserId}`}
-                          className="inline-flex min-h-9 items-center justify-center rounded-[14px] border border-[#ddd8ea] bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-50 sm:rounded-xl"
-                        >
-                          Open client
-                        </Link>
-                        <Link
-                          href={`/therapist/${therapistId}/notes`}
-                          className="inline-flex min-h-9 items-center justify-center rounded-[14px] bg-[#5b4ce6] px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-[#4d3fde] sm:rounded-xl"
-                        >
-                          Write note
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
+
+              <h2 className="mt-4 max-w-none text-[2rem] font-semibold leading-[1.03] tracking-tight text-white sm:max-w-none sm:text-[1.9rem]">
+                Tot ce ai nevoie pentru azi
+              </h2>
+              <p className="mt-2 max-w-[28ch] text-[0.95rem] leading-6 text-white/88 sm:max-w-none sm:text-sm">
+                Verifică rapid ce ai azi în focus.
+              </p>
+
+              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                <div className="rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-700">Azi</p>
+                  <p className="mt-2 text-[1.3rem] font-semibold leading-none text-gray-700">{todayCount}</p>
+                  <p className="mt-1.5 text-xs text-gray-700">sesiuni</p>
+                </div>
+
+                <div className="rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-700">Clienți</p>
+                  <p className="mt-2 text-[1.3rem] font-semibold leading-none text-gray-700">{activeClientsCount}</p>
+                  <p className="mt-1.5 text-xs text-gray-700">activi</p>
+                </div>
+
+                <div className="col-span-2 rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20 sm:col-span-1">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-700">Note</p>
+                  <p className="mt-2 text-[1.3rem] font-semibold leading-none text-gray-700">
+                    {notesCountLoading ? "..." : String(notesCount ?? 0)}
+                  </p>
+                  <p className="mt-1.5 text-xs text-gray-700">în workspace</p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-2.5 md:grid-cols-2">
                 <Link
                   href={`/therapist/${therapistId}/sessions`}
-                  className="inline-flex mt-1 items-center gap-1 text-[11px] font-semibold text-[#5b4ce6] hover:underline sm:text-xs"
+                  className="inline-flex min-h-11 items-center justify-center rounded-[18px] bg-white px-4 py-3 text-center text-sm font-semibold leading-5 text-[#9a5d77] shadow-[0_14px_28px_rgba(255,255,255,0.22)] transition hover:-translate-y-px hover:opacity-95 sm:px-5"
                 >
-                  <span>View full schedule</span>
-                  <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path fillRule="evenodd" d="M7.22 4.97a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06L11.19 10 7.22 6.03a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                  </svg>
+                  Vezi programul
+                </Link>
+
+                <Link
+                  href={`/therapist/${therapistId}/clients`}
+                  className="inline-flex min-h-11 items-center justify-center rounded-[18px] bg-white/90 px-4 py-3 text-center text-sm font-semibold leading-5 text-[#9a5d77] shadow-[0_10px_20px_rgba(255,255,255,0.14)] transition hover:-translate-y-px hover:opacity-95 sm:px-5"
+                >
+                  Clienți
                 </Link>
               </div>
-            )}
-          </PanelCard>
-          <PanelCard title="Acțiuni rapide" subtitle="Intrări rapide către paginile importante" tone="light">
-            <div className="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
-              {quickActions.map((action) => (
-                <Link
-                  key={action.title}
-                  href={action.href}
-                  className="flex items-center justify-between rounded-[18px] border border-[#e2def3] bg-white px-3.5 py-3.5 transition hover:bg-[#faf9fe] sm:rounded-[22px] sm:px-4 sm:py-4"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{action.title}</p>
-                    <p className="mt-1 text-[11px] leading-5 text-slate-500 sm:text-xs">{action.subtitle}</p>
-                  </div>
-                  <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-[#5b4ce6]">
-                    <path fillRule="evenodd" d="M7.22 4.97a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06L11.19 10 7.22 6.03a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                  </svg>
-                </Link>
-              ))}
             </div>
-          </PanelCard>
+          </div>
+        </header>
+        <div className="space-y-6">
+          <section
+            className="overflow-hidden rounded-[28px] border border-black/5 shadow-sm sm:rounded-4xl"
+            style={{
+              background:
+                "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
+            }}
+          >
+            <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-7">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Astăzi</p>
+                <p className="mt-1 text-sm text-[#6B5A63]">
+                  Sesiunile zilei și următorii pași, într-un format clar și ușor de urmărit.
+                </p>
+              </div>
+              <Link
+                href={`/therapist/${therapistId}/sessions`}
+                className="shrink-0 inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-slate-900 shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-(--color-soft)"
+              >
+                Vezi tot programul
+              </Link>
+            </div>
+
+            <div className="px-5 pb-5 sm:px-7 sm:pb-7">
+              {loading ? (
+                <div className="rounded-2xl border border-black/5 bg-(--color-card) p-5">
+                  <div className="space-y-3">
+                    <div className="h-24 rounded-[20px] bg-[#f1eff8]" />
+                    <div className="h-24 rounded-[20px] bg-[#f1eff8]" />
+                    <div className="h-24 rounded-[20px] bg-[#f1eff8]" />
+                  </div>
+                </div>
+              ) : todayAgenda.length === 0 ? (
+                <div className="rounded-2xl border border-black/5 bg-(--color-card) p-5">
+                  <p className="text-sm font-semibold text-slate-900">Nu ai sesiuni azi</p>
+                  <p className="mt-2 text-sm leading-6 text-[#6B5A63]">
+                    Poți folosi timpul pentru a revizui notițele, clienții sau programările viitoare.
+                  </p>
+                  <div className="mt-4">
+                    <Link
+                      href={`/therapist/${therapistId}/sessions`}
+                      className="inline-flex w-full items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 sm:w-auto"
+                    >
+                      Deschide programul
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-black/5 bg-(--color-card) p-5">
+                  <div className="space-y-3">
+                    {todayAgenda.slice(0, 2).map((session) => {
+                      const client = clients.find((c) => c.id === session.clientUserId);
+                      return (
+                        <article
+                          key={session.id}
+                          className="rounded-[20px] border border-black/5 bg-white px-4 py-4 shadow-[0_4px_12px_rgba(31,23,32,0.04)]"
+                        >
+                          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="min-w-0 flex items-center gap-3">
+                              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-900 ring-1 ring-(--color-soft)">
+                                {initials(client?.name ?? "C")}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-slate-900">
+                                  {client?.name ?? "Client necunoscut"}
+                                </p>
+                                <p className="mt-1 text-xs leading-6 text-slate-500">
+                                  {getSessionTypeLabel(session.type)} • {toNiceDate(session.startsAt)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 sm:w-auto sm:flex sm:flex-wrap sm:justify-end">
+                              <Link
+                                href={`/therapist/${therapistId}/clients/${session.clientUserId}`}
+                                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-[11px] font-semibold text-slate-700 transition hover:bg-(--color-soft)"
+                              >
+                                Deschide clientul
+                              </Link>
+                              <Link
+                                href={`/therapist/${therapistId}/notes`}
+                                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-(--color-accent) px-3 py-2 text-[11px] font-semibold text-white transition hover:opacity-95"
+                              >
+                                Scrie notiță
+                              </Link>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4">
+                    <Link
+                      href={`/therapist/${therapistId}/sessions`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:underline"
+                    >
+                      <span>Vezi tot programul</span>
+                      <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                        <path fillRule="evenodd" d="M7.22 4.97a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06L11.19 10 7.22 6.03a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                      </svg>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+          <section
+            className="overflow-hidden rounded-[28px] border border-black/5 shadow-sm sm:rounded-4xl"
+            style={{
+              background:
+                "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
+            }}
+          >
+            <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-7">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Acțiuni rapide</p>
+                <p className="mt-1 text-sm text-[#6B5A63]">
+                  Intrări rapide către zonele pe care le folosești cel mai des în workspace.
+                </p>
+              </div>
+              <Link
+                href={`/therapist/${therapistId}/clients`}
+                className="shrink-0 inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-slate-900 shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-(--color-soft)"
+              >
+                Vezi clienții
+              </Link>
+            </div>
+
+            <div className="px-5 pb-5 sm:px-7 sm:pb-7">
+              <div className="rounded-2xl border border-black/5 bg-(--color-card) p-5">
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  {quickActions.map((action) => (
+                    <Link
+                      key={action.title}
+                      href={action.href}
+                      className="flex items-center justify-between rounded-[20px] border border-black/5 bg-white px-4 py-4 shadow-[0_4px_12px_rgba(31,23,32,0.04)] transition hover:bg-(--color-card) min-h-22"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{action.title}</p>
+                        <p className="mt-1 text-xs leading-6 text-slate-500">{action.subtitle}</p>
+                      </div>
+                      <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-(--color-accent)">
+                        <path fillRule="evenodd" d="M7.22 4.97a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06L11.19 10 7.22 6.03a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                      </svg>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
+      </div>
       </div>
     </section>
   );
@@ -472,7 +578,7 @@ function PanelCard({
 }) {
   return (
     <div
-      className={`rounded-[22px] border p-4 shadow-[0_10px_24px_rgba(31,29,26,0.05)] sm:rounded-[28px] sm:p-7 ${
+      className={`rounded-[28px] border p-4 shadow-[0_10px_24px_rgba(31,29,26,0.05)] sm:rounded-4xl sm:p-7 ${
         tone === "mint"
           ? "border-[#dcd7ff] bg-[#5b4ce6] text-white"
           : "border-[#e3e0ef] bg-[#fcfbff] text-slate-900"
@@ -490,7 +596,7 @@ function PanelCard({
             href={actionHref}
             className={`text-sm font-semibold ${tone === "mint" ? "text-white" : "text-[#5b4ce6]"}`}
           >
-            View all
+            Vezi tot
           </Link>
         ) : null}
       </div>
@@ -511,7 +617,7 @@ function EmptySoftState({
   cta?: string;
 }) {
   return (
-    <div className="mt-5 rounded-3xl border border-dashed border-[#ddd8ea] bg-[#f8f7fc] p-8 text-center">
+    <div className="mt-5 rounded-[28px] border border-dashed border-[#ddd8ea] bg-[#f8f7fc] p-8 text-center">
       <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
       {href && cta ? (

@@ -21,7 +21,7 @@ export default async function TherapistLayout({
 
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 p-6 bg-[#FAD2C8]">
+        <main className="flex-1 p-6 bg-white">
           {children}
         </main>
       </div>

@@ -1,233 +1,25 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { apiFetch } from "@/app/_lib/authClient";
 
-type TherapistPrefs = {
-  emailNotifications: boolean;
-  weeklySummary: boolean;
-  newClientAlerts: boolean;
-  noteReminders: boolean;
-};
+import { SettingsHeader } from "./components/SettingsHeader";
+import { SecurityCard } from "./components/SecurityCard";
+import { PreferencesSection } from "./components/PreferencesSection";
+import { DangerZoneCard } from "./components/DangerZoneCard";
 
-function storageKey(therapistId: string) {
-  return `innery_therapist_prefs_${therapistId}`;
-}
+import { useTherapistPrefs } from "./hooks/useTherapistPrefs";
+import { useMeProfile } from "./hooks/useMeProfile";
 
-function safeParse<T>(raw: string | null): T | null {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return null;
-  }
-}
+export default function therapistSettingsPage() {
+  const params = useParams<{ therapistId?: string }>();
+  const therapistId = params?.therapistId ?? "me";
 
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const a = parts[0]?.[0] ?? "?";
-  const b = (parts.length > 1 ? parts[parts.length - 1]?.[0] : "") ?? "";
-  return (a + b).toUpperCase();
-}
-
-function Toggle({
-  label,
-  description,
-  checked,
-  onChange,
-}: {
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  const id = React.useId();
-
-  return (
-    <div className="group rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition hover:border-gray-200 hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <label
-            htmlFor={id}
-            className="block text-[13px] font-semibold text-gray-900 cursor-pointer"
-          >
-            {label}
-          </label>
-          <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-            {description}
-          </p>
-        </div>
-
-        <button
-          id={id}
-          type="button"
-          role="switch"
-          aria-checked={checked}
-          onClick={() => onChange(!checked)}
-          className={[
-            "relative inline-flex h-8 w-12.5 shrink-0 items-center rounded-full p-1 transition",
-            "ring-1 ring-inset focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
-            checked
-              ? "bg-indigo-600 ring-indigo-600"
-              : "bg-gray-200 ring-gray-200 group-hover:bg-gray-300",
-          ].join(" ")}
-        >
-          {/* Track icons */}
-          <span className="pointer-events-none absolute -left-1 inline-flex items-center justify-center">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className={[
-                "h-6 w-8 transition",
-                checked ? "text-white/90" : "text-gray-500",
-              ].join(" ")}
-              aria-hidden="true"
-            >
-              <path
-                d="M9 12.75 11.25 15 15 9.75"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-          <span className="pointer-events-none absolute right-2 inline-flex items-center justify-center">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className={[
-                "h-3.5 w-3.5 transition",
-                checked ? "text-white/70" : "text-gray-400",
-              ].join(" ")}
-              aria-hidden="true"
-            >
-              <path
-                d="M6 18 18 6M6 6l12 12"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-
-          {/* Thumb */}
-          <span
-            className={[
-              "inline-flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm transition-transform",
-              checked ? "translate-x-4.5" : "translate-x-0",
-            ].join(" ")}
-          >
-            <span
-              className={[
-                "h-2 w-2 rounded-full transition",
-                checked ? "bg-indigo-600" : "bg-gray-300",
-              ].join(" ")}
-            />
-          </span>
-        </button>
-      </div>
-
-      <div className="mt-2.5 flex items-center justify-between text-[11px] text-gray-500">
-        <span className="inline-flex items-center gap-2">
-          <span
-            className={[
-              "h-1.5 w-1.5 rounded-full",
-              checked ? "bg-indigo-500" : "bg-gray-300",
-            ].join(" ")}
-          />
-          {checked ? "Enabled" : "Disabled"}
-        </span>
-        <button
-          type="button"
-          onClick={() => onChange(!checked)}
-          className="text-indigo-600 hover:text-indigo-700 font-semibold"
-        >
-          {checked ? "Turn off" : "Turn on"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export default function TherapistSettingsPage() {
-  const params = useParams<{ therapistId: string }>();
-  const therapistId = params?.therapistId ?? "";
-  // Backend profile state
-  const [meLoading, setMeLoading] = React.useState(true);
-  const [meError, setMeError] = React.useState<string | null>(null);
-  const [meUser, setMeUser] = React.useState<{ id: number; role: string; name: string; email: string } | null>(null);
-  const [editingProfile, setEditingProfile] = React.useState(false);
-  const [draftName, setDraftName] = React.useState("");
-  const [draftEmail, setDraftEmail] = React.useState("");
-  const [profileSaving, setProfileSaving] = React.useState(false);
-
-  const defaultPrefs: TherapistPrefs = React.useMemo(
-    () => ({
-      emailNotifications: true,
-      weeklySummary: true,
-      newClientAlerts: true,
-      noteReminders: false,
-    }),
-    []
-  );
-
-  const [hydrated, setHydrated] = React.useState(false);
-  const [prefs, setPrefs] = React.useState<TherapistPrefs>(defaultPrefs);
   const [toast, setToast] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!therapistId) return;
-    const existing = safeParse<TherapistPrefs>(localStorage.getItem(storageKey(therapistId)));
-    if (existing) {
-      setPrefs({
-        emailNotifications: !!existing.emailNotifications,
-        weeklySummary: !!existing.weeklySummary,
-        newClientAlerts: !!existing.newClientAlerts,
-        noteReminders: !!existing.noteReminders,
-      });
-    } else {
-      localStorage.setItem(storageKey(therapistId), JSON.stringify(defaultPrefs));
-      setPrefs(defaultPrefs);
-    }
-    setHydrated(true);
-  }, [therapistId, defaultPrefs]);
-
-  // Hydrate profile from backend
-  React.useEffect(() => {
-    if (!therapistId) return;
-    let cancelled = false;
-    async function fetchMe() {
-      setMeLoading(true);
-      setMeError(null);
-      try {
-        const me = await apiFetch("/api/me", { method: "GET" });
-        if (!me || !me.user) throw new Error("No user found");
-        if (cancelled) return;
-        setMeUser(me.user);
-        setDraftName(me.user.name ?? "");
-        setDraftEmail(me.user.email ?? "");
-      } catch (err: any) {
-        if (cancelled) return;
-        setMeError(err?.message || "Failed to load profile");
-      } finally {
-        if (!cancelled) setMeLoading(false);
-      }
-    }
-    fetchMe();
-    return () => {
-      cancelled = true;
-    };
-  }, [therapistId]);
-
-  React.useEffect(() => {
-    if (!hydrated || !therapistId) return;
-    localStorage.setItem(storageKey(therapistId), JSON.stringify(prefs));
-  }, [prefs, hydrated, therapistId]);
+  const onToast = React.useCallback((msg: string) => {
+    setToast(msg);
+  }, []);
 
   React.useEffect(() => {
     if (!toast) return;
@@ -235,345 +27,113 @@ export default function TherapistSettingsPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  function update(next: Partial<TherapistPrefs>) {
-    setPrefs((p) => ({ ...p, ...next }));
-    setToast("Saved");
-  }
+  const {
+    meLoading,
+    meError,
+    meUser,
+    editingProfile,
+    setDraftName,
+    setDraftEmail,
+    openProfileEdit,
+    saveProfileEdit,
+  } = useMeProfile({ onToast });
 
-  function openProfileEdit() {
-    if (!meUser) return;
-    setEditingProfile(true);
-    setDraftName(meUser.name ?? "");
-    setDraftEmail(meUser.email ?? "");
-  }
+  const { prefs, update } = useTherapistPrefs({ therapistId, onToast });
 
-  function cancelProfileEdit() {
-    if (!meUser) return;
-    setEditingProfile(false);
-    setDraftName(meUser.name ?? "");
-    setDraftEmail(meUser.email ?? "");
-  }
 
-  async function saveProfileEdit() {
-    const name = draftName.trim();
-    const email = draftEmail.trim();
-    if (!name || !email) {
-      setToast("Please fill name + email");
-      return;
-    }
-    setProfileSaving(true);
-    try {
-      const data = await apiFetch("/api/settings/profile", {
-        method: "PATCH",
-        body: JSON.stringify({ name, email }),
+  const notificationsLabel = prefs.emailNotifications
+    ? "Active"
+    : "Oprite";
+
+  const handleSaveProfileFromHeader = React.useCallback(
+    async (values: {
+      name: string;
+      email: string;
+      notificationsLabel: string;
+    }) => {
+      const nextEmailNotifications = values.notificationsLabel !== "Oprite";
+
+      if (!editingProfile) {
+        openProfileEdit();
+      }
+
+      setDraftName(values.name);
+      setDraftEmail(values.email);
+
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      await saveProfileEdit();
+
+      await update({
+        emailNotifications: nextEmailNotifications,
       });
-      if (!data || !data.user) throw new Error("No user returned");
-      setMeUser(data.user);
-      setEditingProfile(false);
-      setToast("Saved");
-    } catch (err: any) {
-      setToast(err?.message || "Failed to update profile");
-    } finally {
-      setProfileSaving(false);
-    }
-  }
-
-  // SECURITY STATE
-  const [pwOld, setPwOld] = React.useState("");
-  const [pwNew, setPwNew] = React.useState("");
-  const [pwConfirm, setPwConfirm] = React.useState("");
-  const [pwSaving, setPwSaving] = React.useState(false);
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    if (!pwOld || !pwNew || !pwConfirm) {
-      setToast("Please fill all password fields");
-      return;
-    }
-    if (pwNew.length < 8) {
-      setToast("New password must be at least 8 characters");
-      return;
-    }
-    if (pwNew !== pwConfirm) {
-      setToast("Passwords do not match");
-      return;
-    }
-    setPwSaving(true);
-    try {
-      await apiFetch("/api/settings/password", {
-        method: "PATCH",
-        body: JSON.stringify({ oldPassword: pwOld, newPassword: pwNew }),
-      });
-      setPwOld("");
-      setPwNew("");
-      setPwConfirm("");
-      setToast("Password updated");
-    } catch (err: any) {
-      setToast(err?.message || "Failed to update password");
-    } finally {
-      setPwSaving(false);
-    }
-  }
+    },
+    [
+      editingProfile,
+      openProfileEdit,
+      saveProfileEdit,
+      setDraftName,
+      setDraftEmail,
+      update,
+    ],
+  );
 
   if (meLoading) {
     return (
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
         <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-gray-900">Loading…</h1>
+          <h1 className="text-base font-semibold text-gray-900">Se încarcă…</h1>
         </div>
       </section>
     );
   }
+
   if (meError) {
     return (
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
         <div className="rounded-2xl border border-rose-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-rose-700">Error</h1>
+          <h1 className="text-base font-semibold text-rose-700">Eroare</h1>
           <p className="mt-2 text-sm text-gray-600">{meError}</p>
         </div>
       </section>
     );
   }
 
+  if (!meUser) {
+    return (
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+          <h1 className="text-base font-semibold text-gray-900">Utilizator inexistent</h1>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-8">
-      {/* HEADER */}
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            Therapist settings
-          </div>
-          <h1 className="mt-2 text-2xl font-semibold text-gray-900">Settings</h1>
-          <p className="mt-1 text-sm text-gray-600 max-w-xl">
-            Manage your profile, notifications, and how your workspace behaves.
-          </p>
-        </div>
+    <section className="mx-auto max-w-7xl px-3 py-6 space-y-8 sm:px-6 sm:py-10 lg:px-8">
+      <SettingsHeader
+        name={meUser.name}
+        email={meUser.email}
+        therapistId={therapistId}
+      
+        notificationsLabel={notificationsLabel}
+        onEditProfile={openProfileEdit}
+        onSaveProfile={handleSaveProfileFromHeader}
+      />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href={`/therapist/${therapistId}`}
-            className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
-          >
-            Back to dashboard
-          </Link>
-        </div>
-      </header>
-
-      {/* GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* LEFT COLUMN */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* PROFILE */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900">Profile</h2>
-                <p className="mt-1 text-sm text-gray-600">Your public therapist identity in Innery.</p>
-              </div>
-              <button
-                type="button"
-                onClick={openProfileEdit}
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition"
-              >
-                Edit
-              </button>
-            </div>
-
-            <div className="mt-5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-semibold">
-                {initials(meUser?.name ?? "")}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{meUser?.name ?? ""}</p>
-                <p className="text-xs text-gray-500 truncate">Therapist ID: {meUser?.id ?? therapistId}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <SettingRow label="Name" value={meUser?.name ?? ""} />
-              <SettingRow label="Email" value={meUser?.email ?? ""} />
-              <SettingRow label="Role" value={meUser?.role ?? "Therapist"} />
-            </div>
-
-            {editingProfile ? (
-              <div className="mt-6 rounded-2xl border border-gray-100 bg-gray-50/40 p-4">
-                <p className="text-xs font-semibold text-gray-500">Edit profile</p>
-
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600">Name</label>
-                    <input
-                      value={draftName}
-                      onChange={(e) => setDraftName(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Your name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600">Email</label>
-                    <input
-                      value={draftEmail}
-                      onChange={(e) => setDraftEmail(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="you@example.com"
-                      inputMode="email"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={cancelProfileEdit}
-                      className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={saveProfileEdit}
-                      disabled={profileSaving}
-                      className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-50 transition"
-                    >
-                      {profileSaving ? "Saving…" : "Save"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          {/* NOTIFICATIONS */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">Notifications</h2>
-              <p className="mt-1 text-sm text-gray-600">Control what you receive.</p>
-            </div>
-
-            <Toggle
-              label="Email notifications"
-              description="Receive important updates and reminders."
-              checked={prefs.emailNotifications}
-              onChange={(v) => update({ emailNotifications: v })}
-            />
-            <Toggle
-              label="Weekly summary"
-              description="Get a weekly summary of sessions and activity."
-              checked={prefs.weeklySummary}
-              onChange={(v) => update({ weeklySummary: v })}
-            />
-            <Toggle
-              label="New client alerts"
-              description="Be notified when a client is assigned to you (future)."
-              checked={prefs.newClientAlerts}
-              onChange={(v) => update({ newClientAlerts: v })}
-            />
-            <Toggle
-              label="Note reminders"
-              description="Remind you to write brief session notes after appointments."
-              checked={prefs.noteReminders}
-              onChange={(v) => update({ noteReminders: v })}
-            />
-          </div>
-
-
-          {/* SECURITY */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900">Security</h2>
-                <p className="mt-1 text-sm text-gray-600">Protect your therapist workspace.</p>
-              </div>
-            </div>
-            <form className="mt-5 grid grid-cols-1 gap-4" onSubmit={handleChangePassword}>
-              <div>
-                <label className="text-xs font-semibold text-gray-600">Old password</label>
-                <input
-                  type="password"
-                  value={pwOld}
-                  onChange={(e) => setPwOld(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Old password"
-                  autoComplete="current-password"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600">New password</label>
-                <input
-                  type="password"
-                  value={pwNew}
-                  onChange={(e) => setPwNew(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="New password"
-                  autoComplete="new-password"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600">Confirm new password</label>
-                <input
-                  type="password"
-                  value={pwConfirm}
-                  onChange={(e) => setPwConfirm(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Confirm new password"
-                  autoComplete="new-password"
-                />
-              </div>
-              <div>
-                <button
-                  type="submit"
-                  disabled={pwSaving}
-                  className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-50 transition"
-                >
-                  {pwSaving ? "Changing…" : "Change password"}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* DANGER */}
-          <div className="bg-white rounded-2xl border border-rose-200 shadow-sm p-6">
-            <h2 className="text-sm font-semibold text-rose-700">Danger zone</h2>
-            <p className="mt-2 text-sm text-gray-600 max-w-xl">
-              Permanently delete your account and all associated therapeutic data.
-            </p>
-
-            <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="text-xs text-gray-500">Demo action • does not change data</div>
-              <button
-                type="button"
-                onClick={() => setToast("Delete account (demo)")}
-                className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition"
-              >
-                Delete account
-              </button>
-            </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8 items-start">
+        <div className="min-w-0 flex flex-col gap-5 lg:col-span-7 lg:gap-6 lg:min-h-[calc(100vh-220px)]">
+          <SecurityCard onToast={onToast} />
+          <div className="mt-auto">
+            <DangerZoneCard onToast={onToast} />
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
-        <aside className="space-y-6">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="text-sm font-semibold text-gray-900">Account</h3>
-            <p className="mt-2 text-sm text-gray-600">
-              <span className="font-semibold text-gray-900">{meUser?.name ?? ""}</span>
-            </p>
-            <p className="mt-1 text-xs text-gray-500">Therapist ID: {meUser?.id ?? therapistId}</p>
-            <div className="mt-1 text-xs text-gray-500">{meUser?.email ?? ""}</div>
-            <div className="mt-4 rounded-2xl bg-gray-50/40 border border-gray-100 p-4">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                Preferences are saved locally on this device (localStorage).
-              </p>
-            </div>
-          </div>
-        </aside>
+        <div className="min-w-0 flex flex-col gap-5 lg:col-span-5 lg:gap-6 xl:pl-2">
+          <PreferencesSection prefs={prefs} update={update} onToast={onToast} />
+        </div>
       </div>
 
-      {/* TOAST */}
+      {/* TOAST (păstrat exact ca înainte) */}
       <div
         className={
           "pointer-events-none fixed bottom-4 left-1/2 -translate-x-1/2 transition " +
@@ -581,19 +141,10 @@ export default function TherapistSettingsPage() {
         }
         aria-live="polite"
       >
-        <div className="pointer-events-none rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+        <div className="pointer-events-none rounded-[18px] bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">
           {toast}
         </div>
       </div>
     </section>
-  );
-}
-
-function SettingRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-gray-50/40 p-4">
-      <p className="text-xs font-semibold text-gray-500">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-gray-900 truncate">{value}</p>
-    </div>
   );
 }

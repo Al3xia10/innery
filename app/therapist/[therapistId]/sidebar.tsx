@@ -10,9 +10,7 @@ export default function Sidebar({
   therapistId: string;
 }) {
   const pathname = usePathname();
-
-  // Mobile draggable dock position (Y axis)
-  const [dockY, setDockY] = useState<number | null>(null);
+  const [desktopExpanded, setDesktopExpanded] = useState(false);
 
   const [therapistProfile, setTherapistProfile] = useState<{
     name?: string;
@@ -50,112 +48,145 @@ export default function Sidebar({
   const sidebarContent = useMemo(
     () => (
       <>
-        {/* BRAND */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-indigo-600/10 ring-1 ring-indigo-600/10 flex items-center justify-center">
-              <span className="text-indigo-700 font-semibold">in</span>
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-lg font-semibold tracking-tight text-gray-900 leading-tight">
-                innery
-              </h2>
-              <p className="mt-0.5 text-xs text-gray-500">therapist workspace</p>
-            </div>
-          </div>
+        {/* HEADER / BRAND */}
+        <div className="mb-6">
+          {desktopExpanded ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 shrink-0 rounded-xl bg-white shadow-sm ring-1 ring-[#ece2e7] flex items-center justify-center">
+                  <span className="text-[#7c5c6c] font-semibold">in</span>
+                </div>
 
-          <div className="mt-5 rounded-xl bg-linear-to-br from-indigo-50 to-white border border-indigo-100 p-3">
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Keep your work calm, structured, and client-centered.
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#2d1f27] truncate">innery</p>
+                  <p className="text-[11px] text-[#a08a95] truncate">spațiul terapeutului</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDesktopExpanded((v) => !v)}
+                aria-label="Collapse sidebar"
+                title="Collapse"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#7c5c6c] shadow-sm ring-1 ring-[#ece2e7] transition hover:bg-[#fffafb]"
+              >
+                <IconSidebarToggle expanded={desktopExpanded} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-white shadow-sm ring-1 ring-[#ece2e7] flex items-center justify-center">
+                <span className="text-[#7c5c6c] font-semibold">in</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDesktopExpanded((v) => !v)}
+                aria-label="Expand sidebar"
+                title="Expand"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#7c5c6c] shadow-sm ring-1 ring-[#ece2e7] transition hover:bg-[#fffafb]"
+              >
+                <IconSidebarToggle expanded={desktopExpanded} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {desktopExpanded ? (
+          <div className="mb-6 rounded-[20px] bg-white p-4 shadow-sm ring-1 ring-[#eee3ea]">
+            <p className="text-[11px] uppercase tracking-wide text-[#b8a5af]">astăzi</p>
+            <p className="mt-2 text-sm leading-5 text-[#2d1f27]">
+              rămâi organizată și păstrează fiecare pas clar
             </p>
           </div>
-        </div>
+        ) : null}
 
-        {/* MAIN NAV */}
-        <div className="mb-3 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
-          Workspace
-        </div>
-        <nav className="flex flex-col gap-1 text-sm">
+        {/* NAV */}
+        <nav className="mt-2 flex flex-col gap-2">
           <NavItem
             href={`/therapist/${therapistId}`}
-            label="Dashboard"
+            label="Panou"
             icon={<IconHome />}
             active={isActive(`/therapist/${therapistId}`, { exact: true })}
+            compact={!desktopExpanded}
           />
-
           <NavItem
             href={`/therapist/${therapistId}/clients`}
-            label="Clients"
+            label="Clienți"
             icon={<IconUsers />}
             active={isActive(`/therapist/${therapistId}/clients`)}
+            compact={!desktopExpanded}
           />
-
           <NavItem
             href={`/therapist/${therapistId}/sessions`}
-            label="Sessions"
+            label="Ședințe"
             icon={<IconCalendar />}
             active={isActive(`/therapist/${therapistId}/sessions`)}
+            compact={!desktopExpanded}
           />
-
           <NavItem
             href={`/therapist/${therapistId}/notes`}
-            label="Notes"
+            label="Notițe"
             icon={<IconNote />}
             active={isActive(`/therapist/${therapistId}/notes`)}
+            compact={!desktopExpanded}
           />
         </nav>
 
-        {/* DIVIDER */}
-        <div className="my-8 h-px bg-gray-100" />
+        <div className="mt-7 pt-5 border-t border-[#eadfe5]">
+          {desktopExpanded ? (
+            <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a08a95]">
+              preferințe
+            </p>
+          ) : null}
 
-        {/* SECONDARY NAV */}
-        <div className="mb-3 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
-          Preferences
-        </div>
-        <nav className="flex flex-col gap-1 text-sm">
           <NavItem
             href={`/therapist/${therapistId}/settings`}
-            label="Settings"
+            label="Setări"
             icon={<IconSettings />}
             active={isActive(`/therapist/${therapistId}/settings`)}
             secondary
+            compact={!desktopExpanded}
           />
-        </nav>
+        </div>
 
-        {/* FOOTER */}
+        {/* PROFILE */}
         <div className="mt-auto pt-8">
-          <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-indigo-600/10 ring-1 ring-indigo-600/10 flex items-center justify-center">
-                <span className="text-indigo-700 font-semibold text-sm">
+          {desktopExpanded ? (
+            <div className="rounded-[20px] bg-white p-4 shadow-sm ring-1 ring-[#eee3ea]">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-[#f3e8ee] flex items-center justify-center text-[#7c5c6c] font-semibold shrink-0">
                   {(therapistProfile?.name?.trim()?.[0] || "T").toUpperCase()}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 leading-tight truncate">
-                  {therapistProfile?.name || "Therapist"}
-                </p>
-                {therapistProfile?.email ? (
-                  <p className="text-xs text-gray-500 truncate">{therapistProfile.email}</p>
-                ) : null}
-                <p className="text-xs text-gray-500 truncate">ID: {therapistId}</p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#2d1f27] truncate">
+                    {therapistProfile?.name || "Terapeut"}
+                  </p>
+                  <p className="text-xs text-[#a08a95] truncate">
+                    {therapistProfile?.email || "fără email"}
+                  </p>
+                </div>
               </div>
             </div>
-
-            <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-              <span>© 2025 innery</span>
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-[#eee3ea] text-sm font-medium text-[#7c5c6c] opacity-90 transition hover:shadow-[0_8px_18px_rgba(120,92,108,0.08)]">
+              {(therapistProfile?.name?.trim()?.[0] || "T").toUpperCase()}
             </div>
-          </div>
+          )}
         </div>
       </>
     ),
-    [therapistId, pathname, therapistProfile]
+    [desktopExpanded, therapistId, pathname, therapistProfile]
   );
 
   return (
     <>
-      {/* DESKTOP/TABLET: unchanged */}
-      <aside className="hidden md:flex w-72 flex-col border-r border-gray-100 bg-white/80 backdrop-blur px-6 py-7">
+      <aside
+        className={[
+          "hidden md:flex flex-col border-r border-[#eee3ea] bg-[linear-gradient(180deg,#fbf9fb,#f6f1f5)] px-4 py-6 shadow-[inset_-1px_0_0_#f0e6ec] transition-all duration-300",
+          desktopExpanded ? "w-72" : "w-22",
+        ].join(" ")}
+      >
         {sidebarContent}
       </aside>
     </>
@@ -168,66 +199,81 @@ function NavItem({
   icon,
   active,
   secondary,
+  compact,
 }: {
   href: string;
   label: string;
   icon: React.ReactNode;
   active: boolean;
   secondary?: boolean;
+  compact?: boolean;
 }) {
   return (
     <Link
       href={href}
       className={[
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition",
+        "group relative flex items-center rounded-xl py-2.5 transition-all duration-200",
+        compact ? "justify-center px-0 overflow-visible" : "gap-3 px-3",
         active
           ? secondary
-            ? "bg-gray-100 text-gray-900"
-            : "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100"
+            ? "bg-white text-[#2d1f27] shadow-[0_10px_22px_rgba(120,92,108,0.08)] ring-1 ring-[#eadfe5]"
+            : "bg-white text-[#6b4c5c] shadow-[0_10px_22px_rgba(120,92,108,0.08)] ring-1 ring-[#eadfe5]"
           : secondary
-          ? "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-          : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700",
+            ? "text-[#8a7b84] hover:bg-white hover:text-[#2d1f27] hover:shadow-[0_10px_22px_rgba(120,92,108,0.06)] hover:ring-1 hover:ring-[#f0e6ec]"
+            : "text-[#7c5c6c] hover:bg-white hover:text-[#2d1f27] hover:shadow-[0_10px_22px_rgba(120,92,108,0.06)] hover:ring-1 hover:ring-[#f0e6ec]",
       ].join(" ")}
     >
-      {/* Active accent bar */}
-      <span
-        className={[
-          "absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-full transition",
-          active
-            ? secondary
-              ? "bg-gray-300"
-              : "bg-indigo-500"
-            : "bg-transparent group-hover:bg-indigo-200",
-        ].join(" ")}
-      />
+      {!compact ? (
+        <span
+          className={[
+            "absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1.5 rounded-full transition",
+            active ? "bg-[#dcaec6]" : "bg-transparent group-hover:bg-[#ead4e0]",
+          ].join(" ")}
+        />
+      ) : null}
 
       <span
         className={[
-          "inline-flex h-9 w-9 items-center justify-center rounded-lg transition",
+          "inline-flex h-9 w-9 items-center justify-center rounded-lg transition shrink-0",
           active
-            ? secondary
-              ? "bg-white text-gray-700"
-              : "bg-white text-indigo-700"
-            : "bg-gray-50 text-gray-600 group-hover:bg-white group-hover:text-indigo-700",
+            ? "bg-white text-[#6b4c5c] shadow-[0_6px_14px_rgba(120,92,108,0.08)]"
+            : "bg-white/85 text-[#7c5c6c] group-hover:bg-white group-hover:text-[#2d1f27] group-hover:shadow-[0_6px_14px_rgba(120,92,108,0.06)]",
         ].join(" ")}
       >
         {icon}
       </span>
 
-      <span className="font-medium">{label}</span>
+      {!compact ? (
+        <span className="font-medium truncate">{label}</span>
+      ) : (
+        <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-30 -translate-y-1/2 whitespace-nowrap rounded-[18px] border border-[#eee3ea] bg-white px-3 py-2 text-sm font-medium text-[#2d1f27] opacity-0 shadow-[0_12px_30px_rgba(120,92,108,0.12)] transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100">
+          {label}
+        </span>
+      )}
     </Link>
   );
 }
 
-function IconHome() {
+function IconSidebarToggle({ expanded }: { expanded: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path
-        d="M3.5 10.5L12 3.75l8.5 6.75V20a1.5 1.5 0 0 1-1.5 1.5h-4.5V15a1.5 1.5 0 0 0-1.5-1.5h-2A1.5 1.5 0 0 0 9.5 15v6.5H5A1.5 1.5 0 0 1 3.5 20v-9.5Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+      {expanded ? (
+        <path
+          d="M15 6 9 12l6 6"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <path
+          d="M9 6l6 6-6 6"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
     </svg>
   );
 }
@@ -256,6 +302,19 @@ function IconUsers() {
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconHome() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+      <path
+        d="M3.5 10.5L12 3.75l8.5 6.75V20a1.5 1.5 0 0 1-1.5 1.5h-4.5V15a1.5 1.5 0 0 0-1.5-1.5h-2A1.5 1.5 0 0 0 9.5 15v6.5H5A1.5 1.5 0 0 1 3.5 20v-9.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
       />
     </svg>
   );

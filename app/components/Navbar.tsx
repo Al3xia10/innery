@@ -12,14 +12,33 @@ export default function Navbar() {
   const inClientWorkspace = pathname?.startsWith("/client");
   const inTherapistWorkspace = pathname?.startsWith("/therapist");
   const inWorkspace = inClientWorkspace || inTherapistWorkspace;
+  const [workspaceUserId, setWorkspaceUserId] = useState<string | null>(null);
+
+  const therapistPathId = pathname?.match(/^\/therapist\/([^/]+)/)?.[1] ?? null;
+  const therapistBaseHref =
+  therapistPathId || workspaceUserId
+    ? `/therapist/${therapistPathId ?? workspaceUserId}`
+    : "/therapist";
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem("innery_user");
-      setIsAuthenticated(Boolean(savedUser));
-    } catch {
-      setIsAuthenticated(false);
+  try {
+    const savedUser = localStorage.getItem("innery_user");
+    setIsAuthenticated(Boolean(savedUser));
+
+    if (!savedUser) {
+      setWorkspaceUserId(null);
+      return;
     }
-  }, [pathname]);
+
+    const parsedFirst = JSON.parse(savedUser);
+    const parsedUser =
+      typeof parsedFirst === "string" ? JSON.parse(parsedFirst) : parsedFirst;
+
+    setWorkspaceUserId(parsedUser?.id != null ? String(parsedUser.id) : null);
+  } catch {
+    setIsAuthenticated(false);
+    setWorkspaceUserId(null);
+  }
+}, [pathname]);
 
   const handleLogout = () => {
     try {
@@ -28,6 +47,7 @@ export default function Navbar() {
     } catch {}
 
     setIsAuthenticated(false);
+    setWorkspaceUserId(null);
     setOpen(false);
     router.push("/");
   };
@@ -262,10 +282,10 @@ export default function Navbar() {
                       ) : (
                         <>
                           <Link
-                            href="/therapist"
+                            href={therapistBaseHref}
                             onClick={() => setOpen(false)}
                             className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
-                              pathname === "/therapist"
+                              pathname === therapistBaseHref
                                 ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
                                 : "text-gray-800 hover:bg-(--color-card)"
                             }`}
@@ -273,62 +293,91 @@ export default function Navbar() {
                             Dashboard
                           </Link>
                           <Link
-                            href="/therapist/clients"
-                            onClick={() => setOpen(false)}
-                            className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
-                              pathname.startsWith("/therapist/clients")
-                                ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
-                                : "text-gray-800 hover:bg-(--color-card)"
-                            }`}
-                          >
-                            Clients
-                          </Link>
-                          <Link
-                            href="/therapist/sessions"
-                            onClick={() => setOpen(false)}
-                            className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
-                              pathname.startsWith("/therapist/sessions")
-                                ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
-                                : "text-gray-800 hover:bg-(--color-card)"
-                            }`}
-                          >
-                            Sessions
-                          </Link>
-                          <Link
-                            href="/therapist/notes"
-                            onClick={() => setOpen(false)}
-                            className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
-                              pathname.startsWith("/therapist/notes")
-                                ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
-                                : "text-gray-800 hover:bg-(--color-card)"
-                            }`}
-                          >
-                            Notes
-                          </Link>
-                          <Link
-                            href="/therapist/settings"
-                            onClick={() => setOpen(false)}
-                            className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
-                              pathname.startsWith("/therapist/settings")
-                                ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
-                                : "text-gray-800 hover:bg-(--color-card)"
-                            }`}
-                          >
-                            Settings
-                          </Link>
+                        href={`${therapistBaseHref}/clients`}
+                        onClick={() => setOpen(false)}
+                        className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
+                          pathname.startsWith(`${therapistBaseHref}/clients`)
+                            ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
+                            : "text-gray-800 hover:bg-(--color-card)"
+                        }`}
+                      >
+                        Clients
+                      </Link>
+                                                <Link
+                        href={`${therapistBaseHref}/sessions`}
+                        onClick={() => setOpen(false)}
+                        className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
+                          pathname.startsWith(`${therapistBaseHref}/sessions`)
+                            ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
+                            : "text-gray-800 hover:bg-(--color-card)"
+                        }`}
+                      >
+                        Sessions
+                      </Link>
+                                                <Link
+                        href={`${therapistBaseHref}/notes`}
+                        onClick={() => setOpen(false)}
+                        className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
+                          pathname.startsWith(`${therapistBaseHref}/notes`)
+                            ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
+                            : "text-gray-800 hover:bg-(--color-card)"
+                        }`}
+                      >
+                        Notes
+                      </Link>
+                                                <Link
+                        href={`${therapistBaseHref}/settings`}
+                        onClick={() => setOpen(false)}
+                        className={`w-full rounded-2xl px-6 py-[1.05rem] text-center text-[1.08rem] font-medium transition duration-200 ${
+                          pathname.startsWith(`${therapistBaseHref}/settings`)
+                            ? "bg-(--color-card) font-semibold text-(--color-accent) shadow-sm ring-1 ring-(--color-soft)"
+                            : "text-gray-800 hover:bg-(--color-card)"
+                        }`}
+                      >
+                        Settings
+                      </Link>
                         </>
                       )}
                     </nav>
 
                     <div className="mt-auto mx-auto w-full max-w-sm border-t border-(--color-soft)/60 pt-6">
-                      <Link
-                        href="/"
-                        onClick={() => setOpen(false)}
-                        className="inline-flex w-full items-center justify-center rounded-2xl border border-transparent bg-(--color-accent) px-4 py-3.5 text-[1.02rem] font-medium text-white shadow-sm transition duration-200 hover:opacity-95 active:scale-[0.99]"
+                  <div className="grid grid-cols-1 gap-3">
+                    <Link
+                      href="/"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex w-full items-center justify-center rounded-2xl border border-transparent bg-(--color-accent) px-4 py-3.5 text-[1.02rem] font-medium text-white shadow-sm transition duration-200 hover:opacity-95 active:scale-[0.99]"
+                    >
+                      Back to main site
+                    </Link>
+
+                    {isAuthenticated ? (
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="inline-flex w-full items-center justify-center rounded-2xl border border-(--color-soft) bg-white px-4 py-3.5 text-[1.02rem] font-medium text-gray-900 shadow-sm transition duration-200 hover:bg-(--color-card) active:scale-[0.99]"
                       >
-                        Back to main site
-                      </Link>
-                    </div>
+                        Log out
+                      </button>
+                    ) : (
+                      <>
+                        <Link
+                          href="/auth/login"
+                          onClick={() => setOpen(false)}
+                          className="inline-flex w-full items-center justify-center rounded-2xl border border-(--color-soft) bg-white px-4 py-3.5 text-[1.02rem] font-medium text-gray-900 shadow-sm transition duration-200 hover:bg-(--color-card) active:scale-[0.99]"
+                        >
+                          Log in
+                        </Link>
+                        <Link
+                          href="/auth/signup"
+                          onClick={() => setOpen(false)}
+                          className="inline-flex w-full items-center justify-center rounded-2xl bg-(--color-card) px-4 py-3.5 text-[1.02rem] font-medium text-gray-900 shadow-sm transition duration-200 hover:bg-white active:scale-[0.99]"
+                        >
+                          Sign up
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
                   </>
                 ) : (
                   <>
