@@ -93,7 +93,7 @@ export default function Sidebar({
         <nav className="mt-3 flex flex-col gap-1 text-sm">
           <NavItem
             href={`/client/${clientId}`}
-            label="Dashboard"
+            label="Panou"
             icon={<IconHome />}
             active={isActive(`/client/${clientId}`, { exact: true })}
           />
@@ -105,7 +105,7 @@ export default function Sidebar({
           />
           <NavItem
             href={`/client/${clientId}/notes`}
-            label="Notes"
+            label="Notite"
             icon={<IconNote />}
             active={isActive(`/client/${clientId}/notes`)}
           />
@@ -121,7 +121,7 @@ export default function Sidebar({
         <nav className="flex flex-col gap-1 text-sm">
           <NavItem
             href={`/client/${clientId}/settings`}
-            label="Settings"
+            label="Setari"
             icon={<IconSettings />}
             active={isActive(`/client/${clientId}/settings`)}
             secondary
@@ -189,7 +189,7 @@ export default function Sidebar({
           <div className="grid grid-rows-4 gap-1.5">
             <MobileNavItem
               href={`/client/${clientId}`}
-              ariaLabel="Dashboard"
+              ariaLabel="Panou"
               active={isActive(`/client/${clientId}`, { exact: true })}
               icon={<IconHome />}
             />
@@ -201,13 +201,13 @@ export default function Sidebar({
           />
             <MobileNavItem
               href={`/client/${clientId}/notes`}
-              ariaLabel="Notes"
+              ariaLabel="Notite"
               active={isActive(`/client/${clientId}/notes`)}
               icon={<IconNote />}
             />
             <MobileNavItem
               href={`/client/${clientId}/settings`}
-              ariaLabel="Settings"
+              ariaLabel="Setari"
               active={isActive(`/client/${clientId}/settings`)}
               icon={<IconSettings />}
             />

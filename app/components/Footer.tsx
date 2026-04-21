@@ -33,8 +33,8 @@ export default function Footer() {
             <div>
               <h4 className="text-lg font-semibold text-gray-900">Innery</h4>
               <p className="mt-2 text-sm text-gray-700 leading-relaxed">
-                A safe, modern space where therapy begins with understanding,
-                connection and care.
+                Un spatiu sigur si modern, unde terapia incepe cu intelegere,
+                conexiune si grija.
               </p>
             </div>
 
@@ -97,21 +97,34 @@ export default function Footer() {
           {/* RIGHT – NAV */}
           <div className="flex flex-col items-center gap-4 text-sm text-center md:items-start md:text-left">
             <span className="text-gray-900 uppercase tracking-wide text-xs">
-              Explore
+              Exploreaza
             </span>
             <nav className="flex flex-col gap-3.5 font-medium text-gray-700">
-              <Link href="/therapist" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">For therapists</Link>
-              <Link href="/client" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">For clients</Link>
-              <Link href="/about" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">About Innery</Link>
+              <Link href="/therapist" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">Pentru terapeuti</Link>
+              <Link href="/client" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">Pentru clienti</Link>
+              <Link href="/about" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">Despre Innery</Link>
               <Link href="/contact" className="px-2 py-1.5 hover:text-(--color-accent) transition active:scale-[0.98]">Contact</Link>
             </nav>
+
+    
           </div>
 
         </div>
 
         {/* COPYRIGHT */}
-        <div className="mt-12 mb-6 pt-6 border-t border-(--color-accent) text-[0.75rem] text-gray-700 text-center">
-          © 2025 Innery. All rights reserved.
+        <div className="mt-12 mb-6 pt-6 border-t border-(--color-accent) text-[0.75rem] text-gray-700">
+          <div className="flex flex-col items-center gap-2 text-center md:flex-row md:items-center md:justify-between md:text-left">
+            <p>© 2026 Innery. Toate drepturile rezervate.</p>
+            <div className="flex items-center gap-2">
+              <Link href="/privacy-policy" className="underline hover:text-(--color-accent)">
+                Politica de confidentialitate
+              </Link>
+              <span>·</span>
+              <Link href="/terms-and-conditions" className="underline hover:text-(--color-accent)">
+                Termeni si conditii
+              </Link>
+            </div>
+          </div>
         </div>
 
       </div>

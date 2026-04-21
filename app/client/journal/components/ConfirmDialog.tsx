@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { cn } from "./utils";
 import { createPortal } from "react-dom";
 
@@ -24,12 +24,6 @@ export default function ConfirmDialog({
   onCancel: () => void;
 }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -46,10 +40,10 @@ export default function ConfirmDialog({
     first?.focus();
   }, [open]);
 
-  if (!open || !mounted) return null;
+  if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-200 flex items-end justify-center p-3 sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-200 flex items-end justify-center p-2 sm:items-center sm:p-6">
       <button
         type="button"
         aria-label="Close dialog"
@@ -58,26 +52,26 @@ export default function ConfirmDialog({
       />
       <div
         ref={panelRef}
-        className="relative w-full max-w-md rounded-[28px] border border-black/5 shadow-[0_24px_70px_rgba(31,23,32,0.22)]"
+        className="relative w-full max-w-md rounded-[28px] border border-black/5 shadow-[0_24px_70px_rgba(31,23,32,0.22)] sm:rounded-4xl"
         style={{
           background:
             "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
         }}
       >
-        <div className="p-5 sm:p-6">
+        <div className="p-4 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-              <p className="mt-1 text-sm leading-7 text-(--color-foreground-muted,#6B5A63)">{message}</p>
+              <p className="mt-1 text-sm leading-6 sm:leading-7 text-(--color-foreground-muted,#6B5A63)">{message}</p>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div className="mt-4 flex flex-col gap-2 sm:mt-5 sm:flex-row sm:flex-wrap sm:gap-3">
             <button
               type="button"
               onClick={onConfirm}
               className={cn(
-                "inline-flex w-full sm:w-auto items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition",
+                "inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] px-4 py-2.5 text-sm font-semibold transition",
                 danger
                   ? "bg-rose-500 text-white shadow-[0_10px_20px_rgba(244,63,94,0.25)] hover:bg-rose-600"
                   : "bg-(--color-primary) text-white shadow-[0_10px_20px_rgba(125,128,218,0.25)] hover:opacity-95"
@@ -88,7 +82,7 @@ export default function ConfirmDialog({
             <button
               type="button"
               onClick={onCancel}
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-black/5 bg-white/80 px-4 py-2.5 text-sm font-semibold text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-(--color-soft)"
+              className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-white/80 px-4 py-2.5 text-sm font-semibold text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-(--color-soft)"
             >
               {cancelText}
             </button>

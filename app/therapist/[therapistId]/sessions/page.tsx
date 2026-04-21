@@ -2,8 +2,26 @@
 
 import * as React from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { apiFetch } from "@/app/_lib/authClient";
+import { useToast } from "@/app/components/ui/toast/ToastProvider";
+import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import EmptyStateCard from "@/app/components/ui/EmptyStateCard";
+import ErrorStateCard from "@/app/components/ui/ErrorStateCard";
+import ListLoadingSkeleton from "@/app/components/ui/ListLoadingSkeleton";
+import FilterButton from "./components/FilterButton";
+import SessionCard from "./components/SessionCard";
+import SessionStatCard from "./components/SessionStatCard";
+import SessionStatusBadge from "./components/SessionStatusBadge";
+import { CalendarIcon, PlusIcon, SearchIcon, UserIcon, XIcon } from "./components/SessionsIcons";
+
+const CreateSessionModal = dynamic(() => import("./components/CreateSessionModal"), {
+  ssr: false,
+});
+const RescheduleSessionModal = dynamic(() => import("./components/RescheduleSessionModal"), {
+  ssr: false,
+});
 
 type SessionStatus = "Scheduled" | "Completed" | "Canceled" | "NoShow";
 type SessionType = "Individual" | "Couple" | "Group";
@@ -53,18 +71,6 @@ function compareByDate(a: Session, b: Session) {
 }
 
 
-function statusPillClass(status: SessionStatus) {
-  switch (status) {
-    case "Scheduled":
-      return "bg-indigo-50 text-indigo-700 ring-indigo-100";
-    case "Completed":
-      return "bg-emerald-50 text-emerald-700 ring-emerald-100";
-    case "Canceled":
-      return "bg-rose-50 text-rose-700 ring-rose-100";
-    case "NoShow":
-      return "bg-amber-50 text-amber-800 ring-amber-100";
-  }
-}
 function statusLabel(status: SessionStatus) {
   switch (status) {
     case "Scheduled":
@@ -86,6 +92,7 @@ function typeLabel(type: SessionType | string) {
 }
 
 export default function TherapistSessionsPage() {
+  const toast = useToast();
   const params = useParams<{ therapistId: string }>();
   const therapistId = params?.therapistId ?? "t1";
 
@@ -99,7 +106,7 @@ export default function TherapistSessionsPage() {
   const [creatingSession, setCreatingSession] = React.useState(false);
     const [completingSessionId, setCompletingSessionId] = React.useState<string | null>(null);
 
-  // Create modal
+  // Creează modal
   const [createOpen, setCreateOpen] = React.useState(false);
   const [createClients, setCreateClients] = React.useState<ClientOption[]>([]);
   const [createClientsLoading, setCreateClientsLoading] = React.useState(false);
@@ -115,12 +122,25 @@ export default function TherapistSessionsPage() {
   const [rescheduleOpen, setRescheduleOpen] = React.useState(false);
   const [draftDate, setDraftDate] = React.useState<string>("");
 
-  // Notes (per session)
+  // Notițe (per session)
   const [notes, setNotes] = React.useState<Note[]>([]);
   const [notesLoading, setNotesLoading] = React.useState(false);
   const [notesError, setNotesError] = React.useState<string | null>(null);
   const [noteDraft, setNoteDraft] = React.useState("");
   const [noteSaving, setNoteSaving] = React.useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
+  const pendingDeleteTimersRef = React.useRef<Map<string, number>>(new Map());
+  const pendingDeletedSessionsRef = React.useRef<Map<string, Session>>(new Map());
+
+  React.useEffect(() => {
+    const timers = pendingDeleteTimersRef.current;
+    return () => {
+      for (const timer of timers.values()) {
+        window.clearTimeout(timer);
+      }
+      timers.clear();
+    };
+  }, []);
 
   React.useEffect(() => {
     let alive = true;
@@ -333,7 +353,7 @@ export default function TherapistSessionsPage() {
         id: String(s.id),
         therapistId: String(s.therapistId ?? therapistId),
         clientUserId: String(s.clientUserId),
-        clientName: String(s?.clientUser?.name ?? "Unknown client"),
+        clientName: String(s?.clientUser?.name ?? "Client necunoscut"),
         startsAt: String(s.startsAt),
         durationMin: typeof s.durationMin === "number" ? s.durationMin : undefined,
         status: (s.status ?? "Scheduled") as SessionStatus,
@@ -354,7 +374,7 @@ export default function TherapistSessionsPage() {
   async function onNewSession() {
     const opts = await loadLinkedClientsForCreate();
     if (opts.length === 0) {
-      alert("Ai nevoie de cel puțin un client conectat înainte să creezi o ședință.");
+      toast.info("Ai nevoie de cel puțin un client conectat înainte să creezi o ședință.");
       return;
     }
     openCreateModal();
@@ -374,7 +394,7 @@ export default function TherapistSessionsPage() {
       id: String(s.id),
       therapistId: String(s.therapistId ?? therapistId),
       clientUserId: String(s.clientUserId),
-      clientName: String(s?.clientUser?.name ?? selected?.clientName ?? "Unknown client"),
+      clientName: String(s?.clientUser?.name ?? selected?.clientName ?? "Client necunoscut"),
       startsAt: String(s.startsAt),
       durationMin: typeof s.durationMin === "number" ? s.durationMin : undefined,
       status: (s.status ?? "Scheduled") as SessionStatus,
@@ -385,31 +405,60 @@ export default function TherapistSessionsPage() {
     upsert(next);
   }
 
-  async function onDeleteSession() {
-    if (!selected) return;
-
-    const ok = window.confirm("Ștergi permanent această ședință?");
-    if (!ok) return;
-
+  async function commitDeleteSession(sessionId: string) {
     try {
-      await apiFetch(`/api/therapists/${therapistId}/sessions/${selected.id}`, {
+      await apiFetch(`/api/therapists/${therapistId}/sessions/${sessionId}`, {
         method: "DELETE",
       });
-
-      setSessions((prev) => {
-        const next = prev.filter((s) => s.id !== selected.id);
-        const replacement = next[0]?.id ?? "";
-        setSelectedId(replacement);
-        return next;
-      });
-
-      setNotes([]);
-      setNotesError(null);
-      setNoteDraft("");
-      setRescheduleOpen(false);
+      pendingDeletedSessionsRef.current.delete(sessionId);
+      pendingDeleteTimersRef.current.delete(`session:${sessionId}`);
     } catch (e: any) {
-      alert(e?.message || "Nu am putut șterge ședința");
+      const snapshot = pendingDeletedSessionsRef.current.get(sessionId);
+      if (snapshot) {
+        upsert(snapshot);
+        setSelectedId(snapshot.id);
+      }
+      toast.error(e?.message || "Nu am putut șterge ședința");
+      pendingDeletedSessionsRef.current.delete(sessionId);
+      pendingDeleteTimersRef.current.delete(`session:${sessionId}`);
     }
+  }
+
+  function undoDeleteSession(sessionId: string) {
+    const key = `session:${sessionId}`;
+    const timer = pendingDeleteTimersRef.current.get(key);
+    if (timer) window.clearTimeout(timer);
+    pendingDeleteTimersRef.current.delete(key);
+    const snapshot = pendingDeletedSessionsRef.current.get(sessionId);
+    if (!snapshot) return;
+    upsert(snapshot);
+    setSelectedId(snapshot.id);
+    pendingDeletedSessionsRef.current.delete(sessionId);
+  }
+
+  function onDeleteSession() {
+    if (!selected) return;
+    const toDelete = selected;
+    pendingDeletedSessionsRef.current.set(toDelete.id, toDelete);
+    setSessions((prev) => {
+      const next = prev.filter((s) => s.id !== toDelete.id);
+      const replacement = next[0]?.id ?? "";
+      setSelectedId(replacement);
+      return next;
+    });
+    setNotes([]);
+    setNotesError(null);
+    setNoteDraft("");
+    setRescheduleOpen(false);
+    const key = `session:${toDelete.id}`;
+    const timer = window.setTimeout(() => {
+      void commitDeleteSession(toDelete.id);
+    }, 5000);
+    pendingDeleteTimersRef.current.set(key, timer);
+    toast.info("Ședința a fost ștersă.", {
+      actionLabel: "Anulează",
+      onAction: () => undoDeleteSession(toDelete.id),
+    });
   }
 
   function onOpenReschedule() {
@@ -523,27 +572,18 @@ export default function TherapistSessionsPage() {
         </p>
 
             <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-  <div className="rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm">
-    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Total</p>
-    <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">{sessions.length}</p>
-    <p className="mt-1.5 text-xs text-[#6B5A63]">ședințe</p>
-  </div>
-
-  <div className="rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm">
-    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Programate</p>
-    <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">
-      {sessions.filter((s) => (s.status ?? "Scheduled") === "Scheduled").length}
-    </p>
-    <p className="mt-1.5 text-xs text-[#6B5A63]">planificate</p>
-  </div>
-
-  <div className="col-span-2 rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm sm:col-span-1">
-    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Finalizate</p>
-    <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">
-      {sessions.filter((s) => s.status === "Completed").length}
-    </p>
-    <p className="mt-1.5 text-xs text-[#6B5A63]">încheiate</p>
-  </div>
+  <SessionStatCard title="Total" value={sessions.length} subtitle="ședințe" />
+  <SessionStatCard
+    title="Programate"
+    value={sessions.filter((s) => (s.status ?? "Scheduled") === "Scheduled").length}
+    subtitle="planificate"
+  />
+  <SessionStatCard
+    title="Finalizate"
+    value={sessions.filter((s) => s.status === "Completed").length}
+    subtitle="încheiate"
+    className="col-span-2 sm:col-span-1"
+  />
 </div>
           </div>
 
@@ -610,36 +650,32 @@ export default function TherapistSessionsPage() {
 
           <div className="max-h-90 space-y-3 overflow-auto p-3 sm:p-4 lg:max-h-[calc(100vh-260px)]">
             {loading ? (
-              <div className="rounded-2xl border border-black/5 bg-white/85 p-6 text-sm text-gray-700 shadow-[0_4px_12px_rgba(31,23,32,0.04)]">
-                Se încarcă ședințele…
-              </div>
+              <ListLoadingSkeleton items={4} />
             ) : error ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 shadow-[0_4px_12px_rgba(31,23,32,0.04)]">
-                {error}
-              </div>
+              <ErrorStateCard message={error} />
             ) : filtered.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-black/10 bg-(--color-card) p-6 text-center shadow-[0_4px_12px_rgba(31,23,32,0.03)]">
-            <p className="text-sm font-medium text-gray-900">Nu am găsit ședințe</p>
-            <p className="mt-1 text-xs text-[#6B5A63]">Încearcă altă căutare sau alt filtru.</p>
-
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-card)"
-              >
-                Șterge căutarea
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFilter("all")}
-                className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-card)"
-              >
-                Resetează filtrele
-              </button>
-            </div>
-          </div>
+              <EmptyStateCard
+                title="Nu am găsit ședințe"
+                description="Încearcă altă căutare sau alt filtru."
+                action={
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setQuery("")}
+                      className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-card)"
+                    >
+                      Șterge căutarea
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFilter("all")}
+                      className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-card)"
+                    >
+                      Resetează filtrele
+                    </button>
+                  </div>
+                }
+              />
             ) : (
               filtered.map((s) => (
                 <SessionCard
@@ -679,9 +715,7 @@ export default function TherapistSessionsPage() {
                   <div>
                     <h2 className="text-base font-semibold text-gray-900">{selected.clientName}</h2>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${statusPillClass((selected.status ?? "Scheduled") as SessionStatus)}`}> 
-                        {statusLabel((selected.status ?? "Scheduled") as SessionStatus)}
-                      </span>
+                      <SessionStatusBadge status={(selected.status ?? "Scheduled") as SessionStatus} />
                       <span className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700 ring-1 ring-gray-200">
                         {typeLabel(selected.type ?? "Individual")}
                       </span>
@@ -827,7 +861,7 @@ export default function TherapistSessionsPage() {
 
       <button
         type="button"
-        onClick={onDeleteSession}
+        onClick={() => setConfirmDeleteOpen(true)}
         className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 hover:border-rose-300"
       >
         Șterge
@@ -906,200 +940,51 @@ export default function TherapistSessionsPage() {
           )}
         </div>
       </div>
-      {/* CREATE SESSION MODAL */}
-      {createOpen ? (
-        <div
-          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          onMouseDown={closeCreateModal}
-        >
-          <div
-            className="mx-auto mt-20 w-[92%] max-w-xl overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_24px_60px_rgba(31,23,32,0.20)]"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="border-b border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,rgba(239,208,202,0.14)_65%,rgba(125,128,218,0.06)_100%)] px-6 py-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="mt-3 text-[1.05rem] font-semibold text-gray-900">Ședință nouă</h3>
-                  <p className="mt-1 text-sm text-gray-600">Setează data, durata, tipul și un scurt rezumat privat.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeCreateModal}
-                  className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 transition"
-                  aria-label="Close"
-                >
-                  <XIcon />
-                </button>
-              </div>
-            </div>
+      <CreateSessionModal
+        open={createOpen}
+        loadingClients={createClientsLoading}
+        clients={createClients}
+        formClientId={formClientId}
+        formDateLocal={formDateLocal}
+        formDuration={formDuration}
+        formType={formType}
+        formSummary={formSummary}
+        creating={creatingSession}
+        error={createError}
+        onClose={closeCreateModal}
+        onFocusClients={() => {
+          void loadLinkedClientsForCreate();
+        }}
+        onChangeClientId={setFormClientId}
+        onChangeDateLocal={setFormDateLocal}
+        onChangeDuration={setFormDuration}
+        onChangeType={setFormType}
+        onChangeSummary={setFormSummary}
+        onConfirm={onCreateSessionConfirm}
+      />
 
-            <div className="px-6 py-5 space-y-4">
-              <label className="block">
-                <span className="text-xs font-semibold text-gray-500">Client</span>
-                <select
-                  value={formClientId}
-                  onChange={(e) => setFormClientId(e.target.value)}
-                  onFocus={() => void loadLinkedClientsForCreate()}
-                  className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                >
-                  {createClientsLoading ? (
-                    <option value="">Se încarcă…</option>
-                  ) : createClients.length === 0 ? (
-                    <option value="">Nu există clienți conectați</option>
-                  ) : (
-                    createClients.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </label>
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Confirmă ștergerea ședinței"
+        message="Ședința se va șterge, dar o poți anula imediat din notificare."
+        confirmText="Șterge"
+        cancelText="Anulează"
+        danger
+        onCancel={() => setConfirmDeleteOpen(false)}
+        onConfirm={() => {
+          onDeleteSession();
+          setConfirmDeleteOpen(false);
+        }}
+      />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-500">Data si ora</span>
-                  <input
-                    type="datetime-local"
-                    value={formDateLocal}
-                    onChange={(e) => setFormDateLocal(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-500">Durată (min)</span>
-                  <input
-                    type="number"
-                    min={10}
-                    max={600}
-                    value={formDuration}
-                    onChange={(e) => setFormDuration(Number(e.target.value))}
-                    className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                  />
-                </label>
-              </div>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-gray-500">Tip</span>
-                <select
-                  value={formType}
-                  onChange={(e) => setFormType(e.target.value as SessionType)}
-                  className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                >
-                  <option value="Individual">Individuală</option>
-                  <option value="Couple">Cuplu</option>
-                  <option value="Group">Grop</option>
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-gray-500">Rezumat (opțional)</span>
-                <textarea
-                  rows={3}
-                  value={formSummary}
-                  onChange={(e) => setFormSummary(e.target.value)}
-                  placeholder="Rezumat privat scurt…"
-                  className="mt-2 w-full rounded-xl border border-black/5 bg-white p-3 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                />
-              </label>
-
-              {createError ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 shadow-[0_4px_12px_rgba(31,23,32,0.03)]">
-                  {createError}
-                </div>
-              ) : null}
-
-              <div className="flex flex-col-reverse gap-3 border-t border-black/5 pt-4 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={closeCreateModal}
-                  className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
-                >
-                  Renunță
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onCreateSessionConfirm}
-                  disabled={creatingSession}
-                  className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(184,104,152,0.22)] transition hover:opacity-95 disabled:opacity-50"
-                >
-                  {creatingSession ? "Se creează…" : "Creează ședința"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-      {/* RESCHEDULE MODAL */}
-      {rescheduleOpen && selected ? (
-        <div
-          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          onMouseDown={() => setRescheduleOpen(false)}
-        >
-          <div
-            className="mx-auto mt-24 w-[92%] max-w-lg overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_24px_60px_rgba(31,23,32,0.20)]"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="border-b border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,rgba(239,208,202,0.14)_65%,rgba(125,128,218,0.06)_100%)] px-6 py-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="mt-3 text-[1.05rem] font-semibold text-gray-900">Reprogramează ședința</h3>
-                  <p className="mt-1 text-sm text-gray-600">Alege o nouă dată și oră pentru această ședință.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setRescheduleOpen(false)}
-                  className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 transition"
-                  aria-label="Close"
-                >
-                  <XIcon />
-                </button>
-              </div>
-            </div>
-
-            <div className="px-6 py-5 space-y-4">
-              <div className="text-sm text-gray-700">
-                <div className="text-xs text-gray-500">Client</div>
-                <div className="mt-1 font-semibold text-gray-900">{selected.clientName}</div>
-              </div>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-gray-500">Dată nouă</span>
-                <input
-                  type="datetime-local"
-                  value={toDateTimeLocal(draftDate)}
-                  onChange={(e) => setDraftDate(fromDateTimeLocal(e.target.value))}
-                  className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                />
-              </label>
-
-              <div className="flex flex-col-reverse gap-3 border-t border-black/5 pt-4 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => setRescheduleOpen(false)}
-                  className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
-                >
-                     Renunță
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onConfirmReschedule}
-                  className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(184,104,152,0.22)] transition hover:opacity-95"
-                >
-                    Salvează
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <RescheduleSessionModal
+        open={rescheduleOpen && Boolean(selected)}
+        clientName={selected?.clientName ?? ""}
+        draftDateLocal={toDateTimeLocal(draftDate)}
+        onClose={() => setRescheduleOpen(false)}
+        onChangeDraftDateLocal={(value) => setDraftDate(fromDateTimeLocal(value))}
+        onConfirm={onConfirmReschedule}
+      />
     </section>
   );
 }
@@ -1116,129 +1001,4 @@ function fromDateTimeLocal(v: string) {
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return "";
   return d.toISOString();
-}
-
-function FilterButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        "inline-flex items-center gap-2 rounded-[20px] border px-3 py-2 text-sm font-medium shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition " +
-        (active
-          ? "border-(--color-soft) bg-(--color-card) text-(--color-primary)"
-          : "border-black/5 bg-white/85 text-gray-700 hover:bg-white")
-      }
-    >
-      {children}
-    </button>
-  );
-}
-
-function SessionCard({
-  clientName,
-  date,
-  status,
-  type,
-  selected,
-  onClick,
-}: {
-  clientName: string;
-  date: string;
-  status: SessionStatus;
-  type: string;
-  selected?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        "group relative w-full overflow-hidden rounded-[20px] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(31,23,32,0.06)] transition",
-        selected
-          ? "border-[#ead7df] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,249,251,0.98)_100%)] shadow-[0_12px_28px_rgba(31,23,32,0.08)]"
-          : "border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,249,251,0.98)_100%)] hover:shadow-[0_12px_28px_rgba(31,23,32,0.08)]",
-      ].join(" ")}
-    >
-      <span
-      className={[
-        "absolute left-4 right-4 top-0 h-px transition",
-        selected
-          ? "bg-[linear-gradient(90deg,rgba(239,208,202,0.8),transparent)]"
-          : "bg-[linear-gradient(90deg,rgba(125,128,218,0.35),transparent)] group-hover:bg-[linear-gradient(90deg,rgba(125,128,218,0.55),transparent)]",
-      ].join(" ")}
-    />
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="truncate text-[1.02rem] font-semibold tracking-tight text-gray-900">{clientName}</div>
-          <div className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-gray-400">{date}</div>
-        </div>
-
-        <span className={`shrink-0 inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold shadow-[0_3px_8px_rgba(31,23,32,0.04)] ring-1 ${statusPillClass(status)}`}>
-          {statusLabel(status)}
-        </span>
-      </div>
-
-      <div className="mt-3 text-xs text-[#6B5A63]">{typeLabel(type)}</div>
-    </button>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-      <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path d="M7 3.75v2.5M17 3.75v2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M5.5 7.25h13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path
-        d="M6.25 5.5h11.5A1.75 1.75 0 0 1 19.5 7.25v12A2 2 0 0 1 17.5 21.25h-11A2 2 0 0 1 4.5 19.25v-12A1.75 1.75 0 0 1 6.25 5.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path d="M12 12.25a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M20 21.25c0-4-3-6.5-8-6.5s-8 2.5-8 6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function XIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
 }

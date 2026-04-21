@@ -4,24 +4,52 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/app/_lib/authClient";
+import EmptyState from "./components/EmptyState";
+import ProfileTopBar from "./components/ProfileTopBar";
+import SectionHeader from "./components/SectionHeader";
+import Stat from "./components/Stat";
+import TabButton from "./components/TabButton";
 
 type RouteParams = { therapistId: string; clientId: string };
+type ClientListRow = {
+  kind?: "invite" | "linked";
+  therapistId?: string | number;
+  user?: { id?: string | number; name?: string };
+  userId?: string | number;
+  id?: string | number;
+  name?: string;
+};
+type NoteRow = {
+  id?: string | number;
+  content?: string;
+  createdAt?: string;
+  session?: { clientUser?: { id?: string | number }; clientUserId?: string | number };
+  [key: string]: unknown;
+};
+type SessionRow = {
+  id?: string | number;
+  startsAt?: string;
+  clientUserId?: string | number;
+  scheduledAt?: string;
+  date?: string;
+  status?: string;
+  durationMin?: number;
+  [key: string]: unknown;
+};
+type GoalProgressRow = {
+  id?: string | number;
+  title?: string;
+  status?: string;
+  progress?: number;
+  stepsDone?: number;
+  stepsTotal?: number;
+};
 
 export default function TherapistClientProfilePage() {
   const params = useParams<RouteParams>();
   const therapistId = String(params?.therapistId ?? "");
   const clientId = String(params?.clientId ?? "");
   const router = useRouter();
-
-  if (!therapistId || !clientId) {
-    return (
-     <section className="mx-auto max-w-6xl px-3 py-4 sm:px-6 lg:px-8">
-  <div className="rounded-[28px] border border-red-200 bg-red-50 p-6 text-sm text-red-700 shadow-sm sm:rounded-4xl">
-    URL invalid. Lipsește therapistId sau clientId.
-  </div>
-</section>
-    );
-  }
 
   const [tab, setTab] = React.useState<"notes" | "sessions">("notes");
 
@@ -31,8 +59,9 @@ export default function TherapistClientProfilePage() {
   const [displayTherapistName, setDisplayTherapistName] = React.useState<string>(therapistId);
   const [displayClientName, setDisplayClientName] = React.useState<string>(clientId);
 
-  const [clientNotes, setClientNotes] = React.useState<any[]>([]);
-  const [clientSessions, setClientSessions] = React.useState<any[]>([]);
+  const [clientNotes, setClientNotes] = React.useState<NoteRow[]>([]);
+  const [clientSessions, setClientSessions] = React.useState<SessionRow[]>([]);
+  const [clientGoals, setClientGoals] = React.useState<GoalProgressRow[]>([]);
   const [isAllowed, setIsAllowed] = React.useState(true);
     const latestSession = clientSessions[0] ?? null;
   const latestSessionLabel = latestSession?.scheduledAt
@@ -44,13 +73,6 @@ export default function TherapistClientProfilePage() {
   const latestNoteLabel = clientNotes[0]?.createdAt
     ? new Date(clientNotes[0].createdAt).toLocaleDateString()
     : "Nicio notiță încă";
-
-  const initialsFromName = (name: string) => {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    const a = parts[0]?.[0] ?? "C";
-    const b = parts.length > 1 ? parts[parts.length - 1][0] : "";
-    return (a + b).toUpperCase();
-  };
 
   React.useEffect(() => {
     let alive = true;
@@ -71,9 +93,9 @@ export default function TherapistClientProfilePage() {
 
         // clients list (to get name + validate ownership)
         const clientsData = await apiFetch(`/api/therapists/${therapistId}/clients`, { method: "GET" });
-        const list = clientsData?.clients ?? [];
+        const list: ClientListRow[] = Array.isArray(clientsData?.clients) ? clientsData.clients : [];
 
-        const found = list.find((row: any) => {
+        const found = list.find((row) => {
           const kind = row?.kind === "invite" ? "invite" : "linked";
           if (kind === "invite") return false; // invites don't have a profile route
           const id = String(row?.user?.id ?? row?.userId ?? row?.id ?? "");
@@ -88,12 +110,12 @@ export default function TherapistClientProfilePage() {
           setIsAllowed(owner === String(therapistId));
         }
 
-        // Notes hub (optional; endpoint may not exist yet)
-        let filteredNotes: any[] = [];
+        // Notițe hub (optional; endpoint may not exist yet)
+        let filteredNotes: NoteRow[] = [];
         try {
           const notesData = await apiFetch(`/api/therapists/${therapistId}/notes`, { method: "GET" });
-          const allNotes = notesData?.notes ?? [];
-          filteredNotes = allNotes.filter((n: any) => {
+          const allNotes: NoteRow[] = Array.isArray(notesData?.notes) ? notesData.notes : [];
+          filteredNotes = allNotes.filter((n) => {
             const session = n.session ?? {};
             const clientUserId = String(session.clientUser?.id ?? session.clientUserId ?? "");
             return clientUserId === String(clientId);
@@ -102,22 +124,39 @@ export default function TherapistClientProfilePage() {
           filteredNotes = [];
         }
 
-        // Sessions list (optional; endpoint may not exist yet)
-        let filteredSessions: any[] = [];
+        // Ședințe list (optional; endpoint may not exist yet)
+        let filteredSessions: SessionRow[] = [];
         try {
           const sessionsData = await apiFetch(`/api/therapists/${therapistId}/sessions`, { method: "GET" });
-          const allSessions = sessionsData?.sessions ?? [];
-          filteredSessions = allSessions.filter((s: any) => String(s.clientUserId) === String(clientId));
+          const allSessions: SessionRow[] = Array.isArray(sessionsData?.sessions)
+            ? sessionsData.sessions
+            : [];
+          filteredSessions = allSessions.filter((s) => String(s.clientUserId) === String(clientId));
         } catch {
           filteredSessions = [];
+        }
+
+        // Goals progress (optional)
+        let goalsProgress: GoalProgressRow[] = [];
+        try {
+          const goalsData = await apiFetch(
+            `/api/therapists/${therapistId}/clients/${clientId}/goals-progress`,
+            { method: "GET" }
+          );
+          goalsProgress = Array.isArray(goalsData?.goals) ? goalsData.goals : [];
+        } catch {
+          goalsProgress = [];
         }
 
         if (alive) {
           setClientNotes(filteredNotes);
           setClientSessions(filteredSessions);
+          setClientGoals(goalsProgress);
         }
-      } catch (e: any) {
-        if (alive) setError(e?.message || "Failed to load client profile");
+      } catch (e: unknown) {
+        const message =
+          e instanceof Error && e.message ? e.message : "Failed to load client profile";
+        if (alive) setError(message);
       } finally {
         if (alive) setLoading(false);
       }
@@ -128,167 +167,161 @@ export default function TherapistClientProfilePage() {
     };
   }, [therapistId, clientId]);
 
+  if (!therapistId || !clientId) {
+    return (
+      <section className="mx-auto max-w-6xl px-3 py-4 sm:px-6 lg:px-8">
+        <div className="rounded-[20px] border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm sm:rounded-[28px] sm:p-6">
+          URL invalid. Lipsește therapistId sau clientId.
+        </div>
+      </section>
+    );
+  }
+
   if (!loading && (error || !displayClientName)) {
     return (
       <section className="mx-auto max-w-6xl px-3 py-4 sm:px-6 lg:px-8">
-  <div className="rounded-[28px] border border-black/5 bg-white/90 p-6 shadow-[0_10px_24px_rgba(31,23,32,0.05)] sm:rounded-4xl">
-    <h1 className="text-xl font-semibold text-gray-900">Client inexistent</h1>
-    <p className="mt-2 text-sm text-gray-600">
-      Nu am putut găsi acest client.
-    </p>
-    <div className="mt-5">
-      <Link
-        href={`/therapist/${therapistId}/clients`}
-        className="inline-flex items-center justify-center rounded-[18px] border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-      >
-        Înapoi la clienți
-      </Link>
-    </div>
-  </div>
-</section>
+        <div className="rounded-[20px] border border-black/5 bg-white/90 p-4 shadow-[0_10px_24px_rgba(31,23,32,0.05)] sm:rounded-[28px] sm:p-6">
+          <h1 className="text-xl font-semibold text-gray-900">Client inexistent</h1>
+          <p className="mt-2 text-sm leading-6 sm:leading-7 text-gray-600">
+            Nu am putut găsi acest client.
+          </p>
+          <div className="mt-5">
+            <Link
+              href={`/therapist/${therapistId}/clients`}
+              className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              Înapoi la clienți
+            </Link>
+          </div>
+        </div>
+      </section>
     );
   }
 
   if (!loading && !isAllowed) {
     return (
       <section className="mx-auto max-w-6xl px-3 py-4 sm:px-6 lg:px-8">
-
-  <div className="rounded-[28px] border border-black/5 bg-white/90 p-6 shadow-[0_10px_24px_rgba(31,23,32,0.05)] sm:rounded-4xl">
-    <h1 className="text-xl font-semibold text-gray-900">Acces interzis</h1>
-    <p className="mt-2 text-sm text-gray-600">
-      Acest client nu este alocat lui{" "}
-      <span className="font-semibold text-gray-900" suppressHydrationWarning>
-        {displayTherapistName}
-      </span>
-      .
-    </p>
-    <div className="mt-5">
-      <Link
-        href={`/therapist/${therapistId}/clients`}
-        className="inline-flex items-center justify-center rounded-[18px] border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-      >
-        Înapoi la clienți
-      </Link>
-    </div>
-  </div>
-</section>
+        <div className="rounded-[20px] border border-black/5 bg-white/90 p-4 shadow-[0_10px_24px_rgba(31,23,32,0.05)] sm:rounded-[28px] sm:p-6">
+          <h1 className="text-xl font-semibold text-gray-900">Acces interzis</h1>
+          <p className="mt-2 text-sm leading-6 sm:leading-7 text-gray-600">
+            Acest client nu este alocat lui{" "}
+            <span className="font-semibold text-gray-900" suppressHydrationWarning>
+              {displayTherapistName}
+            </span>
+            .
+          </p>
+          <div className="mt-5">
+            <Link
+              href={`/therapist/${therapistId}/clients`}
+              className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              Înapoi la clienți
+            </Link>
+          </div>
+        </div>
+      </section>
     );
   }
 
   return (
     <section className="mx-auto max-w-6xl space-y-5 px-3 py-4 sm:px-6 lg:px-8">
       {loading ? (
-        <div className="rounded-[20px] border border-black/5 bg-white/90 p-4 text-sm text-gray-700 shadow-[0_6px_16px_rgba(31,23,32,0.04)]">
-        Se incarca clientul...
-      </div>  
+        <div className="rounded-[20px] border border-black/5 bg-white/90 p-4 text-sm text-gray-700 shadow-[0_6px_16px_rgba(31,23,32,0.04)] sm:rounded-[28px]">
+          Se încarcă clientul...
+        </div>
       ) : error ? (
-        <div className="rounded-[20px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-[0_6px_16px_rgba(31,23,32,0.04)]">
+        <div className="rounded-[20px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-[0_6px_16px_rgba(31,23,32,0.04)] sm:rounded-[28px]">
           {error}
         </div>
       ) : null}
-      {/* TOP BAR */}
-      {/* TOP BAR */}
-<section
-  className="overflow-hidden rounded-[28px] border border-black/5 shadow-sm sm:rounded-4xl"
-  style={{
-    background:
-      "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
-  }}
->
-  <div className="flex flex-col gap-4 p-4 sm:p-7 lg:flex-row lg:items-start lg:justify-between">
-    <div className="max-w-3xl">
-
-      <div className="mt-4 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-(--color-card) text-sm font-semibold text-(--color-primary) ring-1 ring-black/5">
-          <span suppressHydrationWarning>{initialsFromName(displayClientName)}</span>
-        </div>
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="w-full text-[2rem] font-semibold leading-[1.02] tracking-tight text-slate-900 sm:text-[2.3rem]" suppressHydrationWarning>
-              {displayClientName}
-            </h1>
-          </div>
-          <p className="text-sm text-[#6B5A63]">
-            Terapeut alocat:{" "}
-            <span className="font-semibold text-slate-900" suppressHydrationWarning>
-              {displayTherapistName}
-            </span>
-          </p>
-        </div>
-      </div>
-
-      <p className="mt-4 max-w-2xl text-sm leading-7 text-[#6B5A63] sm:text-[15px]">
-        Revizuiește notițele, ședințele și statusul actual al acestui client într-un singur spațiu organizat.
-      </p>
-    </div>
-
-  <div className="mt-5 grid w-full grid-cols-2 gap-2.5 self-start sm:flex sm:w-auto sm:items-center sm:gap-3">
-  <Link
-  href={`/therapist/${therapistId}/clients`}
-  className="inline-flex min-h-11 w-full items-center justify-center rounded-[18px] border border-black/5 bg-white/85 px-4 py-3 text-center text-sm font-semibold leading-5 text-slate-700 shadow-sm transition hover:bg-white sm:min-w-36 sm:w-auto sm:rounded-[20px] sm:px-5"
-  aria-label="Înapoi la clienți"
-  title="Înapoi la clienți"
->
-  Înapoi la clienți
-</Link>
-
-  <button
-  type="button"
-  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[18px] bg-(--color-accent) px-4 py-3 text-center text-sm font-semibold leading-5 text-white shadow-sm transition hover:opacity-90 sm:min-w-36 sm:w-auto sm:whitespace-nowrap sm:rounded-[20px] sm:px-5"
-  onClick={() => setTab("sessions")}
->
-  Vezi ședințele
-</button>
-</div>
-</div>
-  </section>
+      <ProfileTopBar
+        displayClientName={displayClientName}
+        displayTherapistName={displayTherapistName}
+        therapistId={therapistId}
+        onViewSessions={() => setTab("sessions")}
+      />
 
       {/* STATS */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <Stat label="Ședințe totale" value={String(clientSessions.length)} />
-      <Stat label="Notițe clinice" value={String(clientNotes.length)} />
-      <Stat label="Ultima ședință" value={latestSessionLabel} valueClassName="text-slate-900 text-lg" />
-      <Stat label="Ultima notiță" value={latestNoteLabel} valueClassName="text-slate-900 text-lg" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Ședințe totale" value={String(clientSessions.length)} />
+        <Stat label="Notițe clinice" value={String(clientNotes.length)} />
+        <Stat
+          label="Progress obiective"
+          value={`${clientGoals.length ? Math.round(clientGoals.reduce((acc, g) => acc + Number(g.progress ?? 0), 0) / clientGoals.length) : 0}%`}
+        />
+        <Stat label="Ultima ședință" value={latestSessionLabel} valueClassName="text-slate-900 text-lg" />
+        <Stat label="Ultima notiță" value={latestNoteLabel} valueClassName="text-slate-900 text-lg" />
       </div>
 
+      {clientGoals.length ? (
+        <div className="overflow-hidden rounded-[20px] border border-black/5 bg-white/90 p-4 shadow-[0_12px_28px_rgba(31,23,32,0.05)] sm:rounded-[28px] sm:p-5">
+          <h2 className="text-sm font-semibold text-gray-900">Obiective client</h2>
+          <p className="mt-1 text-sm leading-6 sm:leading-7 text-[#6B5A63]">Progressul calculat din pașii bifați de client.</p>
+          <div className="mt-4 space-y-3">
+            {clientGoals.map((goal) => {
+              const progress = Math.max(0, Math.min(100, Number(goal.progress ?? 0)));
+              const statusLabel =
+                goal.status === "done"
+                  ? "Încheiat"
+                  : goal.status === "paused"
+                  ? "În pauză"
+                  : "Activ";
+              return (
+                <div
+                  key={String(goal.id)}
+                  className="rounded-[18px] border border-black/5 bg-white/85 p-3.5 shadow-[0_4px_10px_rgba(31,23,32,0.04)] sm:rounded-[20px]"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="truncate text-sm font-semibold text-gray-900">{String(goal.title ?? "Obiectiv")}</p>
+                    <span className="text-xs font-semibold text-[#6B5A63]">{statusLabel}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/5">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${progress}%`,
+                          background:
+                            "linear-gradient(90deg, rgba(239,208,202,0.9), rgba(125,128,218,0.45))",
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-[#6B5A63]">{progress}%</span>
+                  </div>
+                  <p className="mt-2 text-xs text-[#6B5A63]">
+                    {Number(goal.stepsDone ?? 0)} / {Number(goal.stepsTotal ?? 0)} pași finalizați
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       {/* CONTENT CARD */}
-      <div className="overflow-hidden rounded-[28px] border border-black/5 bg-white/90 shadow-[0_12px_28px_rgba(31,23,32,0.05)] sm:rounded-4xl">
+      <div className="overflow-hidden rounded-[20px] border border-black/5 bg-white/90 shadow-[0_12px_28px_rgba(31,23,32,0.05)] sm:rounded-[28px]">
         {/* Tabs */}
         <div className="flex flex-col gap-3 border-b border-black/5 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="flex items-center gap-2">
             <TabButton active={tab === "notes"} onClick={() => setTab("notes")}>
-             Notițe
+              Notițe
             </TabButton>
             <TabButton active={tab === "sessions"} onClick={() => setTab("sessions")}>
               Ședințe
             </TabButton>
           </div>
-
-          
         </div>
-
         {/* Body */}
         <div className="p-4 sm:p-5">
           {tab === "notes" ? (
             <div className="space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-  <div>
-    <h2 className="text-sm font-semibold text-gray-900">Notițe clinice</h2>
-    <p className="mt-1 text-sm text-gray-600">
-      Notițe private asociate acestui client.
-    </p>
-    <p className="mt-2 text-xs text-[#6B5A63]">
-      {clientNotes.length} notiț{clientNotes.length === 1 ? "ă" : "e"} disponibil{clientNotes.length === 1 ? "ă" : "e"}
-    </p>
-  </div>
-  <button
-    type="button"
-    className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
-    onClick={() => router.push(`/therapist/${therapistId}/notes`)}
-  >
-    + Adaugă notiță
-  </button>
-</div>
+              <SectionHeader
+                title="Notițe clinice"
+                description="Notițe private asociate acestui client."
+                countText={`${clientNotes.length} notiț${clientNotes.length === 1 ? "ă" : "e"} disponibil${clientNotes.length === 1 ? "ă" : "e"}`}
+                actionLabel="+ Adaugă notiță"
+                onAction={() => router.push(`/therapist/${therapistId}/notes`)}
+              />
 
               {clientNotes.length === 0 ? (
               <EmptyState
@@ -302,20 +335,20 @@ export default function TherapistClientProfilePage() {
                   {clientNotes.map((note) => (
                     <div
                       key={note.id}
-                      className="rounded-[20px] border border-black/5 bg-white/85 p-4 shadow-[0_4px_12px_rgba(31,23,32,0.04)] transition hover:bg-white"
+                      className="rounded-[20px] border border-black/5 bg-white/85 p-4 shadow-[0_4px_12px_rgba(31,23,32,0.04)] transition hover:bg-white sm:rounded-3xl"
                     >
                       <p className="text-sm font-semibold text-gray-900">{"Notiță de ședință"}</p>
                       {note?.content ? (
-                        <p className="mt-2 text-sm text-gray-600 leading-relaxed line-clamp-2">
+                        <p className="mt-2 text-sm leading-6 sm:leading-relaxed text-gray-600 line-clamp-2">
                           {note.content}
                         </p>
                       ) : null}
-                      <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500">
                         <span>{note?.createdAt ? new Date(note.createdAt).toLocaleString() : `Note #${note.id}`}</span>
                         <div className="mt-4 flex items-center justify-end">
                           <details className="relative">
                             <summary
-                              className="list-none inline-flex items-center gap-2 rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft) cursor-pointer [&::-webkit-details-marker]:hidden"
+                              className="list-none inline-flex min-h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-[18px] border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft) cursor-pointer [&::-webkit-details-marker]:hidden"
                               aria-label="More actions"
                             >
                               Mai mult
@@ -331,7 +364,6 @@ export default function TherapistClientProfilePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
                               </svg>
                             </summary>
-
                             <div className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-[20px] border border-black/5 bg-white shadow-[0_12px_28px_rgba(31,23,32,0.12)]">
                               <div className="py-1">
                                 <Link
@@ -341,7 +373,7 @@ export default function TherapistClientProfilePage() {
                                     (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open');
                                   }}
                                 >
-                                  Open profile
+                                  Deschide profilul
                                 </Link>
                                 <button
                                   type="button"
@@ -351,7 +383,7 @@ export default function TherapistClientProfilePage() {
                                     alert("Coming soon");
                                   }}
                                 >
-                                  Pause/Resume
+                                  Pauză/Continuă
                                 </button>
                                 <button
                                   type="button"
@@ -375,24 +407,13 @@ export default function TherapistClientProfilePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">Ședințe</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Ședințele înregistrate pentru acest client.
-              </p>
-              <p className="mt-2 text-xs text-[#6B5A63]">
-                {clientSessions.length} ședinț{clientSessions.length === 1 ? "ă" : "e"} disponibil{clientSessions.length === 1 ? "ă" : "e"}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
-              onClick={() => router.push(`/therapist/${therapistId}/sessions`)}
-            >
-              + Adaugă ședință
-            </button>
-          </div>
+              <SectionHeader
+                title="Ședințe"
+                description="Ședințele înregistrate pentru acest client."
+                countText={`${clientSessions.length} ședinț${clientSessions.length === 1 ? "ă" : "e"} disponibil${clientSessions.length === 1 ? "ă" : "e"}`}
+                actionLabel="+ Adaugă ședință"
+                onAction={() => router.push(`/therapist/${therapistId}/sessions`)}
+              />
 
               {clientSessions.length === 0 ? (
               <EmptyState
@@ -402,27 +423,27 @@ export default function TherapistClientProfilePage() {
             onAction={() => router.push(`/therapist/${therapistId}/sessions`)}
             />
               ) : (
-                <div className="overflow-hidden rounded-[20px] border border-black/5 bg-white/85 shadow-[0_4px_12px_rgba(31,23,32,0.04)]">
+                <div className="overflow-hidden rounded-[20px] border border-black/5 bg-white/85 shadow-[0_4px_12px_rgba(31,23,32,0.04)] sm:rounded-3xl">
                   {clientSessions.map((session) => (
                     <div
                       key={session.id}
-                      className="flex items-center justify-between gap-3 border-b border-black/5 p-4 text-sm transition last:border-b-0 hover:bg-white"
+                      className="flex flex-col gap-3 border-b border-black/5 p-4 text-sm transition last:border-b-0 hover:bg-white sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-900 truncate">
                           {session?.scheduledAt ? new Date(session.scheduledAt).toLocaleString() : String(session.date ?? session.id)}
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
-                         ID ședință: {session.id} • {session.status ?? "—"}
+                          ID ședință: {session.id} • {session.status ?? "—"}
                         </p>
                       </div>
                       <div className="mt-4 flex items-center justify-end">
                         <details className="relative">
                           <summary
-                            className="list-none inline-flex items-center gap-2 rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft) cursor-pointer [&::-webkit-details-marker]:hidden"
+                            className="list-none inline-flex min-h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-[18px] border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft) cursor-pointer [&::-webkit-details-marker]:hidden"
                             aria-label="More actions"
                           >
-                              Mai mult
+                            Mai mult
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               viewBox="0 0 24 24"
@@ -435,7 +456,6 @@ export default function TherapistClientProfilePage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
                             </svg>
                           </summary>
-
                           <div className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-[20px] border border-black/5 bg-white shadow-[0_12px_28px_rgba(31,23,32,0.12)]">
                             <div className="py-1">
                               <Link
@@ -455,7 +475,7 @@ export default function TherapistClientProfilePage() {
                                   alert("Coming soon");
                                 }}
                               >
-                                    Pauză/Continuă
+                                Pauză/Continuă
                               </button>
                               <button
                                 type="button"
@@ -465,7 +485,7 @@ export default function TherapistClientProfilePage() {
                                   alert("Coming soon");
                                 }}
                               >
-                                    Șterge
+                                Șterge
                               </button>
                             </div>
                           </div>
@@ -480,75 +500,5 @@ export default function TherapistClientProfilePage() {
         </div>
       </div>
     </section>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  valueClassName = "text-gray-900",
-}: {
-  label: string;
-  value: string;
-  valueClassName?: string;
-}) {
-  return (
-    <div className="rounded-[20px] border border-black/5 bg-white/90 p-4 shadow-[0_6px_16px_rgba(31,23,32,0.04)] sm:p-5">
-      <p className="text-sm text-[#6B5A63]">{label}</p>
-      <p className={`mt-2 text-2xl font-semibold ${valueClassName}`}>{value}</p>
-    </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        "rounded-[18px] px-3 py-2 text-sm font-semibold transition",
-        active
-          ? "bg-(--color-accent) text-white shadow-sm"
-          : "bg-(--color-card) text-gray-700 hover:bg-(--color-soft)",
-      ].join(" ")}
-    >
-      {children}
-    </button>
-  );
-}
-
-function EmptyState({
-  title,
-  text,
-  actionLabel,
-  onAction,
-}: {
-  title: string;
-  text: string;
-  actionLabel?: string;
-  onAction?: () => void;
-}) {
-  return (
-    <div className="rounded-[20px] border border-dashed border-black/10 bg-(--color-card) p-5 shadow-[0_4px_12px_rgba(31,23,32,0.03)] sm:p-6">
-      <p className="text-sm font-semibold text-gray-900">{title}</p>
-      <p className="mt-1 text-sm text-[#6B5A63]">{text}</p>
-      {actionLabel && onAction ? (
-        <button
-          type="button"
-          onClick={onAction}
-          className="mt-4 inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-        >
-          {actionLabel}
-        </button>
-      ) : null}
-    </div>
   );
 }

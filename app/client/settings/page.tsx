@@ -93,9 +93,9 @@ export default function ClientSettingsPage() {
 
   if (meLoading) {
     return (
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-gray-900">Loading…</h1>
+      <section className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
+        <div className="rounded-[20px] border border-gray-200 bg-white p-6 text-center sm:rounded-[28px] sm:p-10">
+          <h1 className="text-base font-semibold text-gray-900">Se incarca…</h1>
         </div>
       </section>
     );
@@ -103,9 +103,9 @@ export default function ClientSettingsPage() {
 
   if (meError) {
     return (
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-        <div className="rounded-2xl border border-rose-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-rose-700">Error</h1>
+      <section className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
+        <div className="rounded-[20px] border border-rose-200 bg-white p-6 text-center sm:rounded-[28px] sm:p-10">
+          <h1 className="text-base font-semibold text-rose-700">Eroare</h1>
           <p className="mt-2 text-sm text-gray-600">{meError}</p>
         </div>
       </section>
@@ -114,16 +114,16 @@ export default function ClientSettingsPage() {
 
   if (!meUser) {
     return (
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-gray-900">No user</h1>
+      <section className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
+        <div className="rounded-[20px] border border-gray-200 bg-white p-6 text-center sm:rounded-[28px] sm:p-10">
+          <h1 className="text-base font-semibold text-gray-900">Utilizator inexistent</h1>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    <section className="mx-auto max-w-7xl px-3 py-6 space-y-6 sm:px-6 sm:py-10 sm:space-y-10 lg:px-8">
       <SettingsHeader
         name={meUser.name}
         email={meUser.email}
@@ -134,15 +134,15 @@ export default function ClientSettingsPage() {
         onSaveProfile={handleSaveProfileFromHeader}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="min-w-0 lg:col-span-7 flex flex-col gap-6 lg:min-h-[calc(100vh-220px)]">
+      <div className="grid grid-cols-1 gap-6 items-start lg:grid-cols-12 lg:gap-8">
+        <div className="min-w-0 flex flex-col gap-5 lg:col-span-7 lg:gap-6 lg:min-h-[calc(100vh-220px)]">
           <SecurityCard onToast={onToast} />
           <div className="mt-auto">
             <DangerZoneCard onToast={onToast} />
           </div>
         </div>
 
-        <div className="min-w-0 lg:col-span-5 xl:pl-2 flex flex-col gap-6">
+        <div className="min-w-0 flex flex-col gap-5 lg:col-span-5 lg:gap-6 xl:pl-2">
           <PreferencesSection prefs={prefs} update={update} onToast={onToast} />
         </div>
       </div>
@@ -155,7 +155,7 @@ export default function ClientSettingsPage() {
         }
         aria-live="polite"
       >
-        <div className="pointer-events-none rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+        <div className="pointer-events-none rounded-[18px] bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-lg sm:rounded-full">
           {toast}
         </div>
       </div>

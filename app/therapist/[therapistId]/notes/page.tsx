@@ -1,8 +1,22 @@
 "use client";
 
 import * as React from "react";
-import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import { useParams } from "next/navigation";
 import { apiFetch } from "@/app/_lib/authClient";
+import { useToast } from "@/app/components/ui/toast/ToastProvider";
+import EmptyStateCard from "@/app/components/ui/EmptyStateCard";
+import ErrorStateCard from "@/app/components/ui/ErrorStateCard";
+import ListLoadingSkeleton from "@/app/components/ui/ListLoadingSkeleton";
+import NoteCard from "./components/NoteCard";
+import TagPill from "./components/TagPill";
+import NotesFilterButton from "./components/NotesFilterButton";
+import NotesStatCard from "./components/NotesStatCard";
+import { ClockIcon, CopyIcon, PlusIcon, SearchIcon, TagIcon } from "./components/NotesIcons";
+
+const CreateNoteModal = dynamic(() => import("./components/CreateNoteModal"), {
+  ssr: false,
+});
 
 type NoteTag = "Today" | "Yesterday" | "3 days ago" | "Individual session" | "Couple session" | "Draft";
 
@@ -12,7 +26,7 @@ type Note = {
   sessionId: string;
   clientId: string;
   clientName: string;
-  sessionType: "Individual" | "Couple" | "Group" | "Unknown";
+  sessionType: "Individual" | "Couple" | "Group" | "Necunoscut";
   scheduledAtISO: string;
   title: string;
   dateLabel: "Today" | "Yesterday" | "3 days ago";
@@ -39,17 +53,17 @@ function uid(prefix = "n") {
 }
 
 export default function NotesPage() {
+  const toast = useToast();
   // In a real app this comes from auth/session; for now we keep it dynamic-path friendly.
   // If the route is /therapist/t1/notes, this reads therapistId = "t1".
   // Works in Client Components.
   const params = useParams<{ therapistId?: string }>();
-  const router = useRouter();
   const therapistId = String(params?.therapistId ?? "1");
 
   const [displayTherapistName, setDisplayTherapistName] = React.useState<string>(therapistId);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  // Create-note modal
+  // Creează-note modal
   const [createOpen, setCreateOpen] = React.useState(false);
   const [createLoading, setCreateLoading] = React.useState(false);
   const [createError, setCreateError] = React.useState<string | null>(null);
@@ -259,7 +273,6 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
       const createdId = String(data?.note?.id ?? uid("note"));
 
       // Refresh notes list entry (prepend)
-      const sessionPick = createSessions.find((s) => s.id === createSessionId);
       const clientPick = createClients.find((c) => c.id === createClientId);
 
       const newNote: Note = {
@@ -268,7 +281,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
         sessionId: String(createSessionId),
         clientId: String(createClientId),
         clientName: String(clientPick?.name ?? "Client necunoscut"),
-        sessionType: "Unknown",
+        sessionType: "Necunoscut",
         scheduledAtISO: "",
         title: `Notiță ședință – ${String(clientPick?.name ?? "Client")}`,
         dateLabel: "Today",
@@ -357,11 +370,11 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
 
       // Drafts must be linked to a session to be created
       if (!selectedNote.sessionId) {
-        alert("Această notiță nu este încă asociată unei ședințe. Folosește Notiță nouă pentru a alege clientul și ședința.");
+        toast.info("Această notiță nu este încă asociată unei ședințe. Folosește Notiță nouă pentru a alege clientul și ședința.");
         return;
       }
 
-      // Create a new note (POST) for drafts
+      // Creează a new note (POST) for drafts
       const data = await apiFetch(`/api/therapists/${therapistId}/sessions/${selectedNote.sessionId}/notes`, {
         method: "POST",
         body: JSON.stringify({ content }),
@@ -387,7 +400,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
       setDraftById((prev) => ({ ...prev, [nextNote.id]: content }));
       setSelectedId(nextNote.id);
     } catch (e: any) {
-      alert(e?.message || "Nu am putut salva notița");
+      toast.error(e?.message || "Nu am putut salva notița");
     }
   }
   React.useEffect(() => {
@@ -435,23 +448,14 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-        <div className="rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm">
-          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Total</p>
-          <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">{notes.length}</p>
-          <p className="mt-1.5 text-xs text-[#6B5A63]">notițe</p>
-        </div>
-        <div className="rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm">
-          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Afișate</p>
-          <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">{filteredNotes.length}</p>
-          <p className="mt-1.5 text-xs text-[#6B5A63]">rezultate</p>
-        </div>
-        <div className="col-span-2 rounded-[20px] bg-white/80 px-4 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm sm:col-span-1">
-          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Recente</p>
-          <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">
-            {notes.filter((n) => n.dateLabel === "Today" || n.dateLabel === "Yesterday").length}
-          </p>
-          <p className="mt-1.5 text-xs text-[#6B5A63]">ultimele intrări</p>
-        </div>
+        <NotesStatCard title="Total" value={notes.length} subtitle="notițe" />
+        <NotesStatCard title="Afișate" value={filteredNotes.length} subtitle="rezultate" />
+        <NotesStatCard
+          title="Recente"
+          value={notes.filter((n) => n.dateLabel === "Today" || n.dateLabel === "Yesterday").length}
+          subtitle="ultimele intrări"
+          className="col-span-2 sm:col-span-1"
+        />
       </div>
     </div>
 
@@ -486,33 +490,13 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
   </label>
 
   <div className="flex flex-wrap items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setFilter("all")}
-      className={
-        "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition " +
-        (filter === "all"
-          ? "border-(--color-soft) bg-(--color-card) text-(--color-primary)"
-          : "border-black/5 bg-white/85 text-gray-700 hover:bg-white")
-      }
-    >
-      <TagIcon />
+    <NotesFilterButton active={filter === "all"} onClick={() => setFilter("all")} icon={<TagIcon />}>
       Toate
-    </button>
+    </NotesFilterButton>
 
-    <button
-      type="button"
-      onClick={() => setFilter("recent")}
-      className={
-        "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition " +
-        (filter === "recent"
-          ? "border-(--color-soft) bg-(--color-card) text-(--color-primary)"
-          : "border-black/5 bg-white/85 text-gray-700 hover:bg-white")
-      }
-    >
-      <ClockIcon />
+    <NotesFilterButton active={filter === "recent"} onClick={() => setFilter("recent")} icon={<ClockIcon />}>
       Recente
-    </button>
+    </NotesFilterButton>
   </div>
 </div>
 
@@ -522,7 +506,7 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
         <aside className="overflow-hidden rounded-[28px] border border-black/5 bg-white/90 shadow-[0_12px_28px_rgba(31,23,32,0.05)] sm:rounded-4xl xl:col-span-1">
           <div className="flex items-center justify-between border-b border-black/5 px-5 py-4">
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">Notițele tale</h2>
+              <h2 className="text-sm font-semibold text-gray-900">Notesle tale</h2>
               <p className="mt-0.5 text-xs text-[#6B5A63]">Acces rapid la intrările recente</p>
             </div>
             <span className="text-xs font-semibold text-gray-400">{filteredNotes.length}</span>
@@ -530,17 +514,14 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
 
           <div className="max-h-90 space-y-3 overflow-auto p-3 sm:p-4 lg:max-h-[calc(100vh-260px)]">
   {loading ? (
-    <div className="rounded-2xl border border-black/5 bg-white/85 p-6 text-sm text-gray-700 shadow-[0_4px_12px_rgba(31,23,32,0.04)]">
-      Se încarcă notițele…
-    </div>
+    <ListLoadingSkeleton items={4} />
   ) : error ? (
-    <div className="rounded-2xl border border-dashed border-black/10 bg-(--color-card) p-6 text-sm text-[#6B5A63] shadow-[0_4px_12px_rgba(31,23,32,0.03)]">
-      {error}
-    </div>
+    <ErrorStateCard message={error} />
   ) : filteredNotes.length === 0 ? (
-    <div className="rounded-2xl border border-dashed border-black/10 bg-(--color-card) p-6 text-sm text-[#6B5A63] shadow-[0_4px_12px_rgba(31,23,32,0.03)]">
-      Nu există încă notițe. Creează prima notiță din <span className="font-medium">Ședințe</span>.
-    </div>
+    <EmptyStateCard
+      title="Nu există încă notițe"
+      description="Creează prima notiță din Ședințe."
+    />
   ) : (
     filteredNotes.map((n) => (
       <NoteCard
@@ -632,254 +613,23 @@ const [draftById, setDraftById] = React.useState<Record<string, string>>({});
           )}
         </div>
       </div>
-      {/* CREATE NOTE MODAL */}
-      {createOpen ? (
-        <div
-          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          onMouseDown={closeCreateModal}
-        >
-          <div
-            className="mx-auto mt-24 w-[92%] max-w-lg overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_20px_48px_rgba(31,23,32,0.18)]"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="border-b border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,rgba(239,208,202,0.14)_65%,rgba(125,128,218,0.06)_100%)] px-6 py-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="mt-3 text-[1.05rem] font-semibold text-gray-900">Notiță nouă</h3>
-                  <p className="mt-1 text-sm text-gray-600">Alege un client și o ședință, apoi scrie notița.</p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={closeCreateModal}
-                  className="rounded-xl p-2 text-gray-500 transition hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <XIcon />
-                </button>
-              </div>
-            </div>
-
-            <div className="px-6 py-5 space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-500">Client</span>
-                  <select
-                    value={createClientId}
-                    onChange={(e) => setCreateClientId(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                  >
-                    <option value="" disabled>
-                      {createClients.length ? "Selectează un client" : "Nu există clienți conectați"}
-                    </option>
-                    {createClients.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-500">Ședință</span>
-                  <select
-                    value={createSessionId}
-                    onChange={(e) => setCreateSessionId(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                    disabled={!createClientId}
-                  >
-                    <option value="" disabled>
-                      {createClientId
-                        ? createSessions.length
-                          ? "Selectează o ședință"
-                          : "Nu există ședințe pentru acest client"
-                        : "Selectează mai întâi un client"}
-                    </option>
-                    {createSessions.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-500">Notiță</span>
-                  <textarea
-                    value={createContent}
-                    onChange={(e) => setCreateContent(e.target.value)}
-                    placeholder={`Scrie notița… (${defaultNowLocal()})`}
-                    rows={6}
-                    className="mt-2 w-full rounded-xl border border-black/5 bg-white p-3 text-sm text-gray-900 shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-(--color-soft)"
-                  />
-                </label>
-
-                {createError ? (
-                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 shadow-[0_4px_12px_rgba(31,23,32,0.03)]">{translateCreateError(createError)}</div>
-                ) : null}
-
-                <div className="flex flex-col-reverse gap-3 border-t border-black/5 pt-4 sm:flex-row sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={closeCreateModal}
-                    className="inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
-                    disabled={createLoading}
-                  >
-                    Renunță
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={onCreateNoteConfirm}
-                    className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(184,104,152,0.22)] transition hover:opacity-95 disabled:opacity-50"
-                    disabled={createLoading}
-                  >
-                    {createLoading ? "Se salvează…" : "Salvează notița"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <CreateNoteModal
+        open={createOpen}
+        loading={createLoading}
+        error={createError ? translateCreateError(createError) : null}
+        clients={createClients}
+        clientId={createClientId}
+        sessions={createSessions}
+        sessionId={createSessionId}
+        content={createContent}
+        nowLabel={defaultNowLocal()}
+        onClose={closeCreateModal}
+        onChangeClientId={setCreateClientId}
+        onChangeSessionId={setCreateSessionId}
+        onChangeContent={setCreateContent}
+        onConfirm={onCreateNoteConfirm}
+      />
     </section>
-  );
-}
-
-
-/* NOTE CARD */
-function NoteCard({
-  title,
-  date,
-  preview,
-  selected,
-  onClick,
-}: {
-  title: string;
-  date: string;
-  preview: string;
-  selected?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        "group relative w-full overflow-hidden rounded-[20px] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(31,23,32,0.06)] transition cursor-pointer",
-        selected
-          ? "border-[#ead7df] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,249,251,0.98)_100%)] shadow-[0_12px_28px_rgba(31,23,32,0.08)]"
-          : "border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,249,251,0.98)_100%)] hover:shadow-[0_12px_28px_rgba(31,23,32,0.08)]",
-      ].join(" ")}
-    >
-      <span
-        className={[
-          "absolute left-4 right-4 top-0 h-px transition",
-          selected
-            ? "bg-[linear-gradient(90deg,rgba(239,208,202,0.8),transparent)]"
-            : "bg-[linear-gradient(90deg,rgba(125,128,218,0.35),transparent)] group-hover:bg-[linear-gradient(90deg,rgba(125,128,218,0.55),transparent)]",
-        ].join(" ")}
-      />
-
-      <h3 className="mb-1 truncate text-[1.02rem] font-semibold tracking-tight text-gray-900">{title}</h3>
-      <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-gray-400">{date}</p>
-      <p className="line-clamp-2 text-[14px] leading-7 text-gray-700">{preview}</p>
-    </button>
-  );
-}
-
-function TagPill({ tag }: { tag: NoteTag }) {
-  const cls =
-    tag === "Individual session"
-      ? "bg-indigo-50 text-indigo-700 ring-indigo-100"
-      : tag === "Couple session"
-      ? "bg-violet-50 text-violet-700 ring-violet-100"
-      : tag === "Draft"
-      ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
-      : "bg-gray-50 text-gray-700 ring-gray-200";
-
-  const label =
-    tag === "Today"
-      ? "Astăzi"
-      : tag === "Yesterday"
-      ? "Ieri"
-      : tag === "3 days ago"
-      ? "Acum 3 zile"
-      : tag === "Individual session"
-      ? "Ședință individuală"
-      : tag === "Couple session"
-      ? "Ședință de cuplu"
-      : "Ciornă";
-
-  return <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${cls}`}>{label}</span>;
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-      <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function TagIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path
-        d="M3.5 11.5V4.75A1.75 1.75 0 0 1 5.25 3h6.75a1.75 1.75 0 0 1 1.24.51l7.25 7.25a2 2 0 0 1 0 2.83l-6.9 6.9a2 2 0 0 1-2.83 0L4.01 12.74A1.75 1.75 0 0 1 3.5 11.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M7.75 7.75h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path
-        d="M8 8.5V6.25A1.75 1.75 0 0 1 9.75 4.5h8A1.75 1.75 0 0 1 19.5 6.25v8A1.75 1.75 0 0 1 17.75 16H15.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6.25 8.5h8A1.75 1.75 0 0 1 16 10.25v8A1.75 1.75 0 0 1 14.25 20h-8A1.75 1.75 0 0 1 4.5 18.25v-8A1.75 1.75 0 0 1 6.25 8.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function XIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
   );
 }
 // Helper to translate create modal errors

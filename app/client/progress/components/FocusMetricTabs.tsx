@@ -15,14 +15,14 @@ export function FocusMetricTabs({
   onChange: (v: FocusMetric) => void;
 }) {
   return (
-    <div className="max-w-full overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="inline-flex items-center gap-1 rounded-full border border-(--color-soft) bg-background p-1 shadow-[0_6px_14px_rgba(31,23,32,0.06)]">
+    <div className="max-w-full overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-0">
+      <div className="inline-flex items-center gap-1 rounded-[20px] border border-(--color-soft) bg-background p-1 shadow-[0_6px_14px_rgba(31,23,32,0.06)] sm:rounded-full">
         <button
           type="button"
           onClick={() => onChange("mood")}
           className={cn(
-            "rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition",
-            value === "mood" ? "bg-(--color-accent) text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
+            "rounded-[18px] px-3.5 py-2 text-[12px] font-semibold transition sm:rounded-full",
+            value === "mood" ? "bg-(--color-accent) text-white shadow-[0_8px_18px_rgba(239,135,192,0.22)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
           )}
         >
           Stare
@@ -31,8 +31,8 @@ export function FocusMetricTabs({
           type="button"
           onClick={() => onChange("anxiety")}
           className={cn(
-            "rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition",
-            value === "anxiety" ? "bg-(--color-accent) text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
+            "rounded-[18px] px-3.5 py-2 text-[12px] font-semibold transition sm:rounded-full",
+            value === "anxiety" ? "bg-(--color-accent) text-white shadow-[0_8px_18px_rgba(239,135,192,0.22)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
           )}
         >
           Tensiune
@@ -41,8 +41,8 @@ export function FocusMetricTabs({
           type="button"
           onClick={() => onChange("energy")}
           className={cn(
-            "rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition",
-            value === "energy" ? "bg-(--color-accent) text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
+            "rounded-[18px] px-3.5 py-2 text-[12px] font-semibold transition sm:rounded-full",
+            value === "energy" ? "bg-(--color-accent) text-white shadow-[0_8px_18px_rgba(239,135,192,0.22)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
           )}
         >
           Energie
@@ -51,8 +51,8 @@ export function FocusMetricTabs({
           type="button"
           onClick={() => onChange("sleep")}
           className={cn(
-            "rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition",
-            value === "sleep" ? "bg-(--color-accent) text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
+            "rounded-[18px] px-3.5 py-2 text-[12px] font-semibold transition sm:rounded-full",
+            value === "sleep" ? "bg-(--color-accent) text-white shadow-[0_8px_18px_rgba(239,135,192,0.22)]" : "text-foreground bg-transparent hover:bg-(--color-card)"
           )}
         >
           Somn

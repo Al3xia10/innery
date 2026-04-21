@@ -31,6 +31,14 @@ export function initUserModel(sequelize) {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
+      passwordResetTokenHash: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      passwordResetExpiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       tableName: "users",

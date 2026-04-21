@@ -3,31 +3,31 @@
 export default function PainPoints() {
   const less = [
     {
-      title: "Thoughts get lost",
-      text: "Important moments end up in Notes, messages, or nowhere at all.",
+      title: "Gandurile se pierd",
+      text: "Momentele importante ajung in notite, mesaje sau se pierd.",
     },
     {
-      title: "Forgetting what mattered",
-      text: "You remember the feeling, but not the details when the session starts.",
+      title: "Uiti ce a contat",
+      text: "Iti amintesti emotia, dar nu detaliile cand incepe sedinta.",
     },
     {
-      title: "No clear sense of progress",
-      text: "It’s hard to notice patterns when everything is scattered over time.",
+      title: "Fara un sentiment clar de progres",
+      text: "E greu sa observi tipare cand totul e imprastiat in timp.",
     },
   ];
 
   const more = [
     {
-      title: "One private space",
-      text: "A calm place for reflections — organized, searchable, always there.",
+      title: "Un spatiu privat",
+      text: "Un loc calm pentru reflectii — organizat, cautabil, mereu acolo.",
     },
     {
-      title: "Clear continuity",
-      text: "Walk into sessions with context in seconds, not stress.",
+      title: "Continuitate clara",
+      text: "Intri in sedinte cu context in cateva secunde, fara stres.",
     },
     {
-      title: "Progress you can see",
-      text: "Spot patterns, track changes, and build insight over weeks and months.",
+      title: "Progres vizibil",
+      text: "Observi tipare, urmaresti schimbari si construiesti claritate in saptamani si luni.",
     },
   ];
 
@@ -36,11 +36,11 @@ export default function PainPoints() {
       <div className="mx-auto max-w-6xl px-6 py-18 md:py-20">
         <div className="mx-auto max-w-xl text-center">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
-            Less mental clutter. More clarity between sessions.
+            Mai putin haos mental. Mai multa claritate intre sedinte.
           </h2>
           <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed">
-            Innery helps you keep your reflections in one place — so therapy feels
-            more continuous, even outside the session.
+            Innery te ajuta sa-ti pastrezi reflectiile intr-un singur loc — astfel terapia se simte
+            mai continua, chiar si in afara sedintei.
           </p>
         </div>
 
@@ -49,10 +49,10 @@ export default function PainPoints() {
           <div className="rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-(--color-primary)">
-                Less of this
+                Mai putin din asta
               </h3>
               <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
-                friction
+                frictiune
               </span>
             </div>
 
@@ -94,7 +94,7 @@ export default function PainPoints() {
           <div className="rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-(--color-primary)">
-                More of this
+                Mai mult din asta
               </h3>
               <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
                 clarity

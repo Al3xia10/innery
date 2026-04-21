@@ -28,7 +28,7 @@ export default function HowItWorks() {
             <div className="w-full flex justify-center md:mt-10">
             <Image
                src="/poza-therapist.png"
-               alt="Therapy illustration"
+               alt="Ilustratie terapie"
                width={650}
                height={650}
                className="object-contain"
@@ -38,10 +38,10 @@ export default function HowItWorks() {
             {/* RIGHT – TEXT */}
             <div className="relative space-y-6 px-4">
                 <h2 className="text-3xl md:text-4xl font-semibold leading-tight">
-                    How Innery works
+                    Cum functioneaza Innery
                 </h2>
                 <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-md">
-                A simple workflow for documenting care, staying organized, and supporting clients between sessions.
+                Un flux simplu pentru documentarea ingrijirii, organizare si sustinerea clientilor intre sedinte.
               </p>
                 <ul className="mt-6 space-y-5 text-left max-w-md">
                   <li className="flex gap-4">
@@ -49,7 +49,7 @@ export default function HowItWorks() {
                       1
                     </span>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Create a private workspace per client for notes, sessions, and key context.
+                      Creeaza un spatiu privat per client pentru notite, sedinte si context esential.
                     </p>
                   </li>
 
@@ -58,7 +58,7 @@ export default function HowItWorks() {
                       2
                     </span>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Capture session notes in a consistent structure so progress is easy to review.
+                      Noteaza sedintele intr-o structura consecventa pentru a revizui usor progresul.
                     </p>
                   </li>
 
@@ -67,7 +67,7 @@ export default function HowItWorks() {
                       3
                     </span>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Use reflections and follow-ups between sessions to keep momentum and clarity.
+                      Foloseste reflectii si follow-up-uri intre sedinte pentru ritm si claritate.
                     </p>
                   </li>
                 </ul>

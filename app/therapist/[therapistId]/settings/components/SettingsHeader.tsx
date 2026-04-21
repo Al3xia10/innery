@@ -217,7 +217,7 @@ export function SettingsHeader({
                 onClick={closeEditModal}
                 className="inline-flex items-center justify-center rounded-[18px] border border-black/5 bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-[0_6px_14px_rgba(31,23,32,0.05)] transition hover:bg-[#fffafb]"
               >
-                Renunță
+                Anulează
               </button>
               <button
                 type="button"

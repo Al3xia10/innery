@@ -44,35 +44,35 @@ export default function JournalHeader({
 
   return (
     <header
-      className="overflow-hidden rounded-4xl border border-black/5 shadow-[0_10px_28px_rgba(31,23,32,0.05)]"
+      className="overflow-hidden rounded-[28px] border border-black/5 shadow-[0_10px_28px_rgba(31,23,32,0.05)] sm:rounded-4xl"
       style={{
         background:
           "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
       }}
     >
-     <div className="mx-auto max-w-6xl space-y-8 px-6 py-8 lg:px-8">
+     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
         <div className="relative grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
           <div>
       
-            <h1 className="mt-4 text-[2rem] font-semibold leading-[1.02] tracking-tight text-foreground sm:text-[2.55rem]">
-              Jurnalul tău, în ritmul tău
+            <h1 className="mt-3 text-[1.7rem] font-semibold leading-[1.05] tracking-tight text-foreground sm:mt-4 sm:text-[2.55rem]">
+              Journalul tău, în ritmul tău
             </h1>
-            <p className="mt-3 max-w-2xl text-[15px] leading-8 text-(--color-foreground-muted,#6B5A63) sm:text-[17px]">
+            <p className="mt-2 max-w-2xl text-[15px] leading-6 sm:mt-3 sm:leading-8 text-(--color-foreground-muted,#6B5A63) sm:text-[17px]">
               Scrie ca să te auzi. Păstrează privat sau împărtășește cu terapeutul când simți.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:justify-end xl:mt-4">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3 xl:justify-end xl:mt-4">
             <button
               type="button"
               onClick={openNewEntry}
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-[18px] bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
+              className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
             >
               {tab === "private" ? "Scrie privat" : "Scrie pentru ședință"}
             </button>
             <Link
               href="/client"
-              className="inline-flex w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-foreground shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-[#fffafb]"
+              className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-foreground shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-[#fffafb]"
             >
               Înapoi la Azi
             </Link>
@@ -80,7 +80,7 @@ export default function JournalHeader({
         </div>
 
         {/* Tabs */}
-        <div className="relative grid grid-cols-1 gap-4 xl:grid-cols-[auto_minmax(0,1fr)] xl:items-center">
+        <div className="relative grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-[auto_minmax(0,1fr)] xl:items-center">
           <div className="inline-flex w-full items-center rounded-full border border-(--color-soft) bg-background p-1 shadow-[0_6px_14px_rgba(31,23,32,0.06)] sm:w-auto">
             <button
               type="button"
@@ -110,7 +110,7 @@ export default function JournalHeader({
             </button>
           </div>
 
-          <div className="text-xs leading-6 text-(--color-foreground-muted,#6B5A63) xl:pl-2">
+          <div className="text-xs leading-5 sm:leading-6 text-(--color-foreground-muted,#6B5A63) xl:pl-2">
             {tab === "private" ? (
               <span className="inline-flex items-center gap-2">
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-black/5 bg-white text-[10px] opacity-90">

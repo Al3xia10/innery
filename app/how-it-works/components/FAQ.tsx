@@ -7,28 +7,28 @@ import Link from "next/link";
 
 const faqs = [
   {
-    q: "Who is Innery for?",
-    a: "Innery is built for therapy work: therapists get a private workspace for continuity, and clients get a calm space for optional reflections between sessions.",
+    q: "Pentru cine este Innery?",
+    a: "Innery este construit pentru munca terapeutica: terapeutii primesc un spatiu privat pentru continuitate, iar clientii un loc calm pentru reflectii optionale intre sedinte.",
   },
   {
-    q: "Is Innery private?",
-    a: "Innery is designed as a private workspace. Therapists control client profiles and what’s shared. Clients only see what’s meant for them.",
+    q: "Este Innery privat?",
+    a: "Innery este conceput ca un spatiu privat. Terapeutii controleaza profilurile clientilor si ce se partajeaza. Clientii vad doar ce este destinat lor.",
   },
   {
-    q: "Can clients see my session notes?",
-    a: "By default, no. Session notes are for the therapist. Clients can submit reflections if you enable it, and you decide what you share.",
+    q: "Pot clientii sa-mi vada notitele de sedinta?",
+    a: "Implicit, nu. Notitele de sedinta sunt pentru terapeut. Clientii pot trimite reflectii daca activezi optiunea, iar tu decizi ce partajezi.",
   },
   {
-    q: "Do I have to use it during sessions?",
-    a: "No. You can write notes after sessions. Clients can reflect whenever it suits them — Innery supports both workflows.",
+    q: "Trebuie sa-l folosesc in timpul sedintelor?",
+    a: "Nu. Poti scrie notite dupa sedinte. Clientii pot reflecta cand li se potriveste — Innery sustine ambele fluxuri.",
   },
   {
-    q: "How do clients join?",
-    a: "Typically, a therapist invites a client (or shares a code/link). In your current mock phase, this can be represented by IDs; later it’s handled by backend invites.",
+    q: "Cum se alatura clientii?",
+    a: "De obicei, terapeutul invita clientul (sau partajeaza un cod/link). In faza actuala de mock, asta poate fi reprezentat prin ID-uri; ulterior este gestionat prin invitatii din backend.",
   },
   {
-    q: "Can I export my data?",
-    a: "Yes — export/backups can be supported so you keep your records. You can start with basic exports and expand options as Innery evolves.",
+    q: "Pot exporta datele?",
+    a: "Da — exportul si backup-ul pot fi sustinute ca sa iti pastrezi inregistrarile. Poti incepe cu exporturi de baza si extinzi optiunile pe masura ce Innery evolueaza.",
   },
 ] as const;
 
@@ -42,10 +42,10 @@ export default function FAQ() {
           {/* LEFT – intro */}
           <div className="md:col-span-4">
             <h2 className="mt-2 text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
-              Common questions
+              Intrebari frecvente
             </h2>
             <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed">
-              Quick answers about how Innery works for therapists and clients.
+              Raspunsuri rapide despre cum functioneaza Innery pentru terapeuti si clienti.
             </p>
 
             <div className="mt-6 flex flex-col gap-3">
@@ -53,13 +53,13 @@ export default function FAQ() {
                 href="/for-therapists#pricing"
                 className="inline-flex items-center justify-center rounded-xl border border-(--color-soft) bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
               >
-                See pricing
+                Vezi preturile
               </Link>
               <Link
                 href="/support"
                 className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
               >
-                Ask a question
+                Pune o intrebare
               </Link>
             </div>
           </div>

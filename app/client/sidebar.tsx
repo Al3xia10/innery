@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -65,10 +65,17 @@ export default function Sidebar() {
       const raw = localStorage.getItem("innery_user");
       if (!raw) return;
 
-      const first = JSON.parse(raw);
-      const parsed = typeof first === "string" ? JSON.parse(first) : (first as any);
+      const first: unknown = JSON.parse(raw);
+      const parsed: unknown =
+        typeof first === "string" ? JSON.parse(first) : first;
+      if (!parsed || typeof parsed !== "object") return;
 
-      setClientProfile(parsed);
+      setClientProfile(parsed as {
+        name?: string;
+        email?: string;
+        role?: string;
+        id?: number;
+      });
     } catch {
       // ignore
     }
@@ -82,8 +89,7 @@ export default function Sidebar() {
     if (opts?.exact) return current === target;
     return current === target || current.startsWith(target + "/");
   };
-  const sidebarContent = useMemo(
-    () => (
+  const sidebarContent = (
       <>
         {/* HEADER / BRAND */}
                 <div className="mb-6">
@@ -96,15 +102,15 @@ export default function Sidebar() {
 
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#2d1f27] truncate">innery</p>
-                  <p className="text-[11px] text-[#a08a95] truncate">client space</p>
+                  <p className="text-[11px] text-[#a08a95] truncate">spațiul clientului</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setDesktopExpanded((v) => !v)}
-                aria-label="Collapse sidebar"
-                title="Collapse"
+                aria-label="Restrange sidebar-ul"
+                title="Restrange"
                 className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#7c5c6c] shadow-sm ring-1 ring-[#ece2e7] transition hover:bg-[#fffafb]"
               >
                 <IconSidebarToggle expanded={desktopExpanded} />
@@ -119,8 +125,8 @@ export default function Sidebar() {
               <button
                 type="button"
                 onClick={() => setDesktopExpanded((v) => !v)}
-                aria-label="Expand sidebar"
-                title="Expand"
+                aria-label="Extinde sidebar-ul"
+                title="Extinde"
                 className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#7c5c6c] shadow-sm ring-1 ring-[#ece2e7] transition hover:bg-[#fffafb]"
               >
                 <IconSidebarToggle expanded={desktopExpanded} />
@@ -130,10 +136,10 @@ export default function Sidebar() {
         </div>
 
         {desktopExpanded ? (
-          <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#eee3ea]">
-            <p className="text-[11px] uppercase tracking-wide text-[#b8a5af]">today</p>
+          <div className="mb-6 rounded-[20px] bg-white p-4 shadow-sm ring-1 ring-[#eee3ea]">
+            <p className="text-[11px] uppercase tracking-wide text-[#b8a5af]">ziua ta</p>
             <p className="mt-2 text-sm leading-5 text-[#2d1f27]">
-              take one small step for yourself
+              calm, clar, prezent
             </p>
           </div>
         ) : null}
@@ -142,21 +148,21 @@ export default function Sidebar() {
         <nav className="mt-2 flex flex-col gap-2">
           <NavItem
             href={`/client`}
-            label="Today"
+            label="Astăzi"
             icon={<IconHome />}
             active={isActive(`/client`, { exact: true })}
             compact={!desktopExpanded}
           />
           <NavItem
             href={`/client/progress`}
-            label="Progress"
+            label="Progres"
             icon={<IconCalendar />}
             active={isActive(`/client/progress`)}
             compact={!desktopExpanded}
           />
           <NavItem
             href={`/client/journal`}
-            label="Journal"
+            label="Jurnal"
             icon={<IconNote />}
             active={isActive(`/client/journal`)}
             compact={!desktopExpanded}
@@ -173,13 +179,13 @@ export default function Sidebar() {
         <div className="mt-7 pt-5 border-t border-[#eadfe5]">
           {desktopExpanded ? (
             <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a08a95]">
-              preferences
+              preferințe
             </p>
           ) : null}
 
           <NavItem
             href={`/client/settings`}
-            label="Settings"
+            label="Setari"
             icon={<IconSettings />}
             active={isActive(`/client/settings`)}
             secondary
@@ -190,7 +196,7 @@ export default function Sidebar() {
         {/* PROFILE */}
         <div className="mt-auto pt-8">
           {desktopExpanded ? (
-            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#eee3ea]">
+            <div className="rounded-[20px] bg-white p-4 shadow-sm ring-1 ring-[#eee3ea]">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[#f3e8ee] flex items-center justify-center text-[#7c5c6c] font-semibold shrink-0">
                   {(clientProfile?.name?.trim()?.[0] || "C").toUpperCase()}
@@ -200,7 +206,7 @@ export default function Sidebar() {
                     {clientProfile?.name || "Client"}
                   </p>
                   <p className="text-xs text-[#a08a95] truncate">
-                    {clientProfile?.email || "no email"}
+                    {clientProfile?.email || "fără email"}
                   </p>
                 </div>
               </div>
@@ -212,8 +218,6 @@ export default function Sidebar() {
           )}
         </div>
       </>
-    ),
-    [pathname, clientProfile, desktopExpanded]
   );
 
   return (
@@ -222,7 +226,7 @@ export default function Sidebar() {
 
       <aside
   className={[
-    "hidden md:flex flex-col border-r border-[#eee3ea] bg-[linear-gradient(180deg,#fbf9fb,#f6f1f5)] px-4 py-6 shadow-[inset_-1px_0_0_#f0e6ec] transition-all duration-300",
+    "hidden md:flex flex-col border-r border-[#eee3ea] bg-[linear-gradient(180deg,#fbf9fb,#f6f1f5)] px-3 py-5 shadow-[inset_-1px_0_0_#f0e6ec] transition-all duration-300 lg:px-4 lg:py-6",
     desktopExpanded ? "w-72" : "w-22",
   ].join(" ")}
 >
@@ -251,7 +255,7 @@ function NavItem({
     <Link
       href={href}
       className={[
-        "group relative flex items-center rounded-xl py-2.5 transition-all duration-200",
+        "group relative flex items-center rounded-[18px] py-2.5 transition-all duration-200",
         compact ? "justify-center px-0 overflow-visible" : "gap-3 px-3",
         active
           ? secondary
@@ -275,7 +279,7 @@ function NavItem({
 
       <span
       className={[
-        "inline-flex h-9 w-9 items-center justify-center rounded-lg transition shrink-0",
+        "inline-flex h-9 w-9 items-center justify-center rounded-[14px] transition shrink-0",
           active
             ? "bg-white text-[#6b4c5c] shadow-[0_6px_14px_rgba(120,92,108,0.08)]"
             : "bg-white/85 text-[#7c5c6c] group-hover:bg-white group-hover:text-[#2d1f27] group-hover:shadow-[0_6px_14px_rgba(120,92,108,0.06)]",
@@ -287,7 +291,7 @@ function NavItem({
       {!compact ? (
         <span className="font-medium truncate">{label}</span>
       ) : (
-        <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-30 -translate-y-1/2 whitespace-nowrap rounded-xl border border-[#eee3ea] bg-white px-3 py-2 text-sm font-medium text-[#2d1f27] opacity-0 shadow-[0_12px_30px_rgba(120,92,108,0.12)] transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100">
+        <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-30 -translate-y-1/2 whitespace-nowrap rounded-[18px] border border-[#eee3ea] bg-white px-3 py-2 text-sm font-medium text-[#2d1f27] opacity-0 shadow-[0_12px_30px_rgba(120,92,108,0.12)] transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100">
           {label}
         </span>
       )}

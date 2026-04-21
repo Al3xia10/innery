@@ -112,7 +112,7 @@ export default function ClientDashboard() {
 
   const lastReflection = reflections[0];
 
-  async function onSaveQuickReflection() {
+  async function onSalveazaQuickReflection() {
     const content = draft.trim();
     if (!content) return;
 
@@ -136,8 +136,8 @@ export default function ClientDashboard() {
     return (
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-gray-900">Client not found</h1>
-          <p className="mt-2 text-sm text-gray-600">Check the URL. This is a demo route.</p>
+          <h1 className="text-base font-semibold text-gray-900">Client inexistent</h1>
+          <p className="mt-2 text-sm text-gray-600">Verifica URL-ul. Aceasta este o ruta demo.</p>
           <Link
             href="/"
             className="mt-5 inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 transition"
@@ -156,9 +156,9 @@ export default function ClientDashboard() {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
             <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            Client space
+            Spatiu client
           </div>
-          <h1 className="mt-2 text-2xl font-semibold text-gray-900">Welcome back, {displayName}</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-gray-900">Bine ai revenit, {displayName}</h1>
           <p className="mt-1 text-sm text-gray-600 max-w-xl">
             A private space for reflection, progress, and your therapy journey.
           </p>
@@ -175,7 +175,7 @@ export default function ClientDashboard() {
             href={`/client/${clientId}/settings`}
             className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
           >
-            Settings
+            Setari
           </Link>
         </div>
       </header>
@@ -195,14 +195,14 @@ export default function ClientDashboard() {
           href={`/client/${clientId}/reflections`}
         />
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-600">Status</p>
-          <p className="mt-2 text-2xl font-semibold text-emerald-600">Active</p>
-          <p className="mt-1 text-xs text-gray-500">therapy in progress</p>
+          <p className="text-sm text-gray-600">Stare</p>
+          <p className="mt-2 text-2xl font-semibold text-emerald-600">Activ</p>
+          <p className="mt-1 text-xs text-gray-500">terapie in desfasurare</p>
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-600">Therapist</p>
+          <p className="text-sm text-gray-600">Terapeut</p>
           <p className="mt-2 text-2xl font-semibold text-gray-900 truncate">{therapist?.name ?? "—"}</p>
-          <p className="mt-1 text-xs text-gray-500">your primary support</p>
+          <p className="mt-1 text-xs text-gray-500">sprijinul tau principal</p>
         </div>
       </div>
 
@@ -214,7 +214,7 @@ export default function ClientDashboard() {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="font-semibold text-gray-900">Quick reflection</h2>
+                <h2 className="font-semibold text-gray-900">Reflectie rapida</h2>
                 <p className="mt-1 text-sm text-gray-600">
                   Write a few lines now. You can edit it later in the reflections page.
                 </p>
@@ -238,11 +238,11 @@ export default function ClientDashboard() {
               <p className="text-xs text-gray-500">Demo mode • saved in-memory • refresh resets</p>
               <button
                 type="button"
-                onClick={onSaveQuickReflection}
+                onClick={onSalveazaQuickReflection}
                 disabled={!draft.trim() || saving}
                 className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-50 transition"
               >
-                {saving ? "Saving…" : "Save"}
+                {saving ? "Se salveaza…" : "Salveaza"}
               </button>
             </div>
           </div>
@@ -251,8 +251,8 @@ export default function ClientDashboard() {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="font-semibold text-gray-900">Recent reflections</h2>
-                <p className="mt-1 text-sm text-gray-600">Your latest entries.</p>
+                <h2 className="font-semibold text-gray-900">Reflectii recente</h2>
+                <p className="mt-1 text-sm text-gray-600">Ultimele tale inregistrari.</p>
               </div>
               <Link
                 href={`/client/${clientId}/reflections`}
@@ -264,8 +264,8 @@ export default function ClientDashboard() {
 
             {reflections.length === 0 ? (
               <div className="mt-5 rounded-2xl border border-dashed border-gray-200 p-8 text-center">
-                <p className="text-sm font-semibold text-gray-900">No reflections yet</p>
-                <p className="mt-1 text-sm text-gray-600">Write your first one above.</p>
+                <p className="text-sm font-semibold text-gray-900">Nu exista inca reflectii</p>
+                <p className="mt-1 text-sm text-gray-600">Scrie prima reflectie mai sus.</p>
               </div>
             ) : (
               <div className="mt-5 space-y-3">
@@ -284,16 +284,16 @@ export default function ClientDashboard() {
         <div className="space-y-6">
           {/* THERAPIST CARD */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 className="font-semibold text-gray-900">Your therapist</h2>
-            <p className="mt-1 text-sm text-gray-600">Your support space</p>
+            <h2 className="font-semibold text-gray-900">Terapeutul tau</h2>
+            <p className="mt-1 text-sm text-gray-600">Spatiul tau de sprijin</p>
 
             <div className="mt-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-semibold">
-                {initials(therapist?.name ?? "Therapist")}
+                {initials(therapist?.name ?? "Terapeut")}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">{therapist?.name ?? "—"}</p>
-                <p className="text-xs text-gray-500 truncate">Therapist ID: {client.therapistId}</p>
+                <p className="text-xs text-gray-500 truncate">Terapeut ID: {client.therapistId}</p>
               </div>
             </div>
 
@@ -306,17 +306,17 @@ export default function ClientDashboard() {
 
           {/* PROMPT */}
           <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100">
-            <h3 className="text-sm font-semibold text-indigo-700">Gentle prompt</h3>
+            <h3 className="text-sm font-semibold text-indigo-700">Prompt bland</h3>
             <p className="mt-2 text-sm text-indigo-700/80">
               {lastReflection
                 ? "Notice one feeling present right now. Where do you feel it in your body?"
-                : "Start small: write one sentence about today."}
+                : "Incepe simplu: scrie o propozitie despre azi."}
             </p>
           </div>
 
           {/* PRIVACY */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-semibold text-gray-900">Privacy</h3>
+            <h3 className="font-semibold text-gray-900">Confidentialitate</h3>
             <p className="mt-2 text-sm text-gray-600 leading-relaxed">
               Your reflections are yours. In this demo, they are stored only in memory.
               Later, with backend, they can be securely stored and shared based on consent.

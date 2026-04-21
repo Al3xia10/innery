@@ -47,7 +47,7 @@ function initials(name: string) {
 
 function SettingRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-gray-50/40 p-4">
+    <div className="rounded-[20px] border border-gray-100 bg-gray-50/40 p-4 sm:rounded-[28px]">
       <p className="text-xs font-semibold text-gray-500">{label}</p>
       <p className="mt-1 text-sm font-semibold text-gray-900 truncate">{value}</p>
     </div>
@@ -68,8 +68,8 @@ function Toggle({
   const id = React.useId();
 
   return (
-    <div className="group rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm transition hover:border-gray-200 hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
+    <div className="group rounded-[20px] border border-gray-100 bg-white p-3.5 shadow-sm transition hover:border-gray-200 hover:shadow-md sm:rounded-[28px]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <label
             htmlFor={id}
@@ -77,7 +77,7 @@ function Toggle({
           >
             {label}
           </label>
-          <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+          <p className="mt-1 text-xs leading-5 sm:leading-relaxed text-gray-500">
             {description}
           </p>
         </div>
@@ -153,7 +153,7 @@ function Toggle({
         </button>
       </div>
 
-      <div className="mt-2.5 flex items-center justify-between text-[11px] text-gray-500">
+      <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[11px] text-gray-500">
         <span className="inline-flex items-center gap-2">
           <span
             className={[
@@ -161,14 +161,14 @@ function Toggle({
               checked ? "bg-indigo-500" : "bg-gray-300",
             ].join(" ")}
           />
-          {checked ? "Enabled" : "Disabled"}
+          {checked ? "Activ" : "Dezactivat"}
         </span>
         <button
           type="button"
           onClick={() => onChange(!checked)}
           className="text-indigo-600 hover:text-indigo-700 font-semibold"
         >
-          {checked ? "Turn off" : "Turn on"}
+          {checked ? "Dezactivează" : "Activează"}
         </button>
       </div>
     </div>
@@ -244,7 +244,7 @@ export default function ClientSettingsPage() {
 
   function update(next: Partial<ClientPrefs>) {
     setPrefs((p) => ({ ...p, ...next }));
-    setToast("Saved");
+    setToast("Salvat");
   }
 
   function openProfileEdit() {
@@ -268,7 +268,7 @@ export default function ClientSettingsPage() {
     const email = draftEmail.trim();
 
     if (!name || !email) {
-      setToast("Please fill name + email");
+      setToast("Completează numele și emailul");
       return;
     }
 
@@ -281,20 +281,20 @@ export default function ClientSettingsPage() {
 
     setEditingProfile(false);
     setProfileSaving(false);
-    setToast("Saved");
+    setToast("Salvat");
   }
 
   if (!client) {
     return (
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-        <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-gray-900">Client not found</h1>
-          <p className="mt-2 text-sm text-gray-600">Check the URL. This is a demo route.</p>
+      <section className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
+        <div className="rounded-[20px] border border-dashed border-gray-200 bg-white p-6 text-center sm:rounded-[28px] sm:p-10">
+         <h1 className="text-base font-semibold text-gray-900">Client inexistent</h1>
+          <p className="mt-2 text-sm leading-6 sm:leading-7 text-gray-600">Verifică URL-ul. Aceasta este o rută demo.</p>
           <Link
             href="/"
-            className="mt-5 inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 transition"
+            className="mt-5 inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-600"
           >
-            Go home
+            Mergi acasă
           </Link>
         </div>
       </section>
@@ -302,81 +302,82 @@ export default function ClientSettingsPage() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-8">
+    <section className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6 sm:space-y-8">
       {/* HEADER */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
+          <div className="inline-flex items-center gap-2 rounded-[18px] bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100 sm:rounded-full">
             <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            Client settings
+            Setări client
           </div>
           <h1 className="mt-2 text-2xl font-semibold text-gray-900">Preferences</h1>
-          <p className="mt-1 text-sm text-gray-600 max-w-xl">
-            Control notifications, privacy, and how you share your notes.
-          </p>
+          <h1 className="mt-2 text-[1.7rem] font-semibold tracking-tight text-gray-900 sm:text-2xl">Preferințe</h1>
+<p className="mt-1 max-w-xl text-sm leading-6 sm:leading-7 text-gray-600">
+  Controlează notificările, confidențialitatea și modul în care îți partajezi notițele.
+</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+       <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           <Link
             href={`/client/${clientId}`}
-            className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+            className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
           >
-            Back to dashboard
+            Înapoi la dashboard
           </Link>
         </div>
       </header>
 
       {/* CONTENT GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         {/* LEFT: SETTINGS */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6 sm:space-y-8">
           {/* PROFILE */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
+          <div className="rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">Profile</h2>
-                <p className="mt-1 text-sm text-gray-600">Your client identity in Innery.</p>
+                <h2 className="text-sm font-semibold text-gray-900">Profil</h2>
+<p className="mt-1 text-sm text-gray-600">Identitatea ta de client în Innery.</p>
               </div>
               <button
                 type="button"
                 onClick={openProfileEdit}
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition"
+                className="inline-flex min-h-10 w-full items-center justify-center rounded-[18px] border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#7d5d6c] shadow-sm transition hover:bg-gray-50 sm:w-auto"
               >
-                Edit
+                Editează
               </button>
             </div>
 
             <div className="mt-5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-semibold">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[18px] bg-indigo-50 font-semibold text-indigo-700 sm:rounded-full">
                 {initials(profile?.name ?? client.name)}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">
                   {profile?.name ?? client.name}
                 </p>
-                <p className="text-xs text-gray-500 truncate">Client ID: {clientId}</p>
+               <p className="text-xs text-gray-500 truncate">ID client: {clientId}</p>
               </div>
             </div>
 
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <SettingRow label="Name" value={profile?.name ?? client.name} />
-              <SettingRow label="Email" value={profile?.email ?? ((client as any).email ?? "client@innery.com")} />
-              <SettingRow label="Role" value="Client" />
-              <SettingRow label="Privacy mode" value={prefs.privacyMode[0].toUpperCase() + prefs.privacyMode.slice(1)} />
+             <SettingRow label="Nume" value={profile?.name ?? client.name} />
+<SettingRow label="Email" value={profile?.email ?? ((client as any).email ?? "client@innery.com")} />
+<SettingRow label="Rol" value="Client" />
+<SettingRow label="Mod confidențialitate" value={prefs.privacyMode[0].toUpperCase() + prefs.privacyMode.slice(1)} />
             </div>
 
             {editingProfile ? (
-              <div className="mt-6 rounded-2xl border border-gray-100 bg-gray-50/40 p-4">
-                <p className="text-xs font-semibold text-gray-500">Edit profile</p>
+             <div className="mt-6 rounded-[20px] border border-gray-100 bg-gray-50/40 p-4 sm:rounded-[28px]">
+                <p className="text-xs font-semibold text-gray-500">Editează profilul</p>
 
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-gray-600">Name</label>
+                    <label className="text-xs font-semibold text-gray-600">Nume</label>
                     <input
                       value={draftName}
                       onChange={(e) => setDraftName(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Your name"
+                      className="mt-1 w-full rounded-[18px] border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+placeholder="Numele tău"
                     />
                   </div>
 
@@ -385,32 +386,32 @@ export default function ClientSettingsPage() {
                     <input
                       value={draftEmail}
                       onChange={(e) => setDraftEmail(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="you@example.com"
+                      className="mt-1 w-full rounded-[18px] border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+placeholder="email@exemplu.com"
                       inputMode="email"
                     />
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <p className="text-xs text-gray-500">
-                    Saved locally (demo). Later this will connect to backend profile.
-                  </p>
-                  <div className="flex gap-2">
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <p className="text-xs text-gray-500">
+    Salvat local (demo). Mai târziu se va conecta la profilul din backend.
+  </p>
+  <div className="flex flex-col gap-2 sm:flex-row">
                     <button
                       type="button"
                       onClick={cancelProfileEdit}
-                      className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                      className="inline-flex min-h-10 items-center justify-center rounded-[18px] border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
                     >
-                      Cancel
+                      Anulează
                     </button>
                     <button
                       type="button"
                       onClick={saveProfileEdit}
                       disabled={profileSaving}
-                      className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-50 transition"
+                      className="inline-flex min-h-10 items-center justify-center rounded-[18px] bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-600 disabled:opacity-50"
                     >
-                      {profileSaving ? "Saving…" : "Save"}
+                      {profileSaving ? "Se salvează…" : "Salveaza"}
                     </button>
                   </div>
                 </div>
@@ -419,15 +420,15 @@ export default function ClientSettingsPage() {
           </div>
 
           {/* ACCOUNT */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-5">
+         <div className="rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm space-y-5 sm:rounded-[28px] sm:p-6">
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">Notifications</h2>
-              <p className="mt-1 text-sm text-gray-600">Choose what you receive.</p>
+              <h2 className="text-sm font-semibold text-gray-900">Notificări</h2>
+<p className="mt-1 text-sm leading-6 sm:leading-7 text-gray-600">Alege ce vrei să primești.</p>
             </div>
 
             <Toggle
-              label="Email notifications"
-              description="Get reminders and updates related to your therapy journey."
+              label="Notificări pe email"
+description="Primești remindere și actualizări legate de parcursul tău terapeutic."
               checked={prefs.emailNotifications}
               onChange={(v) => update({ emailNotifications: v })}
             />
@@ -435,25 +436,25 @@ export default function ClientSettingsPage() {
             <div className="h-px bg-gray-100" />
 
             <Toggle
-              label="Session reminders"
-              description="Receive a reminder before an upcoming session."
+              label="Remindere pentru ședințe"
+description="Primești un reminder înainte de o ședință viitoare."
               checked={prefs.sessionReminders}
               onChange={(v) => update({ sessionReminders: v })}
             />
           </div>
 
           {/* PRIVACY */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-5">
+          <div className="rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm space-y-5 sm:rounded-[28px] sm:p-6">
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">Privacy & sharing</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                You stay in control. Defaults can be changed any time.
-              </p>
+              <h2 className="text-sm font-semibold text-gray-900">Confidențialitate și partajare</h2>
+<p className="mt-1 text-sm leading-6 sm:leading-7 text-gray-600">
+  Tu deții controlul. Settingsle implicite pot fi schimbate oricând.
+</p>
             </div>
 
             <Toggle
-              label="Share reflections by default"
-              description="When enabled, new reflections will be marked as shareable (you can still change per item later)."
+              label="Partajează reflecțiile implicit"
+description="Când este activat, noile reflecții vor fi marcate ca partajabile (poți schimba asta ulterior pentru fiecare item)."
               checked={prefs.shareReflectionsByDefault}
               onChange={(v) => update({ shareReflectionsByDefault: v })}
             />
@@ -470,114 +471,108 @@ export default function ClientSettingsPage() {
             <div className="h-px bg-gray-100" />
 
             <div className="flex flex-col gap-2">
-              <p className="text-sm font-semibold text-gray-900">Privacy mode</p>
-              <p className="text-xs text-gray-500">
-                A simple preset that influences future defaults. (Demo only)
-              </p>
+              <p className="text-sm font-semibold text-gray-900">Mod de confidențialitate</p>
+<p className="text-xs text-gray-500">
+  Un preset simplu care influențează setările implicite viitoare. (Doar demo)
+</p>
 
               <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => update({ privacyMode: "private", shareNotesByDefault: false, shareReflectionsByDefault: false })}
                   className={
-                    "rounded-xl border px-4 py-3 text-left transition " +
+                    "rounded-[18px] border px-4 py-3 text-left transition " +
                     (prefs.privacyMode === "private"
                       ? "border-indigo-200 bg-indigo-50"
                       : "border-gray-200 bg-white hover:bg-gray-50")
                   }
                 >
-                  <p className="text-sm font-semibold text-gray-900">Private</p>
-                  <p className="mt-1 text-xs text-gray-500">Keep everything private by default.</p>
+                  <p className="text-sm font-semibold text-gray-900">Privat</p>
+<p className="mt-1 text-xs leading-5 text-gray-500">Păstrează totul privat în mod implicit.</p>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => update({ privacyMode: "balanced" })}
                   className={
-                    "rounded-xl border px-4 py-3 text-left transition " +
+                    "rounded-[18px] border px-4 py-3 text-left transition " +
                     (prefs.privacyMode === "balanced"
                       ? "border-indigo-200 bg-indigo-50"
                       : "border-gray-200 bg-white hover:bg-gray-50")
                   }
                 >
-                  <p className="text-sm font-semibold text-gray-900">Balanced</p>
-                  <p className="mt-1 text-xs text-gray-500">Choose per reflection / note.</p>
+                  <p className="text-sm font-semibold text-gray-900">Echilibrat</p>
+<p className="mt-1 text-xs leading-5 text-gray-500">Alegi pentru fiecare reflecție / notiță.</p>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => update({ privacyMode: "open", shareNotesByDefault: true, shareReflectionsByDefault: true })}
                   className={
-                    "rounded-xl border px-4 py-3 text-left transition " +
+                    "rounded-[18px] border px-4 py-3 text-left transition " +
                     (prefs.privacyMode === "open"
                       ? "border-indigo-200 bg-indigo-50"
                       : "border-gray-200 bg-white hover:bg-gray-50")
                   }
                 >
-                  <p className="text-sm font-semibold text-gray-900">Open</p>
-                  <p className="mt-1 text-xs text-gray-500">Share by default (you can revoke later).</p>
+                  <p className="text-sm font-semibold text-gray-900">Deschis</p>
+<p className="mt-1 text-xs leading-5 text-gray-500">Partajează implicit (poți retrage ulterior).</p>
                 </button>
               </div>
             </div>
 
-            <p className="text-xs text-gray-400">
-              Later, these will connect to real permissions and therapist visibility.
-            </p>
+           <p className="text-xs leading-5 text-gray-400">
+  Mai târziu, acestea se vor conecta la permisiuni reale și la vizibilitatea terapeutului.
+</p>
           </div>
 
           {/* DANGER */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900">Account status</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              If you need a break, you can pause your therapy journey.
-            </p>
+         <div className="rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-6">
+            <h2 className="text-sm font-semibold text-gray-900">Starea contului</h2>
+<p className="mt-2 text-sm leading-6 sm:leading-7 text-gray-600">
+  Dacă ai nevoie de o pauză, poți întrerupe parcursul tău terapeutic.
+</p>
 
-            <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="text-xs text-gray-500">Demo action • does not change data</div>
+            <div className="mt-4 flex flex-col gap-2.5 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div className="text-xs text-gray-500">Acțiune demo • nu modifică datele</div>
               <button
                 type="button"
-                onClick={() => setToast("Paused (demo)")}
-                className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition"
+                onClick={() => setToast("Cont pus pe pauză (demo)")}
+                className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
               >
-                Pause account
+                Pune contul pe pauză
               </button>
             </div>
           </div>
         </div>
 
         {/* RIGHT: SUMMARY */}
-        <aside className="space-y-6">
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-900">Account</h3>
+        <aside className="space-y-5 sm:space-y-6">
+          <div className="rounded-[20px] border border-gray-100 bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-6">
+            <h3 className="text-sm font-semibold text-gray-900">Cont</h3>
             <p className="mt-2 text-sm text-gray-600">
               <span className="font-semibold text-gray-900">{profile?.name ?? client.name}</span>
             </p>
-            <p className="mt-1 text-xs text-gray-500">Client ID: {clientId}</p>
+            <p className="mt-1 text-xs text-gray-500">ID client: {clientId}</p>
 
-            <div className="mt-4 rounded-2xl bg-gray-50/40 border border-gray-100 p-4">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                Preferences are saved locally on this device (localStorage).
-              </p>
-            </div>
+            <div className="mt-4 rounded-[20px] border border-gray-100 bg-gray-50/40 p-4 sm:rounded-[28px]">
+  <p className="text-sm leading-6 sm:leading-relaxed text-gray-700">
+    Preferințele sunt salvate local pe acest dispozitiv (localStorage).
+  </p>
+</div>
           </div>
 
-          <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-6">
-            <h3 className="text-sm font-semibold text-indigo-700">Tip</h3>
-            <p className="mt-2 text-sm text-indigo-700/80">
-              You can keep notes private and share only the ones that help your sessions.
-            </p>
+          <div className="rounded-[20px] border border-indigo-100 bg-indigo-50 p-4 sm:rounded-[28px] sm:p-6">
+            <h3 className="text-sm font-semibold text-indigo-700">Sugestie</h3>
+<p className="mt-2 text-sm leading-6 sm:leading-7 text-indigo-700/80">
+  Poți păstra notițele private și să le partajezi doar pe cele care îți ajută ședințele.
+</p>
           </div>
         </aside>
       </div>
 
       {/* TOAST */}
-      <div
-        className={
-          "pointer-events-none fixed bottom-4 left-1/2 -translate-x-1/2 transition " +
-          (toast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2")
-        }
-        aria-live="polite"
-      >
+      <div className="pointer-events-none rounded-[18px] bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-lg sm:rounded-full">
         <div className="pointer-events-none rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">
           {toast}
         </div>

@@ -11,7 +11,7 @@ import { DangerZoneCard } from "./components/DangerZoneCard";
 import { useTherapistPrefs } from "./hooks/useTherapistPrefs";
 import { useMeProfile } from "./hooks/useMeProfile";
 
-export default function therapistSettingsPage() {
+export default function TherapistSettingsPage() {
   const params = useParams<{ therapistId?: string }>();
   const therapistId = params?.therapistId ?? "me";
 
@@ -91,7 +91,7 @@ export default function therapistSettingsPage() {
     return (
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
         <div className="rounded-2xl border border-rose-200 bg-white p-10 text-center">
-          <h1 className="text-base font-semibold text-rose-700">Eroare</h1>
+          <h1 className="text-base font-semibold text-rose-700">Error</h1>
           <p className="mt-2 text-sm text-gray-600">{meError}</p>
         </div>
       </section>

@@ -1,19 +1,19 @@
 const topics = [
   {
-    title: "Client not found / Therapist not found",
-    text: "In demo mode, pages rely on mock IDs. Make sure your URL uses an existing id (ex: /therapist/t1, /client/c1).",
+    title: "Client inexistent / Terapeut inexistent",
+    text: "In modul demo, paginile se bazeaza pe ID-uri mock. Asigura-te ca URL-ul foloseste un ID existent (ex: /therapist/t1, /client/c1).",
   },
   {
-    title: "Notes & reflections not showing",
-    text: "Check if the client is linked to that therapist ID in mock data. In real backend, this becomes a permission rule.",
+    title: "Notitele si reflectiile nu apar",
+    text: "Verifica daca clientul este legat de acel ID de terapeut in datele mock. In backend-ul real, asta devine o regula de permisiuni.",
   },
   {
-    title: "Navigation issues on mobile",
-    text: "If the dashboard dock overlaps, we can tune spacing and stacking so navbar + sidebar coexist cleanly.",
+    title: "Probleme de navigare pe mobil",
+    text: "Daca dock-ul din dashboard se suprapune, putem ajusta spatierea si ordinea ca navbar-ul si sidebar-ul sa coexiste corect.",
   },
   {
-    title: "Privacy & boundaries",
-    text: "Innery is designed for therapist-controlled spaces. If you need a different client visibility model, we can map it.",
+    title: "Confidentialitate si limite",
+    text: "Innery este conceput pentru spatii controlate de terapeut. Daca ai nevoie de un model diferit de vizibilitate pentru client, il putem defini.",
   },
 ];
 
@@ -22,10 +22,10 @@ export default function Topics() {
     <div className="mt-20">
       <div className="max-w-2xl">
         <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-          Common topics
+          Subiecte frecvente
         </h2>
         <p className="mt-2 text-sm md:text-base text-gray-600 leading-relaxed">
-          The things that usually block progress when building the Innery MVP.
+          Lucrurile care blocheaza de obicei progresul cand construiesti MVP-ul Innery.
         </p>
       </div>
 

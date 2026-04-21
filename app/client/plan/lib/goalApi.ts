@@ -68,3 +68,11 @@ export async function deleteGoal(id: string) {
     method: "DELETE",
   })) as any;
 }
+
+export async function toggleGoalStep(goalId: string, stepId: string, done: boolean) {
+  return (await apiFetch(`/api/client/plan/goals/${goalId}/steps/${stepId}` as any, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ done }),
+  })) as any;
+}

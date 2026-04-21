@@ -5,6 +5,10 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { requireSameParamUser } from "../middleware/ownership.js";
 
 const router = Router();
+let goalStepsTableAvailableCache = null;
+let goalStepsTableCacheTs = 0;
+let goalStepsColumnsCache = null;
+let goalStepsColumnsCacheTs = 0;
 
 const inviteSchema = z.object({
   email: z.string().email(),
@@ -14,6 +18,68 @@ const inviteSchema = z.object({
 const updateStatusSchema = z.object({
   status: z.enum(["Active", "Paused"]),
 });
+
+function computeProgressFromSteps(steps) {
+  const total = Array.isArray(steps) ? steps.length : 0;
+  if (!total) return 0;
+  const done = steps.filter((s) => Boolean(s?.done)).length;
+  return Math.round((done / total) * 100);
+}
+
+async function hasGoalStepsTable() {
+  const now = Date.now();
+  const cacheAgeMs = now - goalStepsTableCacheTs;
+  if (goalStepsTableAvailableCache === true && cacheAgeMs < 5 * 60 * 1000) return true;
+  if (goalStepsTableAvailableCache === false && cacheAgeMs < 15 * 1000) return false;
+  try {
+    const exists = await models.Goal.sequelize
+      .getQueryInterface()
+      .tableExists("goal_steps");
+    goalStepsTableAvailableCache = Boolean(exists);
+    goalStepsTableCacheTs = now;
+    return goalStepsTableAvailableCache;
+  } catch {
+    goalStepsTableAvailableCache = false;
+    goalStepsTableCacheTs = now;
+    return false;
+  }
+}
+
+async function getGoalStepsColumns() {
+  const now = Date.now();
+  const cacheAgeMs = now - goalStepsColumnsCacheTs;
+  if (goalStepsColumnsCache && cacheAgeMs < 30 * 1000) return goalStepsColumnsCache;
+  try {
+    const table = await models.Goal.sequelize.getQueryInterface().describeTable("goal_steps");
+    goalStepsColumnsCache = new Set(Object.keys(table || {}));
+    goalStepsColumnsCacheTs = now;
+    return goalStepsColumnsCache;
+  } catch {
+    goalStepsColumnsCache = null;
+    goalStepsColumnsCacheTs = now;
+    return null;
+  }
+}
+
+async function buildGoalStepsInclude() {
+  const hasTable = await hasGoalStepsTable();
+  if (!hasTable) return null;
+  const cols = await getGoalStepsColumns();
+  if (!cols) return null;
+
+  const attrs = ["id", "title"];
+  if (cols.has("done")) attrs.push("done");
+  if (cols.has("order_index")) attrs.push("orderIndex");
+  if (cols.has("created_at")) attrs.push("createdAt");
+  if (cols.has("updated_at")) attrs.push("updatedAt");
+
+  return {
+    model: models.GoalStep,
+    as: "steps",
+    required: false,
+    attributes: attrs,
+  };
+}
 
 /**
  * GET /api/therapists/:therapistId/clients
@@ -97,6 +163,52 @@ router.get(
     if (!client) return res.status(404).json({ message: "Client not found" });
 
     return res.json({ client });
+  },
+);
+
+/**
+ * GET /api/therapists/:therapistId/clients/:clientId/goals-progress
+ * Therapist view for a linked client's goals and step progress.
+ */
+router.get(
+  "/therapists/:therapistId/clients/:clientId/goals-progress",
+  requireAuth,
+  requireRole("therapist"),
+  requireSameParamUser("therapistId"),
+  async (req, res) => {
+    const therapistId = Number(req.params.therapistId);
+    const clientId = Number(req.params.clientId);
+    if (Number.isNaN(clientId)) {
+      return res.status(400).json({ message: "Invalid clientId" });
+    }
+
+    const link = await models.Client.findOne({
+      where: { therapistId, userId: clientId },
+    });
+    if (!link) return res.status(404).json({ message: "Client not found" });
+
+    const stepsInclude = await buildGoalStepsInclude();
+    const goals = await models.Goal.findAll({
+      where: { clientUserId: clientId },
+      include: [
+        ...(stepsInclude ? [stepsInclude] : []),
+      ],
+      order: [[models.Goal.sequelize.col("updated_at"), "DESC"]],
+    });
+
+    const items = goals.map((g) => {
+      const json = g.toJSON();
+      const steps = Array.isArray(json.steps) ? json.steps : [];
+      const stepsDone = steps.filter((s) => Boolean(s?.done)).length;
+      return {
+        ...json,
+        progress: computeProgressFromSteps(steps),
+        stepsDone,
+        stepsTotal: steps.length,
+      };
+    });
+
+    return res.json({ goals: items });
   },
 );
 

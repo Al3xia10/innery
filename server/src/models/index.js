@@ -6,6 +6,7 @@ import { initNoteModel } from "./Note.js";
 import { initCheckinModel } from "./Checkin.js";
 import { initGoalModel } from "./Goal.js";
 import { initGoalUpdateModel } from "./GoalUpdate.js";
+import { initGoalStepModel } from "./GoalStep.js";
 import { initJournalEntryModel } from "./JournalEntry.js";
 import initClientSettingsModel from "./ClientSettings.js";
 import TherapistSettingsModel from "./TherapistSettings.js";
@@ -19,6 +20,7 @@ models.Note = initNoteModel(sequelize);
 models.Checkin = initCheckinModel(sequelize);
 models.Goal = initGoalModel(sequelize);
 models.GoalUpdate = initGoalUpdateModel(sequelize);
+models.GoalStep = initGoalStepModel(sequelize);
 models.JournalEntry = initJournalEntryModel(sequelize);
 models.ClientSettings = initClientSettingsModel(sequelize);
 models.TherapistSettings = TherapistSettingsModel(sequelize);
@@ -180,6 +182,14 @@ models.Goal.hasMany(models.GoalUpdate, {
   onDelete: "CASCADE",
 });
 models.GoalUpdate.belongsTo(models.Goal, { foreignKey: "goalId", as: "goal" });
+
+// GoalSteps
+models.Goal.hasMany(models.GoalStep, {
+  foreignKey: "goalId",
+  as: "steps",
+  onDelete: "CASCADE",
+});
+models.GoalStep.belongsTo(models.Goal, { foreignKey: "goalId", as: "goal" });
 
 // Journal entries
 models.User.hasMany(models.JournalEntry, {

@@ -4,6 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { apiFetch } from "@/app/_lib/authClient";
+import CompactStat from "./components/CompactStat";
+import LoadingCard from "./components/LoadingCard";
+import ClientRowCard from "./components/ClientRowCard";
+import FilterButton from "./components/FilterButton";
+import { PlusIcon, SearchIcon, XIcon } from "./components/ClientIcons";
 
 type ClientStatus = "Active" | "Paused" | "Invited";
 
@@ -16,13 +21,6 @@ type Client = {
   status?: ClientStatus;
   lastSession?: string;
 };
-
-function initialsFromName(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const first = parts[0]?.[0] ?? "?";
-  const second = (parts.length > 1 ? parts[parts.length - 1]?.[0] : "") ?? "";
-  return (first + second).toUpperCase();
-}
 
 function mapClientRow(row: any, therapistId: string): Client {
   const kind: "linked" | "invite" = row?.kind === "invite" ? "invite" : "linked";
@@ -202,27 +200,20 @@ export default function ClientsPage() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
               <h1 className="mt-4 text-[2rem] w-full leading-[1.02] font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                Clienți
+                Clients
               </h1>
               <p className="mt-3 max-w-[30ch] sm:max-w-2xl text-[14px] leading-7 text-[#6B5A63] sm:text-base">
                 Gestionează persoanele alocate lui <span className="font-semibold text-slate-900">{therapistName}</span>, invită clienți noi și păstrează workspace-ul organizat.
               </p>
               <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                <div className="rounded-[20px] bg-white/80 px-4 py-3.5 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm">
-                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Total</p>
-                  <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">{counts.total}</p>
-                  <p className="mt-1.5 text-xs text-[#6B5A63]">clienți</p>
-                </div>
-                <div className="rounded-[20px] bg-white/80 px-4 py-3.5 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm">
-                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Activi</p>
-                  <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">{counts.active}</p>
-                  <p className="mt-1.5 text-xs text-[#6B5A63]">în grijă</p>
-                </div>
-                <div className="col-span-2 rounded-[20px] bg-white/80 px-4 py-3.5 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5 backdrop-blur-sm sm:col-span-1">
-                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5A63]">Invitați</p>
-                  <p className="mt-2 text-[1.3rem] font-semibold leading-none text-slate-900">{counts.invited}</p>
-                  <p className="mt-1.5 text-xs text-[#6B5A63]">în așteptare</p>
-                </div>
+                <CompactStat title="Total" value={counts.total} subtitle="clienți" />
+                <CompactStat title="Activi" value={counts.active} subtitle="în grijă" />
+                <CompactStat
+                  title="Invitați"
+                  value={counts.invited}
+                  subtitle="în așteptare"
+                  className="col-span-2 sm:col-span-1"
+                />
               </div>
             </div>
             <div className="mt-2 grid w-full grid-cols-2 gap-2.5 self-start sm:flex sm:w-auto sm:items-center sm:gap-3">
@@ -230,7 +221,7 @@ export default function ClientsPage() {
                 href={`/therapist/${therapistId}`}
                 className="inline-flex w-full sm:w-auto min-h-11 items-center justify-center rounded-2xl border border-black/5 bg-white/85 px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-white sm:rounded-2xl"
               >
-                Dashboard
+                Panou
               </Link>
               <button
                 type="button"
@@ -339,7 +330,7 @@ export default function ClientsPage() {
                 <div className="rounded-[28px] sm:rounded-4xl border border-dashed border-black/10 bg-white/85 p-10 text-center shadow-[0_6px_16px_rgba(31,23,32,0.04)]">
                   <h3 className="text-sm font-semibold text-gray-900">Încă nu ai clienți</h3>
                   <p className="mt-2 text-sm text-[#6B5A63]">
-                    Începe prin a adăuga primul client
+                    Start prin a adăuga primul client
                   </p>
                   <button
                     type="button"
@@ -441,7 +432,7 @@ export default function ClientsPage() {
                   onClick={() => setOpen(false)}
                   className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition"
                 >
-                  Renunță
+                  Anulează
                 </button>
                 <button
                   type="button"
@@ -456,251 +447,5 @@ export default function ClientsPage() {
         </div>
       ) : null}
     </section>
-  );
-}
-
-function CompactStat({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="rounded-[18px] bg-white/85 px-3 py-3 shadow-[0_6px_16px_rgba(31,23,32,0.04)] ring-1 ring-black/5">
-      <p className="text-[11px] font-medium text-[#6B5A63]">{title}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
-    </div>
-  );
-}
-
-
-function LoadingCard() {
-  return <div className="h-40 rounded-[28px] border border-black/5 bg-white/85 shadow-[0_6px_16px_rgba(31,23,32,0.04)]" />;
-}
-
-function ClientRowCard({
-  therapistId,
-  client,
-  onToggleStatus,
-  onRemove,
-}: {
-  therapistId: string;
-  client: Client;
-  onToggleStatus: () => void;
-  onRemove: () => void;
-}) {
-  const initials = initialsFromName(client.name);
-  const status = client.status ?? (client.kind === "invite" ? "Invited" : "Active");
-  // Romanian translations for statuses
-  const statusLabel =
-    status === "Active"
-      ? "Activ"
-      : status === "Paused"
-      ? "Pauzat"
-      : "Invitat";
-  return (
-    <div className="group relative rounded-[28px] border border-black/5 bg-white/90 p-5 shadow-[0_6px_16px_rgba(31,23,32,0.04)] transition hover:-translate-y-px hover:shadow-[0_10px_22px_rgba(31,23,32,0.06)]">
-      <div className="flex items-start justify-between gap-2.5">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-(--color-card) text-sm font-semibold text-(--color-primary) ring-1 ring-black/5">
-            {initials}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-gray-900">{client.name}</p>
-            <p className="truncate text-xs text-gray-500">{client.email || "Email indisponibil"}</p>
-            <p className="mt-1 text-xs text-gray-500">Ultima ședință: {client.lastSession ?? "—"}</p>
-          </div>
-        </div>
-        <span
-          className={
-            "shrink-0 inline-flex min-h-7 items-center rounded-full px-3 py-1 text-[11px] font-semibold ring-1 " +
-            (status === "Active"
-              ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
-              : status === "Invited"
-              ? "bg-amber-50 text-amber-700 ring-amber-100"
-              : "bg-gray-50 text-gray-700 ring-gray-200")
-          }
-        >
-          {statusLabel}
-        </span>
-      </div>
-      <div className="mt-5">
-        <div className="flex flex-col gap-2.5 sm:hidden">
-          {client.kind === "linked" ? (
-            <Link
-              href={`/therapist/${therapistId}/clients/${client.id}`}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-(--color-accent) px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-            >
-              Deschide profilul
-            </Link>
-          ) : null}
-          {client.kind === "linked" ? (
-            <button
-              type="button"
-              onClick={onToggleStatus}
-              className="inline-flex w-full items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
-            >
-              {status === "Active" ? "Pauză" : "Activează"}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={onRemove}
-            className="inline-flex w-full items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100"
-            aria-label={client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-            title={client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-          >
-            {client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-          </button>
-        </div>
-        <div className="hidden items-center justify-end sm:flex xl:hidden">
-          <details className="relative">
-            <summary
-              className="list-none inline-flex cursor-pointer select-none items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 [&::-webkit-details-marker]:hidden"
-              aria-label="Mai mult"
-            >
-              Mai mult
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
-              </svg>
-            </summary>
-            <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg">
-              <div className="py-1">
-                {client.kind === "linked" ? (
-                  <Link
-                    href={`/therapist/${therapistId}/clients/${client.id}`}
-                    onClick={(e) => {
-                      (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-                    }}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-gray-500" aria-hidden="true">
-                      <path d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z" stroke="currentColor" strokeWidth="1.8" />
-                      <path d="M12 15.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Z" stroke="currentColor" strokeWidth="1.8" />
-                    </svg>
-                    Deschide profilul
-                  </Link>
-                ) : null}
-                {client.kind === "linked" ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-                      onToggleStatus();
-                    }}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-gray-500" aria-hidden="true">
-                      <path d="M10 9v6M14 9v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" strokeWidth="1.8" />
-                    </svg>
-                    {status === "Active" ? "Pauză" : "Activează"}
-                  </button>
-                ) : null}
-                <div className="my-1 h-px bg-gray-100" />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-                    onRemove();
-                  }}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
-                  aria-label={client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-                  title={client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-rose-600" aria-hidden="true">
-                    <path d="M6 7h12M10 11v7M14 11v7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M9 7l1-2h4l1 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M7 7l1 14h8l1-14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  {client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-                </button>
-              </div>
-            </div>
-          </details>
-        </div>
-        <div className="hidden items-center justify-end gap-2 xl:flex">
-          {client.kind === "linked" ? (
-            <Link
-              href={`/therapist/${therapistId}/clients/${client.id}`}
-              className="min-h-10 min-w-18 inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:opacity-90"
-            >
-              Deschide
-            </Link>
-          ) : null}
-          {client.kind === "linked" ? (
-            <button
-              type="button"
-              onClick={onToggleStatus}
-              className="min-h-10 min-w-18 inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-(--color-soft)"
-            >
-              {status === "Active" ? "Pauză" : "Activează"}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={onRemove}
-            className="min-h-10 min-w-18 inline-flex items-center justify-center rounded-xl border border-(--color-soft) bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100"
-            aria-label={client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-            title={client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-          >
-            {client.kind === "invite" ? "Șterge invitația" : "Deconectează"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FilterButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition " +
-        (active
-          ? "border-(--color-soft) bg-(--color-card) text-(--color-accent)"
-          : "border-black/5 bg-white/85 text-gray-700 hover:bg-white")
-      }
-    >
-      {children}
-    </button>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-      <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function XIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
   );
 }

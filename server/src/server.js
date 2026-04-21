@@ -5,6 +5,16 @@ import { sequelize } from "./models/index.js";
 let dbReady = false;
 let lastDbError = null;
 
+function validateRuntimeConfig() {
+  if (env.nodeEnv === "test") return;
+
+  if (!env.jwt.accessSecret || !env.jwt.refreshSecret) {
+    throw new Error(
+      "Missing JWT secrets: set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET.",
+    );
+  }
+}
+
 async function connectWithRetry() {
   const max = 30; // ~30 * 2s = 60s
   for (let i = 1; i <= max; i++) {
@@ -25,10 +35,12 @@ async function connectWithRetry() {
 }
 
 async function start() {
+  validateRuntimeConfig();
+
   // 1) Start API first (so health works)
   const port = env.port || process.env.PORT || 4000;
 
-  app.get("/api/health", (_req, res) => {
+  app.get("/api/health/ready", (_req, res) => {
     res.status(dbReady ? 200 : 503).json({
       ok: true,
       db: dbReady ? "up" : "down",

@@ -124,7 +124,7 @@ export function useClientPrefs({
       });
 
       localStorage.setItem(storageKey(clientId), JSON.stringify(merged));
-      onToast?.("Saved");
+      onToast?.("Salvat");
     } catch {
       if (prev) setPrefs(prev);
       onToast?.("Could not save");

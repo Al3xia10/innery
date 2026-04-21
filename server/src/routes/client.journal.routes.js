@@ -204,20 +204,18 @@ router.get("/journal", async (req, res) => {
     const offset = Math.max(0, Number(req.query.offset ?? 0));
 
     const where = { clientUserId };
+    const whereAny = where;
 
     if (visibility === "private" || visibility === "shared") {
-      // @ts-ignore
-      where.visibility = visibility;
+      whereAny.visibility = visibility;
     }
 
     if (prepared === "1" || prepared === "0") {
-      // @ts-ignore
-      where.preparedForSession = prepared === "1";
+      whereAny.preparedForSession = prepared === "1";
     }
 
     if (q) {
-      // @ts-ignore
-      where[Op.or] = [
+      whereAny[Op.or] = [
         { title: { [Op.like]: `%${q}%` } },
         { content: { [Op.like]: `%${q}%` } },
       ];
@@ -228,8 +226,7 @@ router.get("/journal", async (req, res) => {
       const esc = clean.replace(/%/g, "\\%").replace(/_/g, "\\_");
 
       // tags stored either as JSON string (e.g. ["somn","panică"]) or CSV-like string
-      // @ts-ignore
-      where.tags = {
+      whereAny.tags = {
         [Op.or]: [{ [Op.like]: `%"${clean}"%` }, { [Op.like]: `%${esc}%` }],
       };
     }

@@ -8,7 +8,7 @@ import GoalCard from "./GoalCard";
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="rounded-3xl border border-black/5 shadow-sm p-6 sm:p-7"
+      className="rounded-[28px] border border-black/5 p-4 shadow-sm sm:rounded-4xl sm:p-7"
       style={{
         background:
           "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
@@ -29,10 +29,10 @@ function CardHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="min-w-0">
         <p className="text-[1rem] font-semibold text-foreground">{title}</p>
-        <p className="mt-1 text-[13px] text-(--color-foreground-muted,#6B5A63)">{subtitle}</p>
+        <p className="mt-1 text-[13px] leading-6 text-(--color-foreground-muted,#6B5A63)">{subtitle}</p>
       </div>
       {right ? <div className="shrink-0">{right}</div> : null}
     </div>
@@ -52,14 +52,14 @@ function EmptyState({
 }) {
   return (
     <div
-      className="mt-5 bg-white/80 rounded-3xl border border-black/5 p-8 text-center shadow-[0_6px_14px_rgba(31,23,32,0.05)]"
+      className="mt-5 rounded-[20px] border border-black/5 bg-white/80 p-5 text-center shadow-[0_6px_14px_rgba(31,23,32,0.05)] sm:rounded-[28px] sm:p-8"
     >
       <p className="text-sm font-semibold text-gray-900">{title}</p>
-      <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
+      <p className="mt-1 text-sm leading-6 sm:leading-7 text-gray-600">{subtitle}</p>
       <button
         type="button"
         onClick={onClick}
-        className="mt-4 inline-flex items-center justify-center rounded-2xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
+        className="mt-4 inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
       >
         {cta}
       </button>
@@ -77,6 +77,7 @@ export default function GoalsSection({
   onAdd,
   onEdit,
   onDelete,
+  onToggleStep,
 }: {
   loading: boolean;
   goals: Goal[];
@@ -87,6 +88,7 @@ export default function GoalsSection({
   onAdd: () => void;
   onEdit: (g: Goal) => void;
   onDelete: (id: string) => void;
+  onToggleStep: (goalId: string, stepId: string, nextDone: boolean) => void;
 }) {
   return (
     <Card>
@@ -99,7 +101,7 @@ export default function GoalsSection({
             onClick={onAdd}
             disabled={addingGoal}
             className={cn(
-              "inline-flex items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold transition",
+              "inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] px-4 py-2.5 text-sm font-semibold transition",
               addingGoal
                 ? "bg-(--color-accent)/60 text-white cursor-not-allowed"
                 : "bg-(--color-accent) text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] hover:opacity-95"
@@ -115,7 +117,7 @@ export default function GoalsSection({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="animate-pulse rounded-3xl border border-black/5 p-4 shadow-[0_6px_14px_rgba(31,23,32,0.05)]"
+              className="animate-pulse rounded-[20px] border border-black/5 p-4 shadow-[0_6px_14px_rgba(31,23,32,0.05)] sm:rounded-[28px]"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(224,231,255,0.7) 100%)",
@@ -138,7 +140,7 @@ export default function GoalsSection({
         <div className="mt-5 space-y-6">
           {activeGoals.length ? (
             <section className="space-y-3">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-(--color-foreground-muted,#6B5A63)">
                     În lucru acum
@@ -147,12 +149,12 @@ export default function GoalsSection({
                     Ce construiești în perioada asta.
                   </p>
                 </div>
-                <span className="mt-1 inline-flex items-center rounded-full border border-black/5 bg-white px-2.5 py-1 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)]">
+                <span className="mt-1 inline-flex self-start items-center rounded-[18px] border border-black/5 bg-white px-2.5 py-1 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)] sm:self-auto">
                   {activeGoals.length}
                 </span>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-2">
+              <div className="grid items-start gap-4 xl:grid-cols-2">
                 {activeGoals.map((g) => (
                   <GoalCard
                     key={g.id}
@@ -160,6 +162,7 @@ export default function GoalsSection({
                     tone="active"
                     onEdit={() => onEdit(g)}
                     onDelete={() => onDelete(g.id)}
+                    onToggleStep={(stepId, nextDone) => onToggleStep(g.id, stepId, nextDone)}
                   />
                 ))}
               </div>
@@ -167,10 +170,10 @@ export default function GoalsSection({
           ) : null}
 
           {(pausedGoals.length || doneGoals.length) ? (
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid items-start gap-4 xl:grid-cols-2">
               {pausedGoals.length ? (
                 <section className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-(--color-foreground-muted,#6B5A63)">
                         În pauză
@@ -179,7 +182,7 @@ export default function GoalsSection({
                         Lucruri la care poți reveni când simți.
                       </p>
                     </div>
-                    <span className="mt-1 inline-flex items-center rounded-full border border-black/5 bg-white px-2.5 py-1 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)]">
+                    <span className="mt-1 inline-flex self-start items-center rounded-[18px] border border-black/5 bg-white px-2.5 py-1 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)] sm:self-auto">
                       {pausedGoals.length}
                     </span>
                   </div>
@@ -192,6 +195,7 @@ export default function GoalsSection({
                         tone="paused"
                         onEdit={() => onEdit(g)}
                         onDelete={() => onDelete(g.id)}
+                        onToggleStep={(stepId, nextDone) => onToggleStep(g.id, stepId, nextDone)}
                       />
                     ))}
                   </div>
@@ -200,7 +204,7 @@ export default function GoalsSection({
 
               {doneGoals.length ? (
                 <section className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0_12em] text-(--color-foreground-muted,#6B5A63)">
                         Încheiate
@@ -209,7 +213,7 @@ export default function GoalsSection({
                         Ce ai dus deja până la capăt.
                       </p>
                     </div>
-                    <span className="mt-1 inline-flex items-center rounded-full border border-black/5 bg-white px-2.5 py-1 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)]">
+                    <span className="mt-1 inline-flex self-start items-center rounded-[18px] border border-black/5 bg-white px-2.5 py-1 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)] sm:self-auto">
                       {doneGoals.length}
                     </span>
                   </div>
@@ -222,6 +226,7 @@ export default function GoalsSection({
                         tone="done"
                         onEdit={() => onEdit(g)}
                         onDelete={() => onDelete(g.id)}
+                        onToggleStep={(stepId, nextDone) => onToggleStep(g.id, stepId, nextDone)}
                       />
                     ))}
                   </div>

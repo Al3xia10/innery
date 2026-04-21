@@ -113,7 +113,7 @@ export function useTherapistPrefs({
       });
 
       localStorage.setItem(storageKey(therapistId), JSON.stringify(merged));
-      onToast?.("Saved");
+      onToast?.("Salvat");
     } catch {
       if (prev) setPrefs(prev);
       onToast?.("Could not save");

@@ -12,14 +12,14 @@ export default function Hero() {
         {/* LEFT – TEXT */}
         <div className="w-full md:w-1/2 flex flex-col gap-6 px-4">
           <h1 className="text-gray-900 text-4xl md:text-4xl font-semibold leading-tight">
-            Therapy, organized <br />
-            for therapists and clients
+            Terapie organizata <br />
+            pentru terapeuti si clienti
           </h1>
 
           <p className="text-gray-700 text-base md:text-lg max-w-xl">
-            Innery is a private workspace where therapists keep structured client notes,
-            and clients reflect between sessions. Everything stays organized, secure,
-            and easy to revisit — before, during, and after therapy.
+            Innery este un spatiu privat in care terapeutii pastreaza notite structurate despre clienti,
+            iar clientii reflecteaza intre sedinte. Totul ramane organizat, sigur,
+            si usor de revizitat — inainte, in timpul si dupa terapie.
           </p>
 
           <div className="flex flex-wrap gap-4 mt-4">
@@ -28,7 +28,7 @@ export default function Hero() {
               className="rounded-xl bg-(--color-accent) px-6 py-3 text-[0.95rem] font-medium text-white shadow-sm transition hover:opacity-95"
               role="button"
             >
-              For therapists
+              Pentru terapeuti
             </Link>
 
             <Link
@@ -36,7 +36,7 @@ export default function Hero() {
               className="rounded-xl border border-(--color-soft) bg-white px-6 py-3 text-[0.95rem] font-medium text-gray-900 shadow-sm transition hover:bg-(--color-card)"
               role="button"
             >
-              For clients
+              Pentru clienti
             </Link>
           </div>
         </div>
@@ -49,7 +49,7 @@ export default function Hero() {
 
             <Image
               src="/hero.png"
-              alt="Illustration representing online therapy and reflection"
+              alt="Ilustratie care reprezinta terapia online si reflectia"
               width={520}
               height={520}
               className="object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.08)]"

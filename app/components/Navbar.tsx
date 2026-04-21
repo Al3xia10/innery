@@ -4,50 +4,63 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
+function readAuthState() {
+  if (typeof window === "undefined") {
+    return { isAuthenticated: false, workspaceUserId: null as string | null };
+  }
+
+  try {
+    const savedUser = localStorage.getItem("innery_user");
+    if (!savedUser) {
+      return { isAuthenticated: false, workspaceUserId: null as string | null };
+    }
+
+    const parsedFirst: unknown = JSON.parse(savedUser);
+    const parsedUser =
+      typeof parsedFirst === "string" ? JSON.parse(parsedFirst) : parsedFirst;
+    const workspaceUserId =
+      typeof parsedUser === "object" &&
+      parsedUser !== null &&
+      "id" in parsedUser &&
+      parsedUser.id != null
+        ? String(parsedUser.id)
+        : null;
+
+    return { isAuthenticated: true, workspaceUserId };
+  } catch {
+    return { isAuthenticated: false, workspaceUserId: null as string | null };
+  }
+}
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authState, setAuthState] = useState({
+    isAuthenticated: false,
+    workspaceUserId: null as string | null,
+  });
   const pathname = usePathname();
   const router = useRouter();
+  const isAuthenticated = authState.isAuthenticated;
   const inClientWorkspace = pathname?.startsWith("/client");
   const inTherapistWorkspace = pathname?.startsWith("/therapist");
   const inWorkspace = inClientWorkspace || inTherapistWorkspace;
-  const [workspaceUserId, setWorkspaceUserId] = useState<string | null>(null);
+  const workspaceUserId = authState.workspaceUserId;
 
   const therapistPathId = pathname?.match(/^\/therapist\/([^/]+)/)?.[1] ?? null;
   const therapistBaseHref =
   therapistPathId || workspaceUserId
     ? `/therapist/${therapistPathId ?? workspaceUserId}`
     : "/therapist";
+
   useEffect(() => {
-  try {
-    const savedUser = localStorage.getItem("innery_user");
-    setIsAuthenticated(Boolean(savedUser));
-
-    if (!savedUser) {
-      setWorkspaceUserId(null);
-      return;
-    }
-
-    const parsedFirst = JSON.parse(savedUser);
-    const parsedUser =
-      typeof parsedFirst === "string" ? JSON.parse(parsedFirst) : parsedFirst;
-
-    setWorkspaceUserId(parsedUser?.id != null ? String(parsedUser.id) : null);
-  } catch {
-    setIsAuthenticated(false);
-    setWorkspaceUserId(null);
-  }
-}, [pathname]);
-
+    setAuthState(readAuthState());
+  }, [pathname]);
   const handleLogout = () => {
     try {
       localStorage.removeItem("innery_user");
       localStorage.removeItem("innery_token");
     } catch {}
 
-    setIsAuthenticated(false);
-    setWorkspaceUserId(null);
     setOpen(false);
     router.push("/");
   };
@@ -79,8 +92,8 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="flex h-14 items-center justify-between md:h-16">
           <Link href="/" className="flex items-center justify-center gap-2.5">
-            <img src="/logo.png" alt="Innery logo" className="mt-0.5 h-12 w-auto shrink-0" />
-            <img src="/text-logo.png" alt="Innery logo" className="h-5.5 w-auto shrink-0" />
+            <img src="/logo.png" alt="Logo Innery" className="mt-0.5 h-12 w-auto shrink-0" />
+            <img src="/text-logo.png" alt="Logo Innery" className="h-5.5 w-auto shrink-0" />
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm md:flex">
@@ -92,7 +105,7 @@ export default function Navbar() {
                   : "text-gray-700 hover:text-(--color-accent)"
               }`}
             >
-              How it works
+              Cum functioneaza
             </Link>
             <Link
               href="/for-therapists"
@@ -102,7 +115,7 @@ export default function Navbar() {
                   : "text-gray-700 hover:text-(--color-accent)"
               }`}
             >
-              For therapists
+              Pentru terapeuti
             </Link>
             <Link
               href="/for-clients"
@@ -112,7 +125,7 @@ export default function Navbar() {
                   : "text-gray-700 hover:text-(--color-accent)"
               }`}
             >
-              For clients
+              Pentru clienti
             </Link>
             <Link
               href="/support"
@@ -122,7 +135,7 @@ export default function Navbar() {
                   : "text-gray-700 hover:text-(--color-accent)"
               }`}
             >
-              Support
+              Suport
             </Link>
           </nav>
 
@@ -133,7 +146,7 @@ export default function Navbar() {
                 onClick={handleLogout}
                 className="rounded-xl border border-(--color-soft) bg-white px-4 py-2 text-gray-900 shadow-sm transition hover:bg-(--color-card)"
               >
-                Log out
+                Deconectare
               </button>
             ) : (
               <>
@@ -141,13 +154,13 @@ export default function Navbar() {
                   href="/auth/login"
                   className="rounded-xl border border-(--color-soft) bg-white px-4 py-2 text-gray-900 shadow-sm transition hover:bg-(--color-card)"
                 >
-                  Log in
+                  Autentificare
                 </Link>
                 <Link
                   href="/auth/signup"
                   className="rounded-xl bg-(--color-accent) px-4 py-2 text-white shadow-sm transition hover:opacity-90"
                 >
-                  Sign up
+                  Inregistrare
                 </Link>
               </>
             )}
@@ -157,10 +170,10 @@ export default function Navbar() {
             type="button"
             onClick={() => setOpen(true)}
             className="inline-flex items-center justify-center rounded-xl border border-(--color-soft) bg-white px-3 py-2 text-gray-900 shadow-sm transition hover:bg-(--color-card) active:scale-[0.98] md:hidden"
-            aria-label="Open menu"
+            aria-label="Deschide meniul"
             aria-expanded={open}
           >
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">Deschide meniul</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -178,7 +191,7 @@ export default function Navbar() {
       {open && (
         <div className="fixed inset-0 z-60 md:hidden animate-in fade-in duration-200">
           <button
-            aria-label="Close menu"
+            aria-label="Inchide meniul"
             className="absolute inset-0 bg-black/35 animate-in fade-in duration-200"
             onClick={() => setOpen(false)}
           />
@@ -187,17 +200,17 @@ export default function Navbar() {
             <div className="mx-auto flex min-h-screen max-w-md flex-col px-6">
               <div className="flex h-20 items-center justify-between pt-3">
                 <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-                  <img src="/logo.png" alt="Innery logo" className="mt-0.5 h-10 w-auto shrink-0" />
-                  <img src="/text-logo.png" alt="Innery logo" className="h-5 w-auto shrink-0" />
+                  <img src="/logo.png" alt="Logo Innery" className="mt-0.5 h-10 w-auto shrink-0" />
+                  <img src="/text-logo.png" alt="Logo Innery" className="h-5 w-auto shrink-0" />
                 </Link>
 
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
                   className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-(--color-soft) bg-white text-gray-900 shadow-sm transition duration-200 hover:scale-[1.02] hover:bg-(--color-card) active:scale-[0.98]"
-                  aria-label="Close menu"
+                  aria-label="Inchide meniul"
                 >
-                  <span className="sr-only">Close menu</span>
+                  <span className="sr-only">Inchide meniul</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -216,7 +229,7 @@ export default function Navbar() {
                   <>
                     <div className="mb-8 mt-6 rounded-3xl border border-(--color-soft) px-5 py-4 text-center shadow-sm">
                       <p className="text-sm font-semibold uppercase tracking-[0.22em] text-(--color-accent)">
-                        {inClientWorkspace ? "client workspace" : "therapist workspace"}
+                        {inClientWorkspace ? "workspace client" : "workspace terapeut"}
                       </p>
                     </div>
 
@@ -232,7 +245,7 @@ export default function Navbar() {
                                 : "text-gray-800 hover:bg-(--color-card)"
                             }`}
                           >
-                            Dashboard
+                            Panou
                           </Link>
                           <Link
                             href="/client/progress"
@@ -243,7 +256,7 @@ export default function Navbar() {
                                 : "text-gray-800 hover:bg-(--color-card)"
                             }`}
                           >
-                            Progress
+                            Progres
                           </Link>
                           <Link
                             href="/client/journal"
@@ -254,7 +267,7 @@ export default function Navbar() {
                                 : "text-gray-800 hover:bg-(--color-card)"
                             }`}
                           >
-                            Journal
+                            Jurnal
                           </Link>
                           <Link
                             href="/client/plan"
@@ -276,7 +289,7 @@ export default function Navbar() {
                                 : "text-gray-800 hover:bg-(--color-card)"
                             }`}
                           >
-                            Settings
+                            Setari
                           </Link>
                         </>
                       ) : (
@@ -290,7 +303,7 @@ export default function Navbar() {
                                 : "text-gray-800 hover:bg-(--color-card)"
                             }`}
                           >
-                            Dashboard
+                            Panou
                           </Link>
                           <Link
                         href={`${therapistBaseHref}/clients`}
@@ -301,7 +314,7 @@ export default function Navbar() {
                             : "text-gray-800 hover:bg-(--color-card)"
                         }`}
                       >
-                        Clients
+                        Clienti
                       </Link>
                                                 <Link
                         href={`${therapistBaseHref}/sessions`}
@@ -312,7 +325,7 @@ export default function Navbar() {
                             : "text-gray-800 hover:bg-(--color-card)"
                         }`}
                       >
-                        Sessions
+                        Sedinte
                       </Link>
                                                 <Link
                         href={`${therapistBaseHref}/notes`}
@@ -323,7 +336,7 @@ export default function Navbar() {
                             : "text-gray-800 hover:bg-(--color-card)"
                         }`}
                       >
-                        Notes
+                        Notite
                       </Link>
                                                 <Link
                         href={`${therapistBaseHref}/settings`}
@@ -334,7 +347,7 @@ export default function Navbar() {
                             : "text-gray-800 hover:bg-(--color-card)"
                         }`}
                       >
-                        Settings
+                        Setari
                       </Link>
                         </>
                       )}
@@ -347,7 +360,7 @@ export default function Navbar() {
                       onClick={() => setOpen(false)}
                       className="inline-flex w-full items-center justify-center rounded-2xl border border-transparent bg-(--color-accent) px-4 py-3.5 text-[1.02rem] font-medium text-white shadow-sm transition duration-200 hover:opacity-95 active:scale-[0.99]"
                     >
-                      Back to main site
+                      Inapoi la site-ul principal
                     </Link>
 
                     {isAuthenticated ? (
@@ -356,7 +369,7 @@ export default function Navbar() {
                         onClick={handleLogout}
                         className="inline-flex w-full items-center justify-center rounded-2xl border border-(--color-soft) bg-white px-4 py-3.5 text-[1.02rem] font-medium text-gray-900 shadow-sm transition duration-200 hover:bg-(--color-card) active:scale-[0.99]"
                       >
-                        Log out
+                        Deconectare
                       </button>
                     ) : (
                       <>
@@ -365,14 +378,14 @@ export default function Navbar() {
                           onClick={() => setOpen(false)}
                           className="inline-flex w-full items-center justify-center rounded-2xl border border-(--color-soft) bg-white px-4 py-3.5 text-[1.02rem] font-medium text-gray-900 shadow-sm transition duration-200 hover:bg-(--color-card) active:scale-[0.99]"
                         >
-                          Log in
+                          Autentificare
                         </Link>
                         <Link
                           href="/auth/signup"
                           onClick={() => setOpen(false)}
                           className="inline-flex w-full items-center justify-center rounded-2xl bg-(--color-card) px-4 py-3.5 text-[1.02rem] font-medium text-gray-900 shadow-sm transition duration-200 hover:bg-white active:scale-[0.99]"
                         >
-                          Sign up
+                          Inregistrare
                         </Link>
                       </>
                     )}
@@ -383,10 +396,10 @@ export default function Navbar() {
                   <>
                     <div className="mb-7 mt-14 text-center">
                     <p className="text-[0.88rem] font-semibold uppercase tracking-[0.42em] text-(--color-accent)">
-                      menu
+                      meniu
                     </p>
                     <h2 className="mt-3 text-[2rem] font-semibold tracking-tight text-gray-900">
-                      Explore Innery
+                      Explorează Innery
                     </h2>
                   </div>
                     <nav className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 text-base">
@@ -399,7 +412,7 @@ export default function Navbar() {
                             : "text-gray-800 hover:bg-(--color-card)"
                         }`}
                       >
-                        How it works
+                        Cum functioneaza
                       </Link>
                       <Link
                         href="/for-therapists"
@@ -410,7 +423,7 @@ export default function Navbar() {
                             : "text-gray-800 hover:bg-(--color-card)"
                         }`}
                       >
-                        For therapists
+                        Pentru terapeuti
                       </Link>
                       <Link
                         href="/for-clients"
@@ -421,7 +434,7 @@ export default function Navbar() {
                             : "text-gray-800 hover:bg-(--color-card)"
                         }`}
                       >
-                        For clients
+                        Pentru clienti
                       </Link>
                       <Link
                         href="/support"
@@ -432,7 +445,7 @@ export default function Navbar() {
                             : "text-gray-800 hover:bg-(--color-card)"
                         }`}
                       >
-                        Support
+                        Suport
                       </Link>
                     </nav>
 
@@ -443,7 +456,7 @@ export default function Navbar() {
                           onClick={handleLogout}
                           className="inline-flex items-center justify-center rounded-2xl border border-(--color-soft) bg-white px-4 py-3.5 text-[1.02rem] font-medium text-gray-900 shadow-sm transition duration-200 hover:bg-(--color-card) active:scale-[0.99]"
                         >
-                          Log out
+                          Deconectare
                         </button>
                       ) : (
                         <>
@@ -452,14 +465,14 @@ export default function Navbar() {
                             onClick={() => setOpen(false)}
                             className="inline-flex items-center justify-center rounded-2xl border border-(--color-soft) bg-white px-4 py-3.5 text-[1.02rem] font-medium text-gray-900 shadow-sm transition duration-200 hover:bg-(--color-card) active:scale-[0.99]"
                           >
-                            Log in
+                            Autentificare
                           </Link>
                           <Link
                             href="/auth/signup"
                             onClick={() => setOpen(false)}
                             className="inline-flex items-center justify-center rounded-2xl bg-(--color-accent) px-4 py-3.5 text-[1.02rem] font-medium text-white shadow-sm transition duration-200 hover:opacity-95 active:scale-[0.99]"
                           >
-                            Sign up
+                            Inregistrare
                           </Link>
                         </>
                       )}

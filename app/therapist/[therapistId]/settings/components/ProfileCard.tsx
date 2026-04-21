@@ -121,7 +121,7 @@ export function ProfileCard({
                 onClick={cancelProfileEdit}
                 className="inline-flex min-h-10 items-center justify-center rounded-[18px] border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
               >
-                Renunță
+                Anulează
               </button>
               <button
                 type="button"
@@ -129,7 +129,7 @@ export function ProfileCard({
                 disabled={profileSaving}
                 className="inline-flex min-h-10 items-center justify-center rounded-[18px] bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
               >
-                {profileSaving ? "Se salvează…" : "Salvează"}
+                {profileSaving ? "Se salvează…" : "Salveaza"}
               </button>
             </div>
           </div>

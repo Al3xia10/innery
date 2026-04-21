@@ -1,31 +1,31 @@
 export default function PainPoints() {
   const less = [
     {
-      title: "Scattered notes",
-      text: "Session notes, reflections, and follow-ups living in different places.",
+      title: "Notite imprastiate",
+      text: "Notitele de sedinta, reflectiile si follow-up-urile stau in locuri diferite.",
     },
     {
-      title: "Rebuilding context every session",
-      text: "Spending the first minutes remembering what mattered last time.",
+      title: "Reconstituirea contextului la fiecare sedinta",
+      text: "Pierzi primele minute amintindu-ti ce a contat data trecuta.",
     },
     {
-      title: "Admin that steals focus",
-      text: "Documentation that adds cognitive load instead of reducing it.",
+      title: "Administratie care iti fura atentia",
+      text: "Documentare care adauga incarcare cognitiva in loc sa o reduca.",
     },
   ];
 
   const more = [
     {
-      title: "One client space",
-      text: "A private, organized workspace per client — always up to date.",
+      title: "Un singur spatiu per client",
+      text: "Un spatiu privat si organizat pentru fiecare client — mereu la zi.",
     },
     {
-      title: "Clear continuity",
-      text: "Start sessions with context in seconds, not minutes.",
+      title: "Continuitate clara",
+      text: "Incepi sedintele cu context in secunde, nu minute.",
     },
     {
-      title: "A calmer workflow",
-      text: "Structure that supports clinical work without becoming another system.",
+      title: "Un flux mai calm",
+      text: "Structura care sustine munca clinica fara sa devina inca un sistem.",
     },
   ];
 
@@ -34,10 +34,10 @@ export default function PainPoints() {
       <div className="mx-auto max-w-6xl px-6 py-18 md:py-20">
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
-           Less overhead. Keep your focus on therapy.
+           Mai putina incarcare. Pastreaza focusul pe terapie.
           </h2>
           <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed">
-            A calmer way to manage notes, reflections, and client context — without adding another system to think about.
+            Un mod mai calm de a gestiona notite, reflectii si contextul clientului — fara inca un sistem de care sa te ocupi.
           </p>
         </div>
 
@@ -46,10 +46,10 @@ export default function PainPoints() {
           <div className="rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-xs uppercase tracking-wide font-semibold text-(--color-primary)">
-                Less of this
+                Mai putin din asta
               </h3>
               <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
-                friction
+                frictiune
               </span>
             </div>
 
@@ -91,10 +91,10 @@ export default function PainPoints() {
           <div className="rounded-2xl border border-(--color-soft) bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-xs uppercase tracking-wide font-semibold text-(--color-primary)">
-                More of this
+                Mai mult din asta
               </h3>
               <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
-                clarity
+                claritate
               </span>
             </div>
 

@@ -1,12 +1,16 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 
 import PlanHeader from "./components/PlanHeader";
 import GoalsSection from "./components/GoalsSection";
 import GoalModal from "./components/GoalModal";
 import ExercisesSection from "./components/ExercisesSection";
-
+import SectionLoadingCard from "@/app/components/ui/SectionLoadingCard";
+import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import ErrorStateCard from "@/app/components/ui/ErrorStateCard";
+import { useToast } from "@/app/components/ui/toast/ToastProvider";
 
 import type { Goal, Exercise, GoalStatus } from "./lib/goalTypes";
 import { uid, apiStatusToUi, mapApiGoalToGoal, pickUpdatedAt } from "./lib/goalTypes";
@@ -57,10 +61,21 @@ function getStoredAccessToken() {
 }
 
 type ExerciseWithDone = Exercise & { done?: boolean };
-import { fetchPlan, fetchGoalsList, createGoal, updateGoal, deleteGoal as apiDeleteGoal } from "./lib/goalApi";
+import {
+  fetchPlan,
+  fetchGoalsList,
+  createGoal,
+  updateGoal,
+  deleteGoal as apiDeleteGoal,
+  toggleGoalStep as apiToggleGoalStep,
+} from "./lib/goalApi";
 
+const ExerciseModal = dynamic(() => import("./components/ExerciseModal"), {
+  ssr: false,
+});
 
 export default function PlanPage() {
+  const toast = useToast();
   const [goals, setGoals] = React.useState<Goal[]>([]);
   const [exercises, setExercises] = React.useState<ExerciseWithDone[]>([]);
 
@@ -80,6 +95,23 @@ export default function PlanPage() {
   const [exerciseDraftMinutes, setExerciseDraftMinutes] = React.useState<number>(5);
   const [exerciseDraftNote, setExerciseDraftNote] = React.useState("");
   const [addingExercise, setAddingExercise] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = React.useState<{
+    kind: "goal" | "exercise";
+    id: string;
+  } | null>(null);
+  const pendingDeleteTimersRef = React.useRef<Map<string, number>>(new Map());
+  const pendingDeletedGoalsRef = React.useRef<Map<string, Goal>>(new Map());
+  const pendingDeletedExercisesRef = React.useRef<Map<string, ExerciseWithDone>>(new Map());
+
+  React.useEffect(() => {
+    const timers = pendingDeleteTimersRef.current;
+    return () => {
+      for (const timer of timers.values()) {
+        window.clearTimeout(timer);
+      }
+      timers.clear();
+    };
+  }, []);
 
   const closeGoalModal = React.useCallback(() => {
     setGoalModalOpen(false);
@@ -88,21 +120,21 @@ export default function PlanPage() {
     setGoalDraftProgress(0);
     setGoalDraftStatus("Activ");
   }, []);
-    function closeExerciseModal() {
+  const closeExerciseModal = React.useCallback(() => {
     setExerciseModalOpen(false);
     setExerciseDraftTitle("");
     setExerciseDraftKind("Exercițiu");
     setExerciseDraftMinutes(5);
     setExerciseDraftNote("");
-  }
+  }, []);
 
-  function openCreateExerciseModal() {
+  const openCreateExerciseModal = React.useCallback(() => {
     setExerciseDraftTitle("");
     setExerciseDraftKind("Exercițiu");
     setExerciseDraftMinutes(5);
     setExerciseDraftNote("");
     setExerciseModalOpen(true);
-  }
+  }, []);
 
   const loadPlan = React.useCallback(async () => {
     const token = getStoredAccessToken();
@@ -191,9 +223,18 @@ const exercisesJson = await exercisesRes.json();
     };
   }, [loadPlan]);
 
-  const activeGoals = goals.filter((g) => g.status === "Activ");
-  const pausedGoals = goals.filter((g) => g.status === "În pauză");
-  const doneGoals = goals.filter((g) => g.status === "Încheiat");
+  const activeGoals = React.useMemo(
+    () => goals.filter((g) => g.status === "Activ"),
+    [goals]
+  );
+  const pausedGoals = React.useMemo(
+    () => goals.filter((g) => g.status === "În pauză"),
+    [goals]
+  );
+  const doneGoals = React.useMemo(
+    () => goals.filter((g) => g.status === "Încheiat"),
+    [goals]
+  );
 
   const progressSummary = React.useMemo(() => {
     const p = activeGoals.map((g) => (typeof g.progress === "number" ? g.progress : 0)).reduce((a, b) => a + b, 0);
@@ -255,7 +296,11 @@ const exercisesJson = await exercisesRes.json();
           });
         }
 
-        if (goalsListSupported) await loadPlan();
+        try {
+          await loadPlan();
+        } catch {
+          // Keep optimistic state if refresh fails.
+        }
         closeGoalModal();
         return;
       }
@@ -300,29 +345,129 @@ const exercisesJson = await exercisesRes.json();
         setError(typeof e?.message === "string" ? e.message : "Serverul nu a confirmat update-ul.");
       }
     } catch (e: any) {
-      console.error("Save goal error", e);
+      console.error("Salvează goal error", e);
       setError(typeof e?.message === "string" ? e.message : "Nu am putut salva obiectivul.");
     } finally {
       setAddingGoal(false);
     }
   }
 
-  async function deleteGoal(id: string) {
-    if (!id) return;
-    const ok = window.confirm("Ștergi obiectivul? Acțiunea nu poate fi anulată.");
-    if (!ok) return;
-
+  async function commitDeleteGoal(id: string) {
     try {
-      setError(null);
-      setGoals((prev) => prev.filter((g) => g.id !== id));
       await apiDeleteGoal(id);
+      pendingDeletedGoalsRef.current.delete(id);
+      pendingDeleteTimersRef.current.delete(`goal:${id}`);
       if (goalsListSupported) await loadPlan();
     } catch (e: any) {
-      console.error("Delete goal error", e);
+      console.error("Șterge goal error", e);
+      const snapshot = pendingDeletedGoalsRef.current.get(id);
+      if (snapshot) {
+        setGoals((prev) => {
+          if (prev.some((g) => g.id === snapshot.id)) return prev;
+          return [snapshot, ...prev].sort(
+            (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+        });
+      }
       setError(typeof e?.message === "string" ? e.message : "Nu am putut șterge obiectivul.");
-      try {
-        await loadPlan();
-      } catch {}
+      pendingDeletedGoalsRef.current.delete(id);
+      pendingDeleteTimersRef.current.delete(`goal:${id}`);
+    }
+  }
+
+  function undoDeleteGoal(id: string) {
+    const key = `goal:${id}`;
+    const timer = pendingDeleteTimersRef.current.get(key);
+    if (timer) window.clearTimeout(timer);
+    pendingDeleteTimersRef.current.delete(key);
+    const snapshot = pendingDeletedGoalsRef.current.get(id);
+    if (!snapshot) return;
+    setGoals((prev) => {
+      if (prev.some((g) => g.id === snapshot.id)) return prev;
+      return [snapshot, ...prev].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+    });
+    pendingDeletedGoalsRef.current.delete(id);
+  }
+
+  function deleteGoal(id: string) {
+    if (!id) return;
+    const existing = goals.find((g) => g.id === id);
+    if (!existing) return;
+    setError(null);
+    pendingDeletedGoalsRef.current.set(id, existing);
+    setGoals((prev) => prev.filter((g) => g.id !== id));
+    const key = `goal:${id}`;
+    const timer = window.setTimeout(() => {
+      void commitDeleteGoal(id);
+    }, 5000);
+    pendingDeleteTimersRef.current.set(key, timer);
+    toast.info("Obiectivul a fost șters.", {
+      actionLabel: "Anulează",
+      onAction: () => undoDeleteGoal(id),
+    });
+  }
+
+  async function handleToggleGoalStep(goalId: string, stepId: string, nextDone: boolean) {
+    if (!goalId || !stepId) return;
+
+    const previousGoals = goals;
+    setGoals((prev) =>
+      prev.map((g) => {
+        if (g.id !== goalId) return g;
+        const steps = (g.steps ?? []).map((s) =>
+          s.id === stepId ? { ...s, done: nextDone } : s
+        );
+        const doneCount = steps.filter((s) => s.done).length;
+        const progress = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
+        return {
+          ...g,
+          steps,
+          stepsDone: doneCount,
+          stepsTotal: steps.length,
+          progress,
+          status: progress === 100 ? "Încheiat" : g.status === "Încheiat" ? "Activ" : g.status,
+          updatedAt: new Date().toISOString(),
+        };
+      })
+    );
+
+    try {
+      const resp = await apiToggleGoalStep(goalId, stepId, nextDone);
+      const serverGoal = (resp as any)?.goal ?? null;
+
+      if (serverGoal) {
+        setGoals((prev) =>
+          prev.map((g) =>
+            g.id === goalId
+              ? {
+                  ...g,
+                  progress:
+                    typeof serverGoal.progress === "number" ? serverGoal.progress : g.progress,
+                  status:
+                    serverGoal.status === "done"
+                      ? "Încheiat"
+                      : serverGoal.status === "paused"
+                      ? "În pauză"
+                      : "Activ",
+                  stepsDone:
+                    typeof serverGoal.stepsDone === "number"
+                      ? serverGoal.stepsDone
+                      : g.stepsDone,
+                  stepsTotal:
+                    typeof serverGoal.stepsTotal === "number"
+                      ? serverGoal.stepsTotal
+                      : g.stepsTotal,
+                }
+              : g
+          )
+        );
+      }
+    } catch (e: any) {
+      console.error("Toggle goal step error", e);
+      setGoals(previousGoals);
+      setError(typeof e?.message === "string" ? e.message : "Nu am putut actualiza pasul.");
     }
   }
 
@@ -339,7 +484,6 @@ const exercisesJson = await exercisesRes.json();
       setError(null);
 
       const token = getStoredAccessToken();
-      console.log("Using token:", token);
 
       if (!token) {
         setError("Sesiunea a expirat. Te rog reconectează-te.");
@@ -408,13 +552,11 @@ const exercisesJson = await exercisesRes.json();
       if (!target) return;
 
       const token = getStoredAccessToken();
-      console.log("toggle token found:", token);
 
       if (!token) {
         throw new Error("Nu am găsit token-ul clientului în browser.");
       }
 
-      console.log("PATCH exercise URL:", buildExercisesUrl(`/api/client/exercises/${id}`));
       const res = await fetch(buildExercisesUrl(`/api/client/exercises/${id}`), {
         method: "PATCH",
         headers: {
@@ -439,13 +581,7 @@ const exercisesJson = await exercisesRes.json();
     }
   }
 
-  async function deleteExercise(id: number) {
-    const ok = window.confirm("Ștergi exercițiul? Acțiunea nu poate fi anulată.");
-    if (!ok) return;
-
-    const prev = exercises;
-    setExercises((curr) => curr.filter((e) => Number(e.id) !== id));
-
+  async function commitDeleteExercise(id: number) {
     try {
       const token = getStoredAccessToken();
       if (!token) {
@@ -462,37 +598,60 @@ const exercisesJson = await exercisesRes.json();
       if (!res.ok) {
         const json = await res.json().catch(() => null);
         throw new Error(
-          typeof json?.message === "string"
-            ? json.message
-            : "Nu am putut șterge exercițiul."
+          typeof json?.message === "string" ? json.message : "Nu am putut șterge exercițiul."
         );
       }
+      pendingDeletedExercisesRef.current.delete(String(id));
+      pendingDeleteTimersRef.current.delete(`exercise:${id}`);
     } catch (e) {
-      console.error("Delete exercise error", e);
-      setExercises(prev);
+      console.error("Șterge exercise error", e);
+      const snapshot = pendingDeletedExercisesRef.current.get(String(id));
+      if (snapshot) {
+        setExercises((prev) => [snapshot, ...prev]);
+      }
       setError("Nu am putut șterge exercițiul.");
+      pendingDeletedExercisesRef.current.delete(String(id));
+      pendingDeleteTimersRef.current.delete(`exercise:${id}`);
     }
+  }
+
+  function undoDeleteExercise(id: number) {
+    const key = `exercise:${id}`;
+    const timer = pendingDeleteTimersRef.current.get(key);
+    if (timer) window.clearTimeout(timer);
+    pendingDeleteTimersRef.current.delete(key);
+    const snapshot = pendingDeletedExercisesRef.current.get(String(id));
+    if (!snapshot) return;
+    setExercises((prev) => [snapshot, ...prev]);
+    pendingDeletedExercisesRef.current.delete(String(id));
+  }
+
+  function deleteExercise(id: number) {
+    const existing = exercises.find((e) => Number(e.id) === id);
+    if (!existing) return;
+    setExercises((curr) => curr.filter((e) => Number(e.id) !== id));
+    pendingDeletedExercisesRef.current.set(String(id), existing);
+    const key = `exercise:${id}`;
+    const timer = window.setTimeout(() => {
+      void commitDeleteExercise(id);
+    }, 5000);
+    pendingDeleteTimersRef.current.set(key, timer);
+    toast.info("Exercițiul a fost șters.", {
+      actionLabel: "Anulează",
+      onAction: () => undoDeleteExercise(id),
+    });
   }
 
 
   return (
-    <section className="mx-auto max-w-6xl px-6 lg:px-8 py-8 space-y-8">
-      {error ? (
-        <div className="rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-3 text-sm text-rose-800">
-          {error}
-        </div>
-      ) : null}
+    <section className="mx-auto max-w-6xl px-3 py-6 space-y-6 sm:px-6 sm:py-8 sm:space-y-8 lg:px-8">
+      {error ? <ErrorStateCard message={error} /> : null}
 
       {loading ? (
-        <div className="rounded-[28px] border border-black/5 bg-white/80 p-5 shadow-[0_6px_14px_rgba(31,23,32,0.05)]">
-          <div className="flex items-center gap-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-(--color-accent)/70 animate-pulse" />
-            <p className="text-sm font-semibold text-foreground">Se încarcă planul…</p>
-          </div>
-          <p className="mt-1 text-sm text-(--color-foreground-muted,#6B5A63)">
-            Doar o clipă — adunăm obiectivele tale.
-          </p>
-        </div>
+        <SectionLoadingCard
+          title="Se încarcă planul…"
+          description="Doar o clipă — adunăm obiectivele tale."
+        />
       ) : null}
 
       <PlanHeader
@@ -514,7 +673,8 @@ const exercisesJson = await exercisesRes.json();
             addingGoal={addingGoal}
             onAdd={openCreateGoalModal}
             onEdit={openEditGoalModal}
-            onDelete={deleteGoal}
+            onDelete={(id) => setConfirmDelete({ kind: "goal", id })}
+            onToggleStep={handleToggleGoalStep}
           />
 
           <ExercisesSection
@@ -522,7 +682,7 @@ const exercisesJson = await exercisesRes.json();
             exercises={exercises}
             onAdd={openCreateExerciseModal}
             onToggleDone={handleToggleExerciseDone}
-            onDelete={deleteExercise}
+            onDelete={(id) => setConfirmDelete({ kind: "exercise", id: String(id) })}
           />
         </div>
       </div>
@@ -531,115 +691,45 @@ const exercisesJson = await exercisesRes.json();
         open={goalModalOpen}
         editing={Boolean(editingGoalId)}
         title={goalDraftTitle}
-        progress={goalDraftProgress}
         status={goalDraftStatus}
         adding={addingGoal}
         onClose={closeGoalModal}
         onChangeTitle={setGoalDraftTitle}
-        onChangeProgress={setGoalDraftProgress}
         onChangeStatus={setGoalDraftStatus}
         onSave={saveGoalFromModal}
       />
-            {exerciseModalOpen ? (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-[rgba(24,18,24,0.32)] px-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl overflow-hidden rounded-4xl border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(255,250,251,0.96)_100%)] shadow-[0_24px_60px_rgba(31,23,32,0.16)]">
-            <div className="flex items-start justify-between gap-4 border-b border-black/5 px-6 py-5 sm:px-7">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
-                  Exercițiu nou
-                </p>
-                <h2 className="mt-2 text-[1.45rem] font-semibold tracking-tight text-foreground sm:text-[1.7rem]">
-                  Adaugă un exercițiu
-                </h2>
-                <p className="mt-2 max-w-xl text-sm leading-7 text-[#74656d]">
-                  Creează un exercițiu sau o rutină pe care vrei să o urmezi în perioada asta.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeExerciseModal}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/5 bg-white text-lg text-[#7d5d6c] shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-[#fff7fa]"
-                aria-label="Închide"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 px-6 py-6 sm:grid-cols-2 sm:px-7">
-              <label className="flex flex-col gap-2 sm:col-span-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
-                  Titlu
-                </span>
-                <input
-                  value={exerciseDraftTitle}
-                  onChange={(e) => setExerciseDraftTitle(e.target.value)}
-                  className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
-                  placeholder="De ex. Respirație 4-7-8"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
-                  Tip
-                </span>
-                <select
-                  value={exerciseDraftKind}
-                  onChange={(e) => setExerciseDraftKind(e.target.value as "Exercițiu" | "Rutină")}
-                  className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
-                >
-                  <option value="Exercițiu">Exercițiu</option>
-                  <option value="Rutină">Rutină</option>
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
-                  Minute
-                </span>
-                <input
-                  type="number"
-                  min={1}
-                  value={exerciseDraftMinutes}
-                  onChange={(e) => setExerciseDraftMinutes(Number(e.target.value) || 0)}
-                  className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2 sm:col-span-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
-                  Notiță
-                </span>
-                <textarea
-                  value={exerciseDraftNote}
-                  onChange={(e) => setExerciseDraftNote(e.target.value)}
-                  rows={4}
-                  className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
-                  placeholder="De ex. Dimineața, după cafea."
-                />
-              </label>
-            </div>
-
-            <div className="flex flex-col-reverse gap-3 border-t border-black/5 px-6 py-5 sm:flex-row sm:justify-end sm:px-7">
-              <button
-                type="button"
-                onClick={closeExerciseModal}
-                className="inline-flex items-center justify-center rounded-full border border-black/5 bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-[0_6px_14px_rgba(31,23,32,0.05)] transition hover:bg-[#fffafb]"
-              >
-                Renunță
-              </button>
-              <button
-                type="button"
-                onClick={addExercise}
-                disabled={addingExercise}
-                className="inline-flex items-center justify-center rounded-full bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)] transition hover:opacity-90 disabled:opacity-50"
-              >
-                {addingExercise ? "Se salvează..." : "Salvează exercițiul"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ExerciseModal
+        open={exerciseModalOpen}
+        title={exerciseDraftTitle}
+        kind={exerciseDraftKind}
+        minutes={exerciseDraftMinutes}
+        note={exerciseDraftNote}
+        saving={addingExercise}
+        onClose={closeExerciseModal}
+        onChangeTitle={setExerciseDraftTitle}
+        onChangeKind={setExerciseDraftKind}
+        onChangeMinutes={setExerciseDraftMinutes}
+        onChangeNote={setExerciseDraftNote}
+        onSave={addExercise}
+      />
+      <ConfirmDialog
+        open={Boolean(confirmDelete)}
+        title="Confirmă ștergerea"
+        message="Acțiunea poate fi anulată din notificare pentru câteva secunde."
+        confirmText="Șterge"
+        cancelText="Anulează"
+        danger
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          if (confirmDelete.kind === "goal") {
+            deleteGoal(confirmDelete.id);
+          } else {
+            deleteExercise(Number(confirmDelete.id));
+          }
+          setConfirmDelete(null);
+        }}
+      />
     </section>
   );
 }

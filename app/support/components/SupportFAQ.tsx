@@ -4,23 +4,23 @@ import React from "react";
 
 const faqs = [
   {
-    q: "Do clients see therapist notes?",
-    a: "No, not by default. Session notes are private to the therapist. Clients can submit reflections if enabled.",
+    q: "Clientii vad notitele terapeutului?",
+    a: "Nu, nu implicit. Notitele de sedinta sunt private pentru terapeut. Clientii pot trimite reflectii daca optiunea este activata.",
   },
   {
-    q: "How do I add a client?",
-    a: "In the therapist dashboard, you create a client profile. Later, backend invites/codes can connect client access automatically.",
+    q: "Cum adaug un client?",
+    a: "In dashboard-ul terapeutului creezi profilul clientului. Ulterior, invitatiile/codurile din backend pot conecta automat accesul clientului.",
   },
   {
-    q: "I’m seeing “not found” pages — why?",
-    a: "In the mock phase, routes rely on IDs (e.g. /therapist/t1). If the ID doesn’t exist in your mock data, the page won’t render.",
+    q: "Vad pagini „not found” — de ce?",
+    a: "In faza de mock, rutele depind de ID-uri (ex: /therapist/t1). Daca ID-ul nu exista in datele mock, pagina nu se afiseaza.",
   },
   {
-    q: "Can I export notes or reflections?",
-    a: "That’s a common need. Start with basic export/backups when you add backend, then expand based on what therapists request most.",
+    q: "Pot exporta notitele sau reflectiile?",
+    a: "Este o nevoie comuna. Incepe cu exporturi/backup-uri de baza cand adaugi backend-ul, apoi extinzi in functie de ce cer terapeutii.",
   },
   {
-    q: "Where do I report a bug?",
+    q: "Unde raportez un bug?",
     a: "Email support@innery.com with your device, browser, the page URL, and steps to reproduce. Screenshots help a lot.",
   },
 ] as const;
@@ -35,10 +35,10 @@ export default function SupportFAQ() {
           <div className="md:col-span-4">
             <p className="text-sm font-medium text-indigo-600">FAQ</p>
             <h2 className="mt-2 text-2xl md:text-3xl font-semibold text-gray-900 leading-snug">
-              Common questions
+              Intrebari frecvente
             </h2>
             <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed">
-              Quick answers to the questions we expect most.
+              Raspunsuri rapide la intrebarile pe care le primim cel mai des.
             </p>
           </div>
 
@@ -92,7 +92,7 @@ export default function SupportFAQ() {
             </div>
 
             <p className="mt-4 text-xs text-gray-500">
-              Tip: keep Support simple now — expand when onboarding/invites + backend go live.
+              Tip: pastreaza Suportul simplu acum — extinde cand onboarding-ul/invitarile si backend-ul sunt live.
             </p>
           </div>
         </div>

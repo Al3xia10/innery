@@ -1,24 +1,24 @@
 export default function Features() {
   const features = [
     {
-      title: "Structured session notes",
+      title: "Notite de sedinta structurate",
       text:
-        "Capture session notes in a consistent format so progress, themes, and decisions are easy to revisit.",
+        "Captureaza notitele intr-un format consecvent, ca progresul, temele si deciziile sa fie usor de revizitat.",
     },
     {
-      title: "Client reflections between sessions",
+      title: "Reflectii ale clientului intre sedinte",
       text:
-        "Invite clients to share reflections and follow‑ups without turning therapy into constant messaging.",
+        "Invita clientii sa partajeze reflectii si follow-up-uri fara sa transformi terapia in mesagerie constanta.",
     },
     {
-      title: "Clear client overview",
+      title: "Viziune clara asupra clientului",
       text:
-        "See key context at a glance — recent notes, reflections, and what matters right now.",
+        "Vezi contextul esential dintr-o privire — notite recente, reflectii si ce conteaza acum.",
     },
     {
-      title: "Private by default",
+      title: "Privat implicit",
       text:
-        "Each client has a secure, therapist‑controlled space that supports ethical documentation and boundaries.",
+        "Fiecare client are un spatiu sigur, controlat de terapeut, care sustine documentarea etica si limitele.",
     },
   ];
 
@@ -27,10 +27,10 @@ export default function Features() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-tight">
-            Built around real therapy work
+            Construit in jurul muncii terapeutice reale
           </h2>
           <p className="mt-4 text-sm md:text-base text-gray-600 leading-relaxed">
-            Innery focuses on structure and continuity — without adding another system to manage.
+            Innery se concentreaza pe structura si continuitate — fara inca un sistem de gestionat.
           </p>
         </div>
 

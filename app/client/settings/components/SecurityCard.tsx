@@ -87,7 +87,7 @@ export function SecurityCard({ onToast }: { onToast?: (msg: string) => void }) {
 
   return (
     <div
-      className="rounded-[28px] border border-black/5 p-6 shadow-[0_10px_24px_rgba(31,23,32,0.05)]"
+      className="rounded-[28px] border border-black/5 p-4 shadow-[0_10px_24px_rgba(31,23,32,0.05)] sm:rounded-4xl sm:p-6"
       style={{
         background:
           "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,250,251,0.95) 100%)",
@@ -100,26 +100,26 @@ export function SecurityCard({ onToast }: { onToast?: (msg: string) => void }) {
         <h2 className="mt-2 text-[1.2rem] font-semibold tracking-tight text-foreground">
           Parola contului tău
         </h2>
-        <p className="mt-2 text-sm leading-7 text-[#74656d]">
+        <p className="mt-2 text-sm leading-6 sm:leading-7 text-[#74656d]">
           Schimbă parola pentru a-ți menține contul în siguranță.
         </p>
       </div>
 
-      <form className="mt-6 grid grid-cols-1 gap-4" onSubmit={handleChangePassword}>
+      <form className="mt-5 grid grid-cols-1 gap-3.5 sm:mt-6 sm:gap-4" onSubmit={handleChangePassword}>
         <div className="relative">
           <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">Parola actuală</label>
           <input
             type={showOldPassword ? "text" : "password"}
             value={pwOld}
             onChange={(e) => setPwOld(e.target.value)}
-            className="mt-1 w-full rounded-2xl border border-black/5 bg-white px-4 py-3 pr-12 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
+            className="mt-1 w-full rounded-[18px] border border-black/5 bg-white px-4 py-3 pr-12 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
             placeholder="Parola actuală"
             autoComplete="current-password"
           />
           <button
             type="button"
             onClick={() => setShowOldPassword((v) => !v)}
-            className="absolute right-3 top-9.5 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/5 bg-white text-xs font-semibold text-[#7d5d6c] shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition hover:bg-[#fff7fa]"
+            className="absolute right-3 top-9.5 inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-black/5 bg-white text-xs font-semibold text-[#7d5d6c] shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition hover:bg-[#fff7fa]"
             aria-label={showOldPassword ? "Ascunde parola veche" : "Arată parola veche"}
           >
             <img
@@ -136,14 +136,14 @@ export function SecurityCard({ onToast }: { onToast?: (msg: string) => void }) {
             type={showNewPassword ? "text" : "password"}
             value={pwNew}
             onChange={(e) => setPwNew(e.target.value)}
-            className="mt-1 w-full rounded-2xl border border-black/5 bg-white px-4 py-3 pr-12 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
+            className="mt-1 w-full rounded-[18px] border border-black/5 bg-white px-4 py-3 pr-12 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
             placeholder="Parola nouă"
             autoComplete="new-password"
           />
           <button
             type="button"
             onClick={() => setShowNewPassword((v) => !v)}
-            className="absolute right-3 top-9.5 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/5 bg-white text-xs font-semibold text-[#7d5d6c] shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition hover:bg-[#fff7fa]"
+            className="absolute right-3 top-9.5 inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-black/5 bg-white text-xs font-semibold text-[#7d5d6c] shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition hover:bg-[#fff7fa]"
             aria-label={showNewPassword ? "Ascunde parola nouă" : "Arată parola nouă"}
           >
             <img
@@ -153,7 +153,7 @@ export function SecurityCard({ onToast }: { onToast?: (msg: string) => void }) {
             />
           </button>
           <div className="mt-3">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7b84]">
                 Forță parolă
               </p>
@@ -177,7 +177,7 @@ export function SecurityCard({ onToast }: { onToast?: (msg: string) => void }) {
                 />
               ))}
             </div>
-            <p className="mt-2 text-xs leading-6 text-[#74656d]">
+            <p className="mt-2 text-xs leading-5 sm:leading-6 text-[#74656d]">
               {passwordStrength.hint}
             </p>
           </div>
@@ -189,14 +189,14 @@ export function SecurityCard({ onToast }: { onToast?: (msg: string) => void }) {
             type={showConfirmPassword ? "text" : "password"}
             value={pwConfirm}
             onChange={(e) => setPwConfirm(e.target.value)}
-            className="mt-1 w-full rounded-2xl border border-black/5 bg-white px-4 py-3 pr-12 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
+            className="mt-1 w-full rounded-[18px] border border-black/5 bg-white px-4 py-3 pr-12 text-sm text-foreground shadow-[0_4px_10px_rgba(31,23,32,0.03)] outline-none transition focus:border-[#e7bfd2] focus:ring-2 focus:ring-[#f6dce9]"
             placeholder="Confirmă parola nouă"
             autoComplete="new-password"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword((v) => !v)}
-            className="absolute right-3 top-9.5 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/5 bg-white text-xs font-semibold text-[#7d5d6c] shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition hover:bg-[#fff7fa]"
+            className="absolute right-3 top-9.5 inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-black/5 bg-white text-xs font-semibold text-[#7d5d6c] shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition hover:bg-[#fff7fa]"
             aria-label={showConfirmPassword ? "Ascunde confirmarea parolei" : "Arată confirmarea parolei"}
           >
             <img
@@ -211,7 +211,7 @@ export function SecurityCard({ onToast }: { onToast?: (msg: string) => void }) {
           <button
             type="submit"
             disabled={pwSaving}
-            className="inline-flex items-center justify-center rounded-full bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)] transition hover:opacity-90 disabled:opacity-50"
+            className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(239,135,192,0.25)] transition hover:opacity-90 disabled:opacity-50"
           >
             {pwSaving ? "Se salvează…" : "Schimbă parola"}
           </button>

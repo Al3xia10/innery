@@ -80,7 +80,7 @@ export function useMeProfile({ onToast }: { onToast?: (msg: string) => void }) {
       if (!data || !(data as any).user) throw new Error("No user returned");
       setMeUser((data as any).user as MeUser);
       setEditingProfile(false);
-      onToast?.("Saved");
+      onToast?.("Salvat");
     } catch (err: any) {
       onToast?.(err?.message || "Failed to update profile");
     } finally {

@@ -3,19 +3,44 @@
 import * as React from "react";
 import type { Goal } from "../lib/goalTypes";
 import { cn } from "../lib/goalTypes";
+import StepList from "./StepList";
 
 export default function GoalCard({
   goal,
   tone,
   onEdit,
   onDelete,
+  onToggleStep,
 }: {
   goal: Goal;
   tone: "active" | "paused" | "done";
   onEdit?: () => void;
   onDelete?: () => void;
+  onToggleStep?: (stepId: string, nextDone: boolean) => void;
 }) {
   const progress = typeof goal.progress === "number" ? goal.progress : 0;
+  const stepsCount = Array.isArray(goal.steps) ? goal.steps.length : 0;
+  const doneCount = Array.isArray(goal.steps) ? goal.steps.filter((s) => s.done).length : 0;
+  const [showSteps, setShowSteps] = React.useState(true);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const key = `goal_steps_visible_${goal.id}`;
+    const raw = window.localStorage.getItem(key);
+    if (raw === "0") setShowSteps(false);
+    if (raw === "1") setShowSteps(true);
+  }, [goal.id]);
+
+  function toggleStepsVisibility() {
+    setShowSteps((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        const key = `goal_steps_visible_${goal.id}`;
+        window.localStorage.setItem(key, next ? "1" : "0");
+      }
+      return next;
+    });
+  }
 
   const accent =
     tone === "active"
@@ -34,7 +59,7 @@ export default function GoalCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[30px] border border-black/5 p-4 shadow-[0_12px_30px_rgba(31,23,32,0.06)] sm:px-5 sm:py-4.5",
+        "relative self-start h-fit overflow-hidden rounded-[28px] border border-black/5 p-4 shadow-[0_12px_30px_rgba(31,23,32,0.06)] transition-all duration-250 sm:rounded-4xl sm:px-5 sm:py-4.5",
         accent
       )}
       style={{
@@ -42,16 +67,16 @@ export default function GoalCard({
           "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,249,251,0.98) 100%)",
       }}
     >
-      <div className="flex items-start justify-between gap-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
         <div className="min-w-0 flex-1 pr-2">
-          <p className="truncate text-[1.08rem] font-semibold tracking-tight text-foreground">{goal.title}</p>
+          <p className="text-[1.08rem] font-semibold tracking-tight text-foreground sm:truncate">{goal.title}</p>
           {goal.subtitle ? (
-            <p className="mt-1 line-clamp-2 text-[15px] leading-7 text-(--color-foreground-muted,#6B5A63)">{goal.subtitle}</p>
+            <p className="mt-1 line-clamp-2 text-[15px] leading-6 sm:leading-7 text-(--color-foreground-muted,#6B5A63)">{goal.subtitle}</p>
           ) : null}
         </div>
 
-        <div className="shrink-0 flex w-31 flex-col items-end gap-2">
-          <span className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] uppercase shadow-[0_3px_8px_rgba(31,23,32,0.04)]", badge)}>
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-31 sm:items-end">
+          <span className={cn("inline-flex self-start items-center rounded-[18px] border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] uppercase shadow-[0_3px_8px_rgba(31,23,32,0.04)] sm:self-auto", badge)}>
             {goal.status}
           </span>
 
@@ -76,16 +101,43 @@ export default function GoalCard({
           </div>
         </div>
       </div>
+      {stepsCount > 0 ? (
+        <div className="mt-4">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <button
+              type="button"
+              onClick={toggleStepsVisibility}
+              className="inline-flex min-h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-[18px] border border-black/5 bg-white px-3 py-2 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-black/5 hover:text-foreground"
+            >
+              {showSteps ? "Ascunde pașii" : "Arată pașii"}
+            </button>
+            <span className="text-[11px] font-medium text-(--color-foreground-muted,#6B5A63)">
+              {doneCount}/{stepsCount} completați
+            </span>
+          </div>
+
+          <div
+            className={cn(
+              "transition-all duration-250 ease-out",
+              showSteps
+                ? "mt-2 max-h-135 opacity-100"
+                : "pointer-events-none max-h-0 opacity-0"
+            )}
+          >
+            <StepList steps={goal.steps ?? []} onToggle={onToggleStep} />
+          </div>
+        </div>
+      ) : null}
 
       {(onEdit || onDelete) ? (
         <>
           <div className="mt-4 h-px w-full bg-[linear-gradient(90deg,rgba(31,23,32,0.08),transparent)]" />
-          <div className="mt-4 flex items-center gap-2.5">
+          <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
             {onEdit ? (
               <button
                 type="button"
                 onClick={onEdit}
-                className="inline-flex items-center justify-center rounded-full border border-black/5 bg-white px-3 py-1.5 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-black/5 hover:text-foreground"
+                className="inline-flex min-h-10 w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-white px-3 py-2 text-[11px] font-semibold text-(--color-foreground-muted,#6B5A63) shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-black/5 hover:text-foreground"
               >
                 Editează
               </button>
@@ -95,9 +147,9 @@ export default function GoalCard({
               <button
                 type="button"
                 onClick={onDelete}
-                className="inline-flex items-center justify-center rounded-full border border-black/5 bg-white px-3 py-1.5 text-[11px] font-semibold text-[#8A7B83] shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-black/5 hover:text-foreground"
-                aria-label="Șterge"
-                title="Șterge"
+                className="inline-flex min-h-10 w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-white px-3 py-2 text-[11px] font-semibold text-[#8A7B83] shadow-[0_4px_10px_rgba(31,23,32,0.04)] transition hover:bg-black/5 hover:text-foreground"
+                aria-label="Sterge"
+                title="Sterge"
               >
                 Șterge
               </button>

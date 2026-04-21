@@ -23,6 +23,7 @@ const dbFromUrl = process.env.DATABASE_URL
   : null;
 
 export const env = {
+  nodeEnv: process.env.NODE_ENV || "development",
   port: num(process.env.PORT, 4000),
 
   db: {
@@ -36,12 +37,33 @@ export const env = {
     url: dbFromUrl?.url ?? null,
   },
 
-  corsOrigin: process.env.CORS_ORIGIN || "*",
+  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
 
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || "",
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "30d",
     refreshSecret: process.env.JWT_REFRESH_SECRET || "",
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "1d",
+  },
+
+  ai: {
+    openaiApiKey: process.env.OPENAI_API_KEY || "",
+    openaiModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
+  },
+
+  frontendUrl:
+    process.env.FRONTEND_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "http://localhost:3000",
+
+  mail: {
+    host: process.env.SMTP_HOST || "",
+    port: num(process.env.SMTP_PORT, 587),
+    secure:
+      String(process.env.SMTP_SECURE || "").toLowerCase() === "true" ||
+      num(process.env.SMTP_PORT, 587) === 465,
+    user: process.env.SMTP_USER || "",
+    pass: process.env.SMTP_PASS || "",
+    from: process.env.SMTP_FROM || "Innery <no-reply@innery.app>",
   },
 };

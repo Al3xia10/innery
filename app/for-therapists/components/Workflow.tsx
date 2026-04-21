@@ -2,27 +2,27 @@ export default function Workflow() {
   const steps = [
     {
       step: "01",
-      title: "Create a client workspace",
+      title: "Creeaza un spatiu pentru client",
       text:
-        "Set up a private space for each client with notes, reflections, and context from day one.",
+        "Configureaza un spatiu privat pentru fiecare client cu notite, reflectii si context din prima zi.",
     },
     {
       step: "02",
-      title: "Document sessions clearly",
+      title: "Documenteaza clar sedintele",
       text:
-        "Capture structured session notes so progress and themes are easy to follow over time.",
+        "Noteaza sedintele intr-o structura clara ca progresul si temele sa fie usor de urmarit in timp.",
     },
     {
       step: "03",
-      title: "Stay connected between sessions",
+      title: "Ramai conectat(a) intre sedinte",
       text:
-        "Review client reflections and follow-ups to maintain continuity without constant messaging.",
+        "Revizuieste reflectiile clientului si follow-up-urile pentru continuitate, fara mesaje constante.",
     },
     {
       step: "04",
-      title: "Begin each session with context",
+      title: "Incepe fiecare sedinta cu context",
       text:
-        "Start sessions knowing where things left off — without searching through past notes.",
+        "Incepi sedintele stiind unde ati ramas — fara sa cauti prin notite vechi.",
     },
   ];
 
@@ -31,10 +31,10 @@ export default function Workflow() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center mb-14">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-tight">
-            A simple flow that supports your work
+            Un flux simplu care iti sustine munca
           </h2>
           <p className="mt-4 text-sm md:text-base text-gray-600 leading-relaxed">
-            Innery fits naturally into therapy sessions — without forcing a rigid process.
+            Innery se potriveste natural in sedintele de terapie — fara un proces rigid.
           </p>
         </div>
 

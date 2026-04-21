@@ -1,6 +1,13 @@
 export type GoalStatus = "Activ" | "În pauză" | "Încheiat";
 export type ApiGoalStatus = "active" | "paused" | "done";
 
+export type GoalStep = {
+  id: string;
+  title: string;
+  done: boolean;
+  orderIndex?: number;
+};
+
 export type ApiPlanResponse = {
   goals?: Array<{
     id: number | string;
@@ -33,6 +40,9 @@ export type Goal = {
   subtitle?: string;
   status: GoalStatus;
   progress?: number; // 0..100
+  steps?: GoalStep[];
+  stepsDone?: number;
+  stepsTotal?: number;
   updatedAt: string;
   therapistId?: string | null;
 };
@@ -95,8 +105,22 @@ export function pickUpdatedAt(g: any): string {
 export function mapApiGoalToGoal(g: any): Goal {
   const updatedAt = pickUpdatedAt(g);
 
+  const steps = Array.isArray(g?.steps)
+    ? g.steps
+        .map((s: any) => ({
+          id: String(s?.id),
+          title: String(s?.title ?? "Pas"),
+          done: Boolean(s?.done),
+          orderIndex: typeof s?.orderIndex === "number" ? s.orderIndex : undefined,
+        }))
+        .sort((a: GoalStep, b: GoalStep) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+    : [];
+
   const progressRaw = g?.progress;
-  const progress = typeof progressRaw === "number" ? progressRaw : undefined;
+  const computedProgress = steps.length
+    ? Math.round((steps.filter((s: GoalStep) => s.done).length / steps.length) * 100)
+    : 0;
+  const progress = typeof progressRaw === "number" ? progressRaw : computedProgress;
 
   return {
     id: String(g?.id),
@@ -104,6 +128,12 @@ export function mapApiGoalToGoal(g: any): Goal {
     subtitle: typeof g?.subtitle === "string" ? g.subtitle : undefined,
     status: apiStatusToUi(g?.status),
     progress,
+    steps,
+    stepsDone:
+      typeof g?.stepsDone === "number"
+        ? g.stepsDone
+        : steps.filter((s: GoalStep) => s.done).length,
+    stepsTotal: typeof g?.stepsTotal === "number" ? g.stepsTotal : steps.length,
     updatedAt,
     therapistId: g?.therapistId == null ? null : String(g.therapistId),
   };

@@ -8,13 +8,13 @@ export default function FooterCTA() {
           
 
           <div className="relative">
-            <p className="text-sm font-semibold text-(--color-primary)">Still stuck?</p>
+            <p className="text-sm font-semibold text-(--color-primary)">Inca blocat(a)?</p>
             <h2 className="mt-2 text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
-              Tell us what you’re building
+              Spune-ne ce construiesti
             </h2>
             <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed max-w-2xl">
-              Include your role (therapist/client), the URL you opened, and what you expected.
-              If possible, attach a screenshot.
+              Include rolul tau (terapeut/client), URL-ul deschis si ce te asteptai sa se intample.
+              Daca poti, ataseaza o captura de ecran.
             </p>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
@@ -29,7 +29,7 @@ export default function FooterCTA() {
                 href="/how-it-works"
                 className="inline-flex items-center justify-center rounded-xl border border-(--color-soft) bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-(--color-card)"
               >
-                Revisit How it works
+                Revezi Cum functioneaza
               </Link>
             </div>
           </div>

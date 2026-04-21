@@ -5,7 +5,7 @@ import { apiFetch } from "@/app/_lib/authClient";
 
 import JournalHeader from "./components/JournalHeader";
 import EmptyCard from "./components/EmptyCard";
-import Toast from "./components/Toast";
+import { useToast } from "@/app/components/ui/toast/ToastProvider";
 import ConfirmDialog from "./components/ConfirmDialog";
 import ModalShell from "./components/ModalShell";
 import JournalEntryCard, { Entry } from "./components/JournalEntryCard";
@@ -14,6 +14,7 @@ import { Visibility, cn, toNiceDate } from "./components/utils";
 type EntryApi = any;
 
 export default function JournalPage() {
+  const toast = useToast();
   const [tab, setTab] = useState<Visibility>("private");
   const [query, setQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -27,8 +28,7 @@ export default function JournalPage() {
   const [draftContent, setDraftContent] = useState("");
   const [draftTags, setDraftTags] = useState("");
   const [draftVisibility, setDraftVisibility] = useState<Visibility>("private");
-  const [toast, setToast] = useState<{ kind: "error" | "success" | "info"; message: string } | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const DRAFT_KEY = "innery_journal_draft_v1";
   const saveTimerRef = useRef<number | null>(null);
@@ -278,7 +278,7 @@ useEffect(() => {
   setDraftVisibility(draftSnapshot.visibility);
   setDraftFound(false);
   setDraftSaveState("saved");
-  setToast({ kind: "info", message: "Am restaurat draft-ul. Poți continua în ritmul tău." });
+  toast.info("Am restaurat draft-ul. Poți continua în ritmul tău.");
 };
 
   const discardDraft = () => {
@@ -293,7 +293,7 @@ useEffect(() => {
   setDraftTags("");
   setDraftVisibility(tab);
   setDraftSaveState("idle");
-  setToast({ kind: "info", message: "Ok — începem de la zero." });
+  toast.info("Ok — începem de la zero.");
 };
 
   async function saveEntry() {
@@ -378,8 +378,8 @@ useEffect(() => {
       setEditorFocused(false);
 setDraftSaveState("idle");
     } catch (err) {
-      console.error("Save entry failed", err);
-      setToast({ kind: "error", message: "Nu s-a salvat. Textul tău e încă aici — încearcă din nou când ai spațiu." });
+      console.error("Salvează entry failed", err);
+      toast.error("Nu s-a salvat. Textul tău e încă aici. Încearcă din nou când ai spațiu.");
     } finally {
       setSaving(false);
     }
@@ -398,10 +398,10 @@ setDraftSaveState("idle");
       setEntries((prev) => prev.filter((e) => e.id !== editingId));
       setModalOpen(false);
       setEditingId(null);
-      setToast({ kind: "success", message: "Am șters nota." });
+      toast.success("Am șters nota.");
     } catch (err) {
-      console.error("Delete entry failed", err);
-      setToast({ kind: "error", message: "Nu am putut șterge nota. Încearcă din nou." });
+      console.error("Șterge entry failed", err);
+      toast.error("Nu am putut șterge nota. Încearcă din nou.");
     } finally {
       setSaving(false);
       setDeleteConfirmOpen(false);
@@ -421,8 +421,6 @@ setDraftSaveState("idle");
 
   return (
     <section className="relative min-h-svh">
-      {toast ? <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} /> : null}
-
       <ConfirmDialog
         open={deleteConfirmOpen}
         title="Ștergi nota?"
@@ -434,7 +432,7 @@ setDraftSaveState("idle");
         onCancel={() => setDeleteConfirmOpen(false)}
       />
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-7">
+      <div className="mx-auto max-w-6xl px-3 py-3 space-y-6 sm:px-6 sm:py-8 sm:space-y-7 lg:px-8">
         <JournalHeader
           tab={tab}
           setTab={setTab}
@@ -461,23 +459,23 @@ setDraftSaveState("idle");
             >
               <div className="space-y-5">
                 {editingId == null && draftFound && draftSnapshot ? (
-                  <div className="rounded-3xl border border-black/5 bg-white/80 p-4 shadow-[0_8px_20px_rgba(31,23,32,0.04)] backdrop-blur-sm sm:p-5">
+                  <div className="rounded-[20px] border border-black/5 bg-white/80 p-4 shadow-[0_8px_20px_rgba(31,23,32,0.04)] backdrop-blur-sm sm:rounded-[28px] sm:p-5">
                     <p className="text-sm font-semibold text-[#1f1720]">Am găsit un draft salvat</p>
-                    <p className="mt-1 text-sm leading-7 text-[#6B5A63]">
+                    <p className="mt-1 text-sm leading-6 sm:leading-7 text-[#6B5A63]">
                       Dacă vrei, poți continua de unde ai rămas. Nimic nu se pierde.
                     </p>
                     <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                       <button
                         type="button"
                         onClick={restoreDraft}
-                        className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
+                        className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(239,135,192,0.18)] transition hover:opacity-95"
                       >
                         Continui draft-ul
                       </button>
                       <button
                         type="button"
                         onClick={discardDraft}
-                        className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-[#1f1720] shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-black/5"
+                        className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-[#1f1720] shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-black/5"
                       >
                         Încep de la zero
                       </button>
@@ -488,7 +486,7 @@ setDraftSaveState("idle");
 
                 <div
                   className={cn(
-                    "flex flex-col gap-3 rounded-3xl border border-black/5 bg-white/88 p-3.5 shadow-[0_8px_20px_rgba(31,23,32,0.04)] transition sm:p-4",
+                    "flex flex-col gap-3 rounded-[20px] border border-black/5 bg-white/88 p-3.5 shadow-[0_8px_20px_rgba(31,23,32,0.04)] transition sm:rounded-[28px] sm:p-4",
                     editorFocused && "opacity-55"
                   )}
                 >
@@ -496,19 +494,19 @@ setDraftSaveState("idle");
                     <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d5d6c]">
                       Vizibilitate
                     </p>
-                    <p className="mt-1 text-sm leading-7 text-[#6B5A63]">
+                    <p className="mt-1 text-sm leading-6 sm:leading-7 text-[#6B5A63]">
                       {draftVisibility === "private"
                         ? "Doar tu vezi această notiță."
                         : "O poți păstra pentru ședință, dacă simți."}
                     </p>
                   </div>
 
-                  <div className="inline-flex w-fit items-center rounded-full border border-black/5 bg-[#fcf9fb] p-1.5 shadow-[0_6px_14px_rgba(31,23,32,0.04)]">
+                  <div className="inline-flex w-full sm:w-fit items-center rounded-[20px] border border-black/5 bg-[#fcf9fb] p-1.5 shadow-[0_6px_14px_rgba(31,23,32,0.04)] sm:rounded-full">
                     <button
                       type="button"
                       onClick={() => setDraftVisibility("private")}
                       className={cn(
-                        "rounded-full px-4 py-2 text-[12px] font-semibold transition",
+                        "rounded-[18px] px-4 py-2 text-[12px] font-semibold transition sm:rounded-full",
                         draftVisibility === "private"
                           ? "bg-white text-[#1f1720] shadow-[0_6px_14px_rgba(31,23,32,0.06)]"
                           : "bg-transparent text-[#6B5A63] hover:text-[#1f1720]"
@@ -520,7 +518,7 @@ setDraftSaveState("idle");
                       type="button"
                       onClick={() => setDraftVisibility("shared")}
                       className={cn(
-                        "rounded-full px-4 py-2 text-[12px] font-semibold transition",
+                        "rounded-[18px] px-4 py-2 text-[12px] font-semibold transition sm:rounded-full",
                         draftVisibility === "shared"
                           ? "bg-(--color-accent) text-white shadow-[0_10px_18px_rgba(239,135,192,0.18)]"
                           : "bg-transparent text-[#6B5A63] hover:text-[#1f1720]"
@@ -539,14 +537,14 @@ setDraftSaveState("idle");
                   onBlur={() => setEditorFocused(false)}
                   placeholder="Scrie liber aici. Nu trebuie să iasă perfect."
                   className={cn(
-                    "min-h-35 w-full rounded-[26px] border border-[#ead7df] bg-white px-5 py-4 text-[15px] leading-8 text-[#1f1720] shadow-[0_10px_24px_rgba(31,23,32,0.05)] outline-none transition placeholder:text-[#9b8d95] focus:border-[#e9c6d6] focus:ring-2 focus:ring-[#f3e3ea] focus:ring-offset-1",
+                    "min-h-35 w-full rounded-[20px] border border-[#ead7df] bg-white px-4 py-3.5 text-[15px] leading-6 text-[#1f1720] shadow-[0_10px_24px_rgba(31,23,32,0.05)] outline-none transition placeholder:text-[#9b8d95] focus:border-[#e9c6d6] focus:ring-2 focus:ring-[#f3e3ea] focus:ring-offset-1 sm:rounded-[26px] sm:px-5 sm:py-4 sm:leading-8",
                     editorFocused && "shadow-[0_18px_40px_rgba(31,23,32,0.10)]"
                   )}
                 />
 
                     <div
                     className={cn(
-                      "rounded-[20px] border border-black/5 bg-[#fcf9fb] p-3 transition shadow-[0_4px_10px_rgba(31,23,32,0.03)] sm:px-4 sm:py-3.5",
+                      "rounded-[20px] border border-black/5 bg-[#fcf9fb] p-3 transition shadow-[0_4px_10px_rgba(31,23,32,0.03)] sm:rounded-[28px] sm:px-4 sm:py-3.5",
                       editorFocused && "opacity-60"
                     )}
                   >
@@ -562,7 +560,7 @@ setDraftSaveState("idle");
                               return next;
                             });
                           }}
-                          className="rounded-full border border-black/5 bg-white px-3.5 py-2 text-[11px] font-semibold tracking-[0.03em] text-[#1f1720] shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-black/5"
+                          className="rounded-[18px] border border-black/5 bg-white px-3.5 py-2 text-[11px] font-semibold tracking-[0.03em] text-[#1f1720] shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-black/5 sm:rounded-full"
                         >
                           {p}
                         </button>
@@ -573,7 +571,7 @@ setDraftSaveState("idle");
 
                 <div
                   className={cn(
-                    "rounded-[20px] border border-black/5 bg-[#fffdfd] p-3 shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition sm:p-4",
+                    "rounded-[20px] border border-black/5 bg-[#fffdfd] p-3 shadow-[0_4px_10px_rgba(31,23,32,0.03)] transition sm:rounded-[28px] sm:p-4",
                     editorFocused && "opacity-60"
                   )}
                 >
@@ -581,7 +579,7 @@ setDraftSaveState("idle");
                     value={draftTitle}
                     onChange={(e) => setDraftTitle(e.target.value)}
                     placeholder="Adaugă un titlu (opțional)…"
-                    className="w-full rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm text-[#1f1720] shadow-[0_4px_10px_rgba(31,23,32,0.04)] outline-none transition placeholder:text-[#9b8d95] focus:border-[#ead7df] focus:ring-2 focus:ring-[#f3e3ea]"
+                    className="w-full rounded-[18px] border border-black/5 bg-white px-4 py-3 text-sm text-[#1f1720] shadow-[0_4px_10px_rgba(31,23,32,0.04)] outline-none transition placeholder:text-[#9b8d95] focus:border-[#ead7df] focus:ring-2 focus:ring-[#f3e3ea]"
                   />
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-[#8a7b83]">
@@ -605,7 +603,7 @@ setDraftSaveState("idle");
                         setEditorFocused(false);
                         setDraftSaveState("idle");
                       }}
-                      className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-[#1f1720] shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-black/5"
+                      className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-white px-4 py-2.5 text-sm font-semibold text-[#1f1720] shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-black/5"
                     >
                       Continuă mai târziu
                     </button>
@@ -615,7 +613,7 @@ setDraftSaveState("idle");
                         type="button"
                         onClick={deleteEntry}
                         disabled={saving}
-                        className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-rose-100 disabled:opacity-50"
+                        className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-[0_6px_14px_rgba(31,23,32,0.06)] transition hover:bg-rose-100 disabled:opacity-50"
                       >
                         Șterge
                       </button>
@@ -626,7 +624,7 @@ setDraftSaveState("idle");
                     type="button"
                     onClick={saveEntry}
                     disabled={saving || !draftContent.trim()}
-                    className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(239,135,192,0.22)] transition hover:opacity-95 disabled:opacity-50"
+                    className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(239,135,192,0.22)] transition hover:opacity-95 disabled:opacity-50"
                   >
                     {saving ? "Se salvează…" : editingId ? "Salvează modificările" : "Salvează nota"}
                   </button>
@@ -642,7 +640,7 @@ setDraftSaveState("idle");
             {[0, 1].map((i) => (
               <div
                 key={i}
-                className="rounded-[28px] border border-white/60 bg-white/70 backdrop-blur-xl p-6 shadow-sm"
+                className="rounded-[28px] border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-xl sm:rounded-4xl sm:p-6"
               >
                 <div className="h-4 w-40 rounded bg-gray-200/60 animate-pulse" />
                 <div className="mt-3 h-3 w-28 rounded bg-gray-200/60 animate-pulse" />
@@ -652,19 +650,19 @@ setDraftSaveState("idle");
                   <div className="h-3 w-10/12 rounded bg-gray-200/60 animate-pulse" />
                 </div>
                 <div className="mt-5 flex gap-3">
-                  <div className="h-10 w-28 rounded-xl bg-gray-200/60 animate-pulse" />
-                  <div className="h-10 w-40 rounded-xl bg-gray-200/60 animate-pulse" />
+                  <div className="h-10 w-28 rounded-[18px] bg-gray-200/60 animate-pulse" />
+                  <div className="h-10 w-40 rounded-[18px] bg-gray-200/60 animate-pulse" />
                 </div>
               </div>
             ))}
           </div>
         ) : loadError ? (
-          <div className="rounded-[28px] border border-rose-200 bg-rose-50/70 backdrop-blur-xl p-6 shadow-sm">
+          <div className="rounded-[28px] border border-rose-200 bg-rose-50/70 p-4 shadow-sm backdrop-blur-xl sm:rounded-4xl sm:p-6">
             <p className="text-sm font-semibold text-rose-800">{loadError}</p>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-4 inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[18px] bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700"
             >
               Reîncarcă pagina
             </button>
@@ -691,14 +689,14 @@ setDraftSaveState("idle");
             title={tab === "private" ? "Nu ai încă note private" : "Nu ai încă note pentru ședință"}
             subtitle={
               tab === "private"
-                ? "Începe cu un paragraf mic. Poate fi doar o propoziție despre azi."
+                ? "Start cu un paragraf mic. Poate fi doar o propoziție despre azi."
                 : "Alege o notă pe care ai vrea să o discuți în ședință."
             }
             cta={
               <button
                 type="button"
                 onClick={openNewEntry}
-                className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition"
+                className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
               >
                 Scrie prima notă
               </button>
@@ -713,11 +711,9 @@ setDraftSaveState("idle");
                 onOpen={onOpenEntry}
                 onToggleTag={(t) => setSelectedTag((prev) => (prev === t ? null : t))}
                 onInfoShare={() =>
-                  setToast({
-                    kind: "info",
-                    message:
-                      "În curând vei putea împărtăși nota cu terapeutul direct de aici. Nimic nu se trimite fără acordul tău.",
-                  })
+                  toast.info(
+                    "În curând vei putea împărtăși nota cu terapeutul direct de aici. Nimic nu se trimite fără acordul tău."
+                  )
                 }
               />
             ))}

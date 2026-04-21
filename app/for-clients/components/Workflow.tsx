@@ -2,27 +2,27 @@ export default function Workflow() {
   const steps = [
     {
       step: "01",
-      title: "Join through your therapist",
+      title: "Alatura-te prin terapeutul tau",
       text:
-        "Your therapist invites you to Innery, creating a shared and private space for your work together.",
+        "Terapeutul tau te invita in Innery, creand un spatiu comun si privat pentru munca voastra.",
     },
     {
       step: "02",
-      title: "Reflect between sessions",
+      title: "Reflecteaza intre sedinte",
       text:
-        "Write thoughts, feelings, or questions whenever they come up — at your own pace.",
+        "Scrie ganduri, emotii sau intrebari cand apar — in ritmul tau.",
     },
     {
       step: "03",
-      title: "Stay connected to your process",
+      title: "Ramai conectat(a) la procesul tau",
       text:
-        "Your reflections help maintain continuity, so important moments don’t get lost between sessions.",
+        "Reflectiile tale mentin continuitatea, ca momentele importante sa nu se piarda intre sedinte.",
     },
     {
       step: "04",
-      title: "Arrive with clarity",
+      title: "Vino cu claritate",
       text:
-        "Begin each session feeling grounded, without needing to re-explain what mattered last time.",
+        "Incepe fiecare sedinta ancorat(a), fara sa reexplici ce a contat data trecuta.",
     },
   ];
 
@@ -31,10 +31,10 @@ export default function Workflow() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center mb-14">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-tight">
-            How it fits into your therapy
+            Cum se potriveste in terapia ta
           </h2>
           <p className="mt-4 text-sm md:text-base text-gray-600 leading-relaxed">
-            Innery supports your therapeutic journey gently — without pressure or constant interaction.
+            Innery iti sustine parcursul terapeutic bland — fara presiune sau interactiune constanta.
           </p>
         </div>
 

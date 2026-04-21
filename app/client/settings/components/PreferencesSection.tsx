@@ -17,8 +17,8 @@ function Toggle({
   const id = React.useId();
 
   return (
-    <div className="group rounded-3xl border border-black/5 bg-white/90 p-4 shadow-[0_6px_14px_rgba(31,23,32,0.04)] transition hover:bg-[#fffafb] hover:shadow-[0_10px_20px_rgba(31,23,32,0.06)]">
-      <div className="flex items-start justify-between gap-4">
+    <div className="group rounded-[20px] border border-black/5 bg-white/90 p-4 shadow-[0_6px_14px_rgba(31,23,32,0.04)] transition hover:bg-[#fffafb] hover:shadow-[0_10px_20px_rgba(31,23,32,0.06)] sm:rounded-[28px]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <label
             htmlFor={id}
@@ -26,7 +26,7 @@ function Toggle({
           >
             {label}
           </label>
-          <p className="mt-1 text-xs leading-relaxed text-[#74656d]">{description}</p>
+          <p className="mt-1 text-xs leading-5 sm:leading-relaxed text-[#74656d]">{description}</p>
         </div>
 
         <button
@@ -87,7 +87,7 @@ function Toggle({
         </button>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-[11px] text-[#8a7b84]">
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[11px] text-[#8a7b84]">
         <span className="inline-flex items-center gap-2">
           <span className={["h-1.5 w-1.5 rounded-full", checked ? "bg-(--color-accent)" : "bg-[#d7cad2]"].join(" ")} />
           {checked ? "Activ" : "Oprit"}
@@ -118,7 +118,7 @@ export function PreferencesSection({
     <>
       {/* NOTIFICATIONS */}
       <div
-        className="rounded-[28px] border border-black/5 p-6 space-y-5 shadow-[0_10px_24px_rgba(31,23,32,0.05)]"
+        className="rounded-[28px] border border-black/5 p-4 space-y-5 shadow-[0_10px_24px_rgba(31,23,32,0.05)] sm:rounded-4xl sm:p-6"
         style={{
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,250,251,0.95) 100%)",
@@ -131,7 +131,7 @@ export function PreferencesSection({
           <h2 className="mt-2 text-[1.2rem] font-semibold tracking-tight text-foreground">
             Notificări & remindere
           </h2>
-          <p className="mt-2 text-sm leading-7 text-[#74656d]">
+          <p className="mt-2 text-sm leading-6 sm:leading-7 text-[#74656d]">
             Alege cum vrei să rămâi conectată la ședințe și la parcursul tău.
           </p>
         </div>
@@ -155,7 +155,7 @@ export function PreferencesSection({
 
       {/* PRIVACY */}
       <div
-        className="rounded-[28px] border border-black/5 p-6 space-y-5 shadow-[0_10px_24px_rgba(31,23,32,0.05)]"
+        className="rounded-[28px] border border-black/5 p-4 space-y-5 shadow-[0_10px_24px_rgba(31,23,32,0.05)] sm:rounded-4xl sm:p-6"
         style={{
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,250,251,0.95) 100%)",
@@ -168,7 +168,7 @@ export function PreferencesSection({
           <h2 className="mt-2 text-[1.2rem] font-semibold tracking-tight text-foreground">
             Confidențialitate & partajare
           </h2>
-          <p className="mt-2 text-sm leading-7 text-[#74656d]">
+          <p className="mt-2 text-sm leading-6 sm:leading-7 text-[#74656d]">
             Tu decizi ce rămâne privat și ce poate fi împărtășit mai departe.
           </p>
         </div>

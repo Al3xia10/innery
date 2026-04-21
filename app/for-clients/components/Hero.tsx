@@ -13,15 +13,15 @@ export default function Hero() {
           <div className="max-w-xl">
 
             <h1 className="mt-5 text-3xl font-semibold leading-tight tracking-tight text-gray-900 md:text-4xl">
-              A calm space for
-              <span className="text-(--color-accent)"> reflection</span>,
-              <span className="text-(--color-accent)"> clarity</span>, and growth.
+              Un spatiu calm pentru
+              <span className="text-(--color-accent)"> reflectie</span>,
+              <span className="text-(--color-accent)"> claritate</span>, si crestere.
             </h1>
 
             <p className="mt-5 text-base leading-relaxed text-gray-600 md:text-lg">
-              Keep your thoughts, emotions, and between-session reflections in
-              one private place — so your therapy work continues even outside
-              the session.
+              Keep your thoughts, emotions, and between-session reflecties in
+              un singur loc privat — astfel munca ta terapeutica continua chiar si in afara
+              sedintei.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -29,14 +29,14 @@ export default function Hero() {
                 href="/auth/signup?role=client"
                 className="inline-flex h-11 items-center justify-center rounded-xl bg-(--color-accent) px-6 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
               >
-                Create client account
+                Creeaza cont de client
               </Link>
 
               <Link
                 href="/how-it-works"
                 className="inline-flex h-11 items-center justify-center rounded-xl border border-(--color-soft) bg-white px-6 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-(--color-soft)/40"
               >
-                See how it works
+                Vezi cum functioneaza
                 <span className="ml-2 text-gray-400">→</span>
               </Link>
             </div>
@@ -49,7 +49,7 @@ export default function Hero() {
             <div className="overflow-hidden rounded-[28px] border border-(--color-soft) bg-white shadow-lg">
               <Image
                 src="/poza-dashboard-clienti.png"
-                alt="Innery client dashboard preview"
+                alt="Previzualizare dashboard client Innery"
                 width={1200}
                 height={800}
                 className="h-auto w-full object-cover"
@@ -58,7 +58,7 @@ export default function Hero() {
             </div>
 
             <p className="mt-4 text-center text-xs text-gray-500">
-              Real product preview — interface may evolve.
+              Previzualizare reala a produsului — interfata poate evolua.
             </p>
           </div>
         </div>

@@ -2,25 +2,25 @@ import Link from "next/link";
 
 const actions = [
   {
-    eyebrow: "Therapists",
-    title: "Invite a client",
-    text: "Create a client workspace and share access (MVP flow: mock/invite link).",
+    eyebrow: "Terapeuti",
+    title: "Invita un client",
+    text: "Creeaza un spatiu de client si partajeaza accesul (flux MVP: link mock/invitatie).",
     href: "/for-therapists",
-    cta: "Open therapist guide →",
+    cta: "Deschide ghidul terapeutului →",
   },
   {
-    eyebrow: "Clients",
-    title: "Access your space",
-    text: "If you can’t open your dashboard, check your link and client ID (demo).",
+    eyebrow: "Clienti",
+    title: "Acceseaza-ti spatiul",
+    text: "Daca nu poti deschide dashboard-ul, verifica linkul si ID-ul de client (demo).",
     href: "/for-clients",
-    cta: "Open client guide →",
+    cta: "Deschide ghidul clientului →",
   },
   {
-    eyebrow: "Account",
-    title: "Login issues",
-    text: "Wrong redirect, missing ID, or 'not found'? We can help you debug it fast.",
+    eyebrow: "Cont",
+    title: "Probleme de autentificare",
+    text: "Redirect gresit, ID lipsa sau 'not found'? Te ajutam sa depanezi rapid.",
     href: "/auth/login",
-    cta: "Go to login →",
+    cta: "Mergi la autentificare →",
   },
 ];
 

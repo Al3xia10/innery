@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -26,12 +26,17 @@ export default function Sidebar({
       const raw = localStorage.getItem("innery_user");
       if (!raw) return;
 
-      // raw might be a JSON string (common) or a plain object stringified twice
-      const first = JSON.parse(raw);
-      const parsed =
-        typeof first === "string" ? JSON.parse(first) : (first as any);
+      const first: unknown = JSON.parse(raw);
+      const parsed: unknown =
+        typeof first === "string" ? JSON.parse(first) : first;
+      if (!parsed || typeof parsed !== "object") return;
 
-      setTherapistProfile(parsed);
+      setTherapistProfile(parsed as {
+        name?: string;
+        email?: string;
+        role?: string;
+        id?: number;
+      });
     } catch {
       // ignore
     }
@@ -45,9 +50,8 @@ export default function Sidebar({
     if (opts?.exact) return current === target;
     return current === target || current.startsWith(target + "/");
   };
-  const sidebarContent = useMemo(
-    () => (
-      <>
+  const sidebarContent = (
+    <>
         {/* HEADER / BRAND */}
         <div className="mb-6">
           {desktopExpanded ? (
@@ -112,7 +116,7 @@ export default function Sidebar({
           />
           <NavItem
             href={`/therapist/${therapistId}/clients`}
-            label="Clienți"
+            label="Clients"
             icon={<IconUsers />}
             active={isActive(`/therapist/${therapistId}/clients`)}
             compact={!desktopExpanded}
@@ -174,9 +178,7 @@ export default function Sidebar({
             </div>
           )}
         </div>
-      </>
-    ),
-    [desktopExpanded, therapistId, pathname, therapistProfile]
+    </>
   );
 
   return (

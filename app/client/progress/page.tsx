@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/app/_lib/authClient";
 import { SoftCard } from "./components/SoftCard";
-import { Toast } from "./components/Toast";
+import { useToast } from "@/app/components/ui/toast/ToastProvider";
 import { FocusMetricTabs } from "./components/FocusMetricTabs";
 import { ProgressChartCard } from "./components/ProgressChartCard";
 import { InsightsCard } from "./components/InsightsCard";
@@ -41,14 +41,14 @@ type ProgressResponse = {
 type FocusMetric = "mood" | "anxiety" | "energy" | "sleep";
 export default function ProgressPage() {
   const router = useRouter();
+  const toast = useToast();
 
   const [range, setRange] = useState<RangeKey>("7");
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [series, setSeries] = useState<ProgressPoint[]>([]);
   const [insights, setInsights] = useState<ProgressInsight[]>([]);
-  const [toast, setToast] = useState<{ kind: "error" | "success"; message: string } | null>(null);
-  const [contextOpen, setContextOpen] = useState(false);
+    const [contextOpen, setContextOpen] = useState(false);
   const [contextNote, setContextNote] = useState("");
   const [contextTags, setContextTags] = useState<string[]>([]);
   const [insightsOpen, setInsightsOpen] = useState(false);
@@ -246,14 +246,14 @@ export default function ProgressPage() {
         if (!alive) return;
 
         // apiFetch typically throws; try to detect auth.
-        const msg = String(e?.message ?? e ?? "Eroare necunoscută");
+        const msg = String(e?.message ?? e ?? "Error necunoscută");
         if (msg.toLowerCase().includes("401") || msg.toLowerCase().includes("unauthorized")) {
-          setToast({ kind: "error", message: "Sesiunea a expirat. Te rugăm să te reconectezi." });
+          toast.error("Sesiunea a expirat. Te rugăm să te reconectezi.");
           router.replace("/login");
           return;
         }
 
-        setToast({ kind: "error", message: "Nu am putut încărca progresul. Încearcă din nou." });
+        toast.error("Nu am putut încărca progresul. Încearcă din nou.");
         setSeries([]);
         setInsights([]);
       } finally {
@@ -333,27 +333,23 @@ export default function ProgressPage() {
   };
 
   return (
-    <section className="relative">
-      {toast ? (
-  <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />
-) : null}
-      {/* soft canvas */}
+    <section className="relative">      {/* soft canvas */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <div className="absolute -top-10 -left-10 h-72 w-72 rounded-full bg-white/60 blur-3xl" />
         <div className="absolute top-24 -right-10 h-80 w-80 rounded-full bg-(--color-primary)/10 blur-3xl" />
         <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-(--color-soft)/15 blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-7">
+      <div className="mx-auto max-w-6xl px-3 py-3 space-y-6 sm:px-6 sm:py-8 sm:space-y-7 lg:px-8">
         {/* HEADER */}
                 {/* HEADER */}
         <ProgressHeader range={range} setRange={setRange} />
 
         {/* GRID */}
                 {/* GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
           <SoftCard
-            className="lg:col-span-2 rounded-3xl border border-black/5 shadow-sm"
+            className="lg:col-span-2 rounded-[28px] border border-black/5 shadow-sm sm:rounded-4xl"
             style={{
               background:
                 "linear-gradient(135deg,#ffffff 0%,rgba(239,208,202,0.18) 60%,rgba(125,128,218,0.08) 100%)",

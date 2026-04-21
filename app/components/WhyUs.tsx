@@ -28,11 +28,11 @@ export default function WhyUs() {
         {/* TITLE */}
         <div className="text-center max-w-2xl mx-auto mb-20">
           <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
-            Why Innery? <br /> Built for therapist–client work
+            De ce Innery? <br /> Creat pentru munca terapeut-client
           </h2>
           <p className="mt-4 text-gray-600 text-base leading-relaxed max-w-xl mx-auto">
-            Innery supports the ongoing work of therapy — notes, reflections, and follow‑ups
-            that bring clarity before, during, and between sessions.
+            Innery sustine munca terapeutica continua — notite, reflectii si follow-up-uri
+            care aduc claritate inainte, in timpul si intre sedinte.
           </p>
         </div>
 
@@ -43,19 +43,19 @@ export default function WhyUs() {
           <ul className="space-y-12">
             {[
               {
-                title: "One shared workspace",
+                title: "Un spatiu comun",
                 text:
-                  "A private place where therapists document care and clients reflect — aligned around the same therapeutic process.",
+                  "Un loc privat unde terapeutii documenteaza procesul iar clientii reflecteaza — aliniati in acelasi parcurs terapeutic.",
               },
               {
-                title: "Between‑session progress",
+                title: "Progres intre sedinte",
                 text:
-                  "Prompts, reflections, and follow‑ups help clients stay engaged, and help therapists pick up exactly where you left off.",
+                  "Prompturile, reflectiile si follow-up-urile ajuta clientii sa ramana implicati, iar terapeutii continua exact de unde au ramas.",
               },
               {
-                title: "Designed for real practice",
+                title: "Conceput pentru practica reala",
                 text:
-                  "Clear structure for ethical documentation, continuity, and collaboration — without turning therapy into “on‑demand chat.”",
+                  "Structura clara pentru documentare etica, continuitate si colaborare — fara a transforma terapia in „chat la cerere”.",
               },
             ].map((item, index) => (
               <li key={index} className="flex gap-6">
@@ -79,19 +79,19 @@ export default function WhyUs() {
           <div className="relative md:mt-10 z-20">
             <div className="bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] rounded-xl shadow-md border border-(--color-soft) p-10 max-w-md mx-auto">
               <h3 className="font-semibold text-gray-900 mb-4 leading-snug">
-                Built with therapists
+                Construit alaturi de terapeuti
               </h3>
 
               <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                Shaped by clinical experience — designed to support ethical documentation,
-                continuity of care, and a strong therapeutic alliance.
+                Modelat de experienta clinica — conceput pentru a sustine documentarea etica,
+                continuitatea ingrijirii si o alianta terapeutica puternica.
               </p>
 
               <Link
                 href="/about"
                 className="inline-block bg-white hover:bg-(--color-card) text-forceground px-5 py-3 rounded-md text-sm transition"
               >
-                About the approach
+                Despre abordare
               </Link>
             </div>
           </div>

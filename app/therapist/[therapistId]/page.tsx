@@ -79,7 +79,7 @@ export default function TherapistDashboard() {
         const meName = meUser?.name;
 
         if (meRole !== "therapist") {
-          const message = "You don’t have access to the therapist workspace.";
+          const message = "Nu ai acces la workspace-ul terapeutului.";
 
           try {
             localStorage.setItem("innery_redirect_notice", message);
@@ -97,7 +97,7 @@ export default function TherapistDashboard() {
         }
 
         if (meId && meId !== therapistId) {
-          const message = "You’ve been redirected to your therapist workspace.";
+          const message = "Ai fost redirecționată către workspace-ul tău de terapeut.";
 
           try {
             localStorage.setItem("innery_redirect_notice", message);
@@ -161,7 +161,7 @@ export default function TherapistDashboard() {
           setSessions(nextSessions);
         }
       } catch (e) {
-        console.error("Dashboard load error", e);
+        console.error("Panou load error", e);
       } finally {
         if (alive) setLoading(false);
       }
@@ -305,12 +305,12 @@ export default function TherapistDashboard() {
 
 
   return (
-  <section className="min-h-screen px-3 py-3 sm:p-6 lg:p-8">
+  <section className="min-h-screen px-3 py-3 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
     {accessToast ? (
         <div className="fixed inset-x-4 top-4 z-50 flex justify-center sm:inset-x-0">
-          <div className="w-full max-w-md rounded-3xl border border-(--color-soft) bg-white px-5 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-2 ring-(--color-soft)">
+          <div className="w-full max-w-md rounded-[20px] border border-(--color-soft) bg-white px-4 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-2 ring-(--color-soft) sm:rounded-[28px] sm:px-5">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-soft) text-(--color-primary)">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] bg-(--color-soft) text-(--color-primary) sm:rounded-full">
                 <span className="text-base font-semibold">i</span>
               </div>
               <div>
@@ -324,20 +324,20 @@ export default function TherapistDashboard() {
           </div>
         </div>
       ) : null}
-      <div className="w-full px-1 pb-16 pt-4 sm:px-6 lg:px-10 lg:pt-10">
+      <div className="w-full px-1 pb-16 pt-3 sm:px-6 lg:px-10 lg:pt-10">
         <div className="space-y-5 lg:mx-auto lg:max-w-5xl lg:space-y-8">
         <header className="space-y-6">
           <div className="px-1 sm:px-2 lg:px-1">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e7edf8_0%,#f2e8ff_100%)] text-sm font-semibold text-slate-700 shadow-sm">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#e7edf8_0%,#f2e8ff_100%)] text-sm font-semibold text-slate-700 shadow-sm sm:rounded-full">
                   {initials(displayTherapistName)}
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-(--color-primary)">
                     bine ai revenit
                   </p>
-                  <h1 className="mt-1 text-[1.5rem] font-semibold leading-none tracking-tight text-slate-900 sm:text-[1.7rem]">
+                  <h1 className="mt-1 text-[1.45rem] font-semibold leading-none tracking-tight text-slate-900 sm:text-[1.7rem]">
                     {displayTherapistName}
                   </h1>
                 </div>
@@ -352,12 +352,12 @@ export default function TherapistDashboard() {
               </p>
             </div>
 
-            <div className="w-full rounded-[28px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] p-5 text-white shadow-[0_28px_60px_rgba(184,104,152,0.24)] sm:rounded-4xl sm:p-7">
-              <div className="inline-flex rounded-full bg-white/40 px-3 py-1 text-[11px] font-semibold text-white">
+            <div className="w-full rounded-[28px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] p-5 text-white shadow-[0_28px_60px_rgba(184,104,152,0.24)] sm:rounded-[36px] sm:p-7">
+              <div className="inline-flex rounded-[18px] bg-white/40 px-3 py-1 text-[11px] font-semibold text-white sm:rounded-full">
                 privire de ansamblu
               </div>
 
-              <h2 className="mt-4 max-w-none text-[2rem] font-semibold leading-[1.03] tracking-tight text-white sm:max-w-none sm:text-[1.9rem]">
+              <h2 className="mt-4 max-w-none text-[1.8rem] font-semibold leading-[1.03] tracking-tight text-white sm:max-w-none sm:text-[1.9rem]">
                 Tot ce ai nevoie pentru azi
               </h2>
               <p className="mt-2 max-w-[28ch] text-[0.95rem] leading-6 text-white/88 sm:max-w-none sm:text-sm">
@@ -365,19 +365,19 @@ export default function TherapistDashboard() {
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                <div className="rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20">
+                <div className="rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20 sm:rounded-3xl">
                   <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-700">Azi</p>
                   <p className="mt-2 text-[1.3rem] font-semibold leading-none text-gray-700">{todayCount}</p>
                   <p className="mt-1.5 text-xs text-gray-700">sesiuni</p>
                 </div>
 
-                <div className="rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20">
-                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-700">Clienți</p>
+                <div className="rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20 sm:rounded-3xl">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-700">Clienti</p>
                   <p className="mt-2 text-[1.3rem] font-semibold leading-none text-gray-700">{activeClientsCount}</p>
                   <p className="mt-1.5 text-xs text-gray-700">activi</p>
                 </div>
 
-                <div className="col-span-2 rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20 sm:col-span-1">
+                <div className="col-span-2 rounded-[20px] bg-white/60 px-4 py-3.5 backdrop-blur-sm ring-1 ring-white/20 sm:rounded-3xl sm:col-span-1">
                   <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-700">Note</p>
                   <p className="mt-2 text-[1.3rem] font-semibold leading-none text-gray-700">
                     {notesCountLoading ? "..." : String(notesCount ?? 0)}
@@ -398,7 +398,7 @@ export default function TherapistDashboard() {
                   href={`/therapist/${therapistId}/clients`}
                   className="inline-flex min-h-11 items-center justify-center rounded-[18px] bg-white/90 px-4 py-3 text-center text-sm font-semibold leading-5 text-[#9a5d77] shadow-[0_10px_20px_rgba(255,255,255,0.14)] transition hover:-translate-y-px hover:opacity-95 sm:px-5"
                 >
-                  Clienți
+                  Clients
                 </Link>
               </div>
             </div>
@@ -406,7 +406,7 @@ export default function TherapistDashboard() {
         </header>
         <div className="space-y-6">
           <section
-            className="overflow-hidden rounded-[28px] border border-black/5 shadow-sm sm:rounded-4xl"
+            className="overflow-hidden rounded-[28px] border border-black/5 shadow-sm sm:rounded-[36px]"
             style={{
               background:
                 "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
@@ -421,7 +421,7 @@ export default function TherapistDashboard() {
               </div>
               <Link
                 href={`/therapist/${therapistId}/sessions`}
-                className="shrink-0 inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-slate-900 shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-(--color-soft)"
+                className="shrink-0 inline-flex min-h-10 w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-slate-900 shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-(--color-soft)"
               >
                 Vezi tot programul
               </Link>
@@ -429,11 +429,11 @@ export default function TherapistDashboard() {
 
             <div className="px-5 pb-5 sm:px-7 sm:pb-7">
               {loading ? (
-                <div className="rounded-2xl border border-black/5 bg-(--color-card) p-5">
+                <div className="rounded-[20px] border border-black/5 bg-(--color-card) p-4 sm:rounded-[28px] sm:p-5">
                   <div className="space-y-3">
-                    <div className="h-24 rounded-[20px] bg-[#f1eff8]" />
-                    <div className="h-24 rounded-[20px] bg-[#f1eff8]" />
-                    <div className="h-24 rounded-[20px] bg-[#f1eff8]" />
+                    <div className="h-24 rounded-[20px] bg-[#f1eff8] sm:rounded-3xl" />
+                    <div className="h-24 rounded-[20px] bg-[#f1eff8] sm:rounded-3xl" />
+                    <div className="h-24 rounded-[20px] bg-[#f1eff8] sm:rounded-3xl" />
                   </div>
                 </div>
               ) : todayAgenda.length === 0 ? (
@@ -445,7 +445,7 @@ export default function TherapistDashboard() {
                   <div className="mt-4">
                     <Link
                       href={`/therapist/${therapistId}/sessions`}
-                      className="inline-flex w-full items-center justify-center rounded-xl bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 sm:w-auto"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-[18px] bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 sm:w-auto"
                     >
                       Deschide programul
                     </Link>
@@ -459,11 +459,11 @@ export default function TherapistDashboard() {
                       return (
                         <article
                           key={session.id}
-                          className="rounded-[20px] border border-black/5 bg-white px-4 py-4 shadow-[0_4px_12px_rgba(31,23,32,0.04)]"
+                          className="rounded-[20px] border border-black/5 bg-white px-4 py-4 shadow-[0_4px_12px_rgba(31,23,32,0.04)] sm:rounded-3xl"
                         >
                           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                             <div className="min-w-0 flex items-center gap-3">
-                              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-900 ring-1 ring-(--color-soft)">
+                              <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-white text-sm font-semibold text-slate-900 ring-1 ring-(--color-soft) sm:rounded-[20px]">
                                 {initials(client?.name ?? "C")}
                               </div>
                               <div className="min-w-0">
@@ -479,13 +479,13 @@ export default function TherapistDashboard() {
                             <div className="grid grid-cols-2 gap-2 sm:w-auto sm:flex sm:flex-wrap sm:justify-end">
                               <Link
                                 href={`/therapist/${therapistId}/clients/${session.clientUserId}`}
-                                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-[11px] font-semibold text-slate-700 transition hover:bg-(--color-soft)"
+                                className="inline-flex min-h-10 items-center justify-center rounded-[18px] border border-black/5 bg-(--color-card) px-3 py-2 text-[11px] font-semibold text-slate-700 transition hover:bg-(--color-soft)"
                               >
                                 Deschide clientul
                               </Link>
                               <Link
                                 href={`/therapist/${therapistId}/notes`}
-                                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-(--color-accent) px-3 py-2 text-[11px] font-semibold text-white transition hover:opacity-95"
+                                className="inline-flex min-h-10 items-center justify-center rounded-[18px] bg-(--color-accent) px-3 py-2 text-[11px] font-semibold text-white transition hover:opacity-95"
                               >
                                 Scrie notiță
                               </Link>
@@ -512,7 +512,7 @@ export default function TherapistDashboard() {
             </div>
           </section>
           <section
-            className="overflow-hidden rounded-[28px] border border-black/5 shadow-sm sm:rounded-4xl"
+            className="overflow-hidden rounded-[28px] border border-black/5 shadow-sm sm:rounded-[36px]"
             style={{
               background:
                 "linear-gradient(135deg, #ffffff 0%, rgba(239,208,202,0.18) 60%, rgba(125,128,218,0.08) 100%)",
@@ -527,20 +527,20 @@ export default function TherapistDashboard() {
               </div>
               <Link
                 href={`/therapist/${therapistId}/clients`}
-                className="shrink-0 inline-flex items-center justify-center rounded-xl border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-slate-900 shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-(--color-soft)"
+                className="shrink-0 inline-flex min-h-10 w-full sm:w-auto items-center justify-center rounded-[18px] border border-black/5 bg-(--color-card) px-3 py-2 text-sm font-semibold text-slate-900 shadow-[0_4px_10px_rgba(31,23,32,0.05)] transition hover:bg-(--color-soft)"
               >
                 Vezi clienții
               </Link>
             </div>
 
             <div className="px-5 pb-5 sm:px-7 sm:pb-7">
-              <div className="rounded-2xl border border-black/5 bg-(--color-card) p-5">
+             <div className="rounded-[20px] border border-black/5 bg-(--color-card) p-4 sm:rounded-[28px] sm:p-5">
                 <div className="grid gap-2.5 sm:grid-cols-2">
                   {quickActions.map((action) => (
                     <Link
                       key={action.title}
                       href={action.href}
-                      className="flex items-center justify-between rounded-[20px] border border-black/5 bg-white px-4 py-4 shadow-[0_4px_12px_rgba(31,23,32,0.04)] transition hover:bg-(--color-card) min-h-22"
+                      className="flex min-h-22 items-center justify-between rounded-[20px] border border-black/5 bg-white px-4 py-4 shadow-[0_4px_12px_rgba(31,23,32,0.04)] transition hover:bg-(--color-card) sm:rounded-3xl"
                     >
                       <div>
                         <p className="text-sm font-semibold text-slate-900">{action.title}</p>
@@ -578,7 +578,7 @@ function PanelCard({
 }) {
   return (
     <div
-      className={`rounded-[28px] border p-4 shadow-[0_10px_24px_rgba(31,29,26,0.05)] sm:rounded-4xl sm:p-7 ${
+      className={`rounded-[28px] border p-4 shadow-[0_10px_24px_rgba(31,29,26,0.05)] sm:rounded-[36px] sm:p-7 ${
         tone === "mint"
           ? "border-[#dcd7ff] bg-[#5b4ce6] text-white"
           : "border-[#e3e0ef] bg-[#fcfbff] text-slate-900"
@@ -617,13 +617,13 @@ function EmptySoftState({
   cta?: string;
 }) {
   return (
-    <div className="mt-5 rounded-[28px] border border-dashed border-[#ddd8ea] bg-[#f8f7fc] p-8 text-center">
+    <div className="mt-5 rounded-[20px] border border-dashed border-[#ddd8ea] bg-[#f8f7fc] p-5 text-center sm:rounded-[28px] sm:p-8">
       <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
       {href && cta ? (
         <Link
           href={href}
-          className="mt-4 inline-flex items-center justify-center rounded-2xl bg-[#5b4ce6] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4d3fde]"
+          className="mt-4 inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-[18px] bg-[#5b4ce6] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4d3fde]"
         >
           {cta}
         </Link>
@@ -657,10 +657,10 @@ function AlertSoftRow({
       : "bg-emerald-100 text-emerald-800";
 
   const content = (
-    <div className={`flex items-center justify-between gap-3 rounded-[20px] border px-4 py-3 ${toneClass}`}>
+    <div className={`flex items-center justify-between gap-3 rounded-[20px] border px-4 py-3 sm:rounded-3xl ${toneClass}`}>
       <p className="text-sm font-semibold text-slate-900">{title}</p>
-      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${badgeClass}`}>
-        {tone === "warn" ? "Important" : tone === "info" ? "Info" : "OK"}
+      <span className={`rounded-[18px] px-2.5 py-1 text-[11px] font-semibold sm:rounded-full ${badgeClass}`}>
+        {tone === "warn" ? "Important" : tone === "info" ? "Info" : "Bine"}
       </span>
     </div>
   );

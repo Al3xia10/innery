@@ -6,51 +6,51 @@ import Link from "next/link";
 export default function PricingTeaser() {
   const [billing, setBilling] = React.useState<"monthly" | "yearly">("monthly");
 
-  const isYearly = billing === "yearly";
+  const isAnual = billing === "yearly";
 
-  const yearlyMonthlyEquivalent: Record<string, string> = {
-    Professional: "≈ €15.17 / month",
-    Clinic: "≈ €55.17 / month",
+  const yearlyLunarEquivalent: Record<string, string> = {
+    Professional: "≈ €15.17 / luna",
+    Clinic: "≈ €55.17 / luna",
   };
 
   const plans = [
     {
       name: "Starter",
-      note: "For early exploration",
-      price: { monthly: "Free", yearly: "Free" },
+      note: "Pentru explorare initiala",
+      price: { monthly: "Gratuit", yearly: "Gratuit" },
       features: [
-        "Up to 3 clients",
-        "Session notes",
-        "Client reflections",
-        "Basic overview",
+        "Pana la 3 clienti",
+        "Notite de sedinta",
+        "Reflectii clienti",
+        "Vedere generala de baza",
       ],
-      cta: { label: "Start free", href: "/auth/signup" },
+      cta: { label: "Incepe gratuit", href: "/auth/signup" },
       highlight: false,
     },
     {
       name: "Professional",
-      note: "For active practices",
-      price: { monthly: "€19 / month", yearly: "€182 / year" },
+      note: "Pentru practici active",
+      price: { monthly: "€19 / luna", yearly: "€182 / an" },
       features: [
-        "Unlimited clients",
-        "Structured note templates",
-        "Goals & progress tracking",
-        "Exports & backups",
+        "Clienti nelimitati",
+        "Sabloane structurate de notite",
+        "Obiective si urmarire progres",
+        "Exporturi si backup-uri",
       ],
-      cta: { label: "Upgrade to Pro", href: "/auth/signup" },
+      cta: { label: "Treci la Pro", href: "/auth/signup" },
       highlight: true,
     },
     {
       name: "Clinic",
-      note: "For teams & clinics",
-      price: { monthly: "€69 / month", yearly: "€662 / year" },
+      note: "Pentru echipe si clinici",
+      price: { monthly: "€69 / luna", yearly: "€662 / an" },
       features: [
-        "Multiple therapist accounts",
-        "Roles & permissions",
-        "Shared templates & standards",
-        "Team-level reporting",
+        "Conturi multiple de terapeuti",
+        "Roluri si permisiuni",
+        "Sabloane si standarde comune",
+        "Raportare la nivel de echipa",
       ],
-      cta: { label: "Upgrade to Clinic", href: "/auth/signup" },
+      cta: { label: "Treci la Clinic", href: "/auth/signup" },
       highlight: false,
     },
   ] as const;
@@ -60,60 +60,57 @@ export default function PricingTeaser() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="max-w-2xl">
           <h2 className="mt-2 text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
-            Simple pricing, built for practice
+            Preturi simple, construite pentru practica
           </h2>
           <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed">
-            Start small, then upgrade when you’re ready. Plans stay focused on what therapists actually need.
+            Incepi simplu, apoi faci upgrade cand esti pregatit(a). Planurile raman orientate pe ce au nevoie terapeutii.
           </p>
 
-          <div className="mt-8 flex items-center justify-center md:justify-start">
-            <div
-              className="relative inline-flex rounded-2xl border border-(--color-soft) bg-white p-1 shadow-sm"
-              role="group"
-              aria-label="Billing period"
-            >
-              {/* sliding thumb */}
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-(--color-accent) shadow-sm transition-transform duration-200 ease-out ${
-                  isYearly ? "translate-x-full" : "translate-x-0"
-                }`}
-              />
-
-              <button
-                type="button"
-                onClick={() => setBilling("monthly")}
-                className={`relative z-10 inline-flex min-w-38 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-primary)/60 ${
-                  !isYearly
-                    ? "text-white"
-                    : "text-gray-700 hover:text-gray-900"
-                }`}
-                aria-pressed={!isYearly}
+          <div className="mt-8 flex justify-center md:justify-start">
+            <div className="w-full max-w-100">
+              <div
+                className="relative grid grid-cols-2 rounded-2xl border border-(--color-soft) bg-white p-1 shadow-sm"
+                role="group"
+                aria-label="Perioada de facturare"
               >
-                Monthly
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setBilling("yearly")}
-                className={`relative z-10 inline-flex min-w-38 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-primary)/60 ${
-                  isYearly
-                    ? "text-white"
-                    : "text-gray-700 hover:text-gray-900"
-                }`}
-                aria-pressed={isYearly}
-              >
-                Yearly
                 <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold transition ${
-                    isYearly
-                      ? "bg-white/20 text-white"
-                      : "bg-(--color-card) text-gray-900"
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-(--color-accent) shadow-sm transition-transform duration-200 ease-out ${
+                    isAnual ? "translate-x-full" : "translate-x-0"
                   }`}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setBilling("monthly")}
+                  className={`relative z-10 inline-flex max-h-9.5 items-center justify-center rounded-xl px-4 py-2 text-lg font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-primary)/60 ${
+                    !isAnual ? "text-white" : "text-gray-700 hover:text-gray-900"
+                  }`}
+                  aria-pressed={!isAnual}
                 >
-                  Save 20%
-                </span>
-              </button>
+                  Lunar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setBilling("yearly")}
+                  className={`relative z-10 inline-flex max-h-9.5 items-center justify-center rounded-xl px-4 py-2 text-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-primary)/60 ${
+                    isAnual ? "text-white" : "text-gray-700 hover:text-gray-900"
+                  }`}
+                  aria-pressed={isAnual}
+                >
+                  <span className="flex flex-col items-center leading-tight">
+                    <span className="text-lg font-semibold">Anual</span>
+                    <span
+                      className={` text-[11px] font-semibold whitespace-nowrap ${
+                        isAnual ? "text-white/95" : "text-gray-600"
+                      }`}
+                    >
+                      Economisesti 20% 
+                    </span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -135,8 +132,8 @@ export default function PricingTeaser() {
                 </div>
 
                 {p.highlight && (
-                  <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
-                    Best value
+                  <span className="hidden sm:inline-flex whitespace-nowrap rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
+                    Cel mai bun raport pret-valoare
                   </span>
                 )}
               </div>
@@ -146,13 +143,13 @@ export default function PricingTeaser() {
                   {p.price[billing]}
                 </p>
 
-                {p.name !== "Starter" && isYearly && (
+                {p.name !== "Starter" && isAnual && (
                   <div className="mt-2 space-y-1">
                     <p className="text-xs font-semibold text-gray-500">
-                      {yearlyMonthlyEquivalent[p.name]}
+                      {yearlyLunarEquivalent[p.name]}
                     </p>
                     <p className="text-xs font-semibold text-gray-500">
-                      Billed yearly • Save 20%
+                      Facturat anual • Economisesti 20%
                     </p>
                   </div>
                 )}

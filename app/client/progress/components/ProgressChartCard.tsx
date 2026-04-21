@@ -3,10 +3,6 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 
-function cn(...parts: Array<string | false | null | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
-
 export function ProgressChartCard({
   label,
   hint,
@@ -51,22 +47,18 @@ export function ProgressChartCard({
   const toY = (v: number) => padTop + (1 - v / 10) * innerH;
 
   // Build segments separated by nulls
-  const segments = useMemo(() => {
-    const segs: Array<Array<{ x: number; y: number; v: number; idx: number }>> = [];
-    let cur: Array<{ x: number; y: number; v: number; idx: number }> = [];
-
-    for (let i = 0; i < safe.length; i++) {
-      const v = safe[i];
-      if (v == null) {
-        if (cur.length) segs.push(cur);
-        cur = [];
-        continue;
-      }
-      cur.push({ x: toX(i), y: toY(v), v, idx: i });
+  const segments: Array<Array<{ x: number; y: number; v: number; idx: number }>> = [];
+  let cur: Array<{ x: number; y: number; v: number; idx: number }> = [];
+  for (let i = 0; i < safe.length; i++) {
+    const v = safe[i];
+    if (v == null) {
+      if (cur.length) segments.push(cur);
+      cur = [];
+      continue;
     }
-    if (cur.length) segs.push(cur);
-    return segs;
-  }, [safe]);
+    cur.push({ x: toX(i), y: toY(v), v, idx: i });
+  }
+  if (cur.length) segments.push(cur);
 
   const buildSmoothPath = (pts: Array<{ x: number; y: number }>) => {
     if (!pts.length) return "";
@@ -100,7 +92,7 @@ export function ProgressChartCard({
     return (
       <div className="space-y-3">
         <div className="h-4 w-40 rounded bg-(--color-soft)/60 animate-pulse" />
-        <div className="h-40 w-full rounded-3xl bg-(--color-soft)/50 animate-pulse" />
+        <div className="h-40 w-full rounded-[20px] bg-(--color-soft)/50 animate-pulse sm:rounded-[28px]" />
         <div className="h-3 w-64 rounded bg-(--color-soft)/55 animate-pulse" />
       </div>
     );
@@ -108,9 +100,9 @@ export function ProgressChartCard({
 
   if (empty) {
     return (
-      <div className="rounded-[26px] border border-dashed border-black/5 bg-white p-5 shadow-[0_8px_20px_rgba(31,23,32,0.04)]">
+      <div className="rounded-[20px] border border-dashed border-black/5 bg-white p-4 shadow-[0_8px_20px_rgba(31,23,32,0.04)] sm:rounded-[28px] sm:p-5">
         <p className="text-sm font-semibold text-foreground">Încă nu avem suficiente repere</p>
-        <p className="mt-1 text-sm text-(--color-foreground-muted,#6B5A63)">{hint}</p>
+        <p className="mt-1 text-sm leading-6 sm:leading-7 text-(--color-foreground-muted,#6B5A63)">{hint}</p>
         <Link
           href="/client"
           className="mt-4 inline-flex w-full sm:w-auto items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(184,104,152,0.24)] transition hover:opacity-95"
@@ -122,19 +114,19 @@ export function ProgressChartCard({
   }
 
   return (
-    <div className="rounded-[28px] border border-black/5 bg-(--color-card) p-4 sm:p-6 shadow-[0_10px_24px_rgba(31,23,32,0.05)]">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-[28px] border border-black/5 bg-(--color-card) p-4 shadow-[0_10px_24px_rgba(31,23,32,0.05)] sm:rounded-4xl sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[15px] font-semibold tracking-tight text-foreground">{label}</p>
 
         {hover ? (
-          <div className="hidden sm:flex items-center gap-2 rounded-full border border-black/5 bg-white px-3 py-1 text-xs font-semibold text-foreground shadow-[0_4px_12px_rgba(31,23,32,0.05)]">
+          <div className="hidden sm:flex items-center gap-2 rounded-[18px] border border-black/5 bg-white px-3 py-1 text-xs font-semibold text-foreground shadow-[0_4px_12px_rgba(31,23,32,0.05)]">
             <span className="h-1.5 w-1.5 rounded-full bg-(--color-primary)" />
             {Math.round(hover.v * 10) / 10}
           </div>
         ) : null}
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-3xl bg-white ring-1 ring-black/5">
+      <div className="mt-4 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/5 sm:rounded-[28px]">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="block h-44 sm:h-56 w-full"
@@ -242,7 +234,7 @@ export function ProgressChartCard({
         </svg>
       </div>
 
-      <p className="mt-3 text-[12px] leading-6 text-(--color-foreground-muted,#6B5A63)">
+      <p className="mt-3 text-[12px] leading-5 sm:leading-6 text-(--color-foreground-muted,#6B5A63)">
         Un detaliu mic: uită-te la perioadă, nu la o singură zi. Dacă vrei, notează contextul (somn, stres, oameni) în jurnal.
       </p>
     </div>

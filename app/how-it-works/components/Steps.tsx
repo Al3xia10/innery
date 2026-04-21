@@ -2,39 +2,39 @@ import Link from "next/link";
 
 const therapistSteps = [
   {
-    title: "Create your workspace",
-    text: "Set up your therapist space — where client work stays organized and private.",
+    title: "Creeaza-ti spatiul",
+    text: "Configureaza-ti spatiul de terapeut — unde munca cu clientii ramane organizata si privata.",
   },
   {
-    title: "Add a client profile",
-    text: "Create a profile and keep a clear timeline for notes and context on each client.",
+    title: "Adauga profilul unui client",
+    text: "Creeaza un profil si pastreaza o cronologie clara pentru notite si context la fiecare client.",
   },
   {
-    title: "Write session notes",
-    text: "Capture what matters after sessions using a simple structure that supports continuity.",
+    title: "Scrie notite de sedinta",
+    text: "Noteaza ce conteaza dupa sedinte folosind o structura simpla care sustine continuitatea.",
   },
   {
-    title: "Review reflections (optional)",
-    text: "If enabled, clients can submit short reflections between sessions for you to review.",
+    title: "Revizuieste reflectiile (optional)",
+    text: "Daca este activat, clientii pot trimite reflectii scurte intre sedinte pentru revizuire.",
   },
 ] as const;
 
 const clientSteps = [
   {
-    title: "Join your client space",
-    text: "Access your personal space connected to your therapist — calm, simple, and private.",
+    title: "Intra in spatiul tau de client",
+    text: "Acceseaza spatiul tau personal conectat la terapeut — calm, simplu si privat.",
   },
   {
-    title: "Add reflections",
-    text: "Write short reflections between sessions so you don’t lose what felt important.",
+    title: "Adauga reflectii",
+    text: "Scrie reflectii scurte intre sedinte, ca sa nu pierzi ce a fost important.",
   },
   {
-    title: "Track your progress",
-    text: "See your reflection history over time — patterns become easier to notice.",
+    title: "Urmareste-ti progresul",
+    text: "Vezi istoricul reflectiilor in timp — tiparele devin mai usor de observat.",
   },
   {
-    title: "Stay prepared",
-    text: "Use your notes to bring clarity into your next session and focus on what matters.",
+    title: "Fii pregatit(a)",
+    text: "Foloseste notitele pentru claritate in urmatoarea sedinta si focus pe ce conteaza.",
   },
 ] as const;
 
@@ -76,11 +76,11 @@ export default function Steps() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="mt-2 text-xl md:text-2xl font-semibold text-gray-900 leading-snug">
-            Understand the flow — for therapists and clients
+            Intelege fluxul — pentru terapeuti si clienti
           </h2>
           <p className="mt-3 text-sm md:text-base text-gray-600 leading-relaxed">
-            Innery connects a therapist workspace with a client space — so notes, reflections, and
-            continuity are easier on both sides.
+            Innery conecteaza spatiul terapeutului cu spatiul clientului — astfel notitele, reflectiile si
+            continuitatea sunt mai simple de gestionat de ambele parti.
           </p>
         </div>
 
@@ -90,14 +90,14 @@ export default function Steps() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-(--color-primary)">
-                  For therapists
+                  Pentru terapeuti
                 </p>
                 <p className="mt-1 text-sm text-gray-700">
-                  A private workspace for client continuity.
+                  Un spatiu privat pentru continuitatea cu clientii.
                 </p>
               </div>
-              <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
-                Notes • Timeline • Context
+              <span className="hidden sm:inline-flex whitespace-nowrap rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
+                Notite • Cronologie • Context
               </span>
             </div>
 
@@ -108,7 +108,7 @@ export default function Steps() {
                 href="/auth/signup"
                 className="inline-flex items-center justify-center rounded-xl border border-(--color-soft) bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-(--color-card)"
               >
-                Create therapist account
+                Creeaza cont de terapeut
                 
               </Link>
             </div>
@@ -119,14 +119,14 @@ export default function Steps() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-(--color-primary)">
-                  For clients
+                  Pentru clienti
                 </p>
                 <p className="mt-1 text-sm text-gray-700">
-                  A calm place to reflect between sessions.
+                  Un loc calm pentru reflectie intre sedinte.
                 </p>
               </div>
               <span className="hidden sm:inline-flex rounded-full bg-(--color-card) px-3 py-1 text-xs border border-(--color-soft) text-gray-600">
-                Reflections • History • Clarity
+                Reflectii • Istoric • Claritate
               </span>
             </div>
 
@@ -137,7 +137,7 @@ export default function Steps() {
                 href="/auth/signup"
                 className="inline-flex items-center justify-center rounded-xl bg-(--color-accent) px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
               >
-                Create client account
+                Creeaza cont de client
               </Link>
             </div>
           </div>

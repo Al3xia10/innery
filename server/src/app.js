@@ -13,10 +13,8 @@ import notesRoutes from "./routes/notes.routes.js";
 import clientsRoutes from "./routes/clients.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import clientTodayRoutes from "./routes/client.today.routes.js";
-import clientProgressRoutes from "./routes/client.progress.routes.js";
 import clientPlanRoutes from "./routes/client.plan.routes.js";
 import clientJournalRoutes from "./routes/client.journal.routes.js";
-import clientCheckinsRoutes from "./routes/client.checkins.routes.js";
 import clientSettingsRoutes from "./routes/client.settings.routes.js";
 import therapistSettingsRoutes from "./routes/therapist.settings.routes.js";
 import clientExercisesRoutes from "./routes/client.exercises.routes.js";
@@ -41,32 +39,41 @@ app.use(
 // Supports comma-separated origins in env, e.g.
 // CORS_ORIGIN=http://localhost:3000,https://innery.ro
 const allowedOrigins = (
-  process.env.CORS_ORIGIN || "http://localhost:3000,https://innery.vercel.app"
+  env.corsOrigin || "http://localhost:3000"
 )
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
 
-app.use(
-  cors({
-    origin(origin, cb) {
-      // Allow tools like Thunder Client/Postman (no Origin header)
-      if (!origin) return cb(null, true);
+if (allowedOrigins.includes("*")) {
+  throw new Error(
+    "CORS_ORIGIN cannot contain '*' when credentials are enabled. Use explicit origins.",
+  );
+}
 
-      // Allow exact matches
-      if (allowedOrigins.includes(origin)) return cb(null, true);
+const allowVercelPreview = process.env.ALLOW_VERCEL_PREVIEW === "true";
 
-      // Allow Vercel preview deployments (*.vercel.app)
-      if (origin.endsWith(".vercel.app")) return cb(null, true);
+const corsOptions = {
+  origin(origin, cb) {
+    // Allow tools like Thunder Client/Postman (no Origin header)
+    if (!origin) return cb(null, true);
 
-      return cb(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    credentials: true,
-  }),
-);
+    // Allow exact matches
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+
+    // Allow Vercel preview deployments (*.vercel.app) only when explicitly enabled
+    if (allowVercelPreview && origin.endsWith(".vercel.app"))
+      return cb(null, true);
+
+    return cb(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 // Preflight (Express v5/path-to-regexp doesn't accept "*")
-app.options(/.*/, cors());
+app.options(/.*/, cors(corsOptions));
 
 // ---- Body parsers ----
 app.use(express.json({ limit: "1mb" }));
@@ -103,11 +110,9 @@ app.use("/api", settingsRoutes);
 
 // Client area (Today / Progress / Journal / Plan)
 app.use("/api", clientTodayRoutes);
-app.use("/api", clientProgressRoutes);
 // Plan (Goals)
 app.use("/api/client/plan", clientPlanRoutes);
 app.use("/api/client", clientJournalRoutes);
-app.use("/api/client", clientCheckinsRoutes);
 // Client settings
 app.use("/api", clientSettingsRoutes);
 

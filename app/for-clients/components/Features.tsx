@@ -1,24 +1,24 @@
 export default function Features() {
   const features = [
     {
-      title: "A private space for your thoughts",
+      title: "Un spatiu privat pentru gandurile tale",
       text:
-        "Write reflections between sessions in a calm, personal space — without pressure or constant messaging.",
+        "Scrie reflectii intre sedinte intr-un spatiu calm, personal — fara presiune sau mesaje constante.",
     },
     {
-      title: "Continuity between sessions",
+      title: "Continuitate intre sedinte",
       text:
-        "Your therapist sees what matters to you before each session, so you don’t have to start from zero.",
+        "Terapeutul vede ce conteaza pentru tine inainte de fiecare sedinta, asa ca nu pornesti de la zero.",
     },
     {
-      title: "Clarity, not clutter",
+      title: "Claritate, nu haos",
       text:
-        "Everything related to your therapy lives in one place — notes, reflections, and shared context.",
+        "Tot ce tine de terapia ta este intr-un singur loc — notite, reflectii si context comun.",
     },
     {
-      title: "Safe and respectful by design",
+      title: "Sigur si respectuos prin design",
       text:
-        "Your information stays private, structured, and shared only within the therapeutic relationship.",
+        "Informatiile tale raman private, structurate si partajate doar in relatia terapeutica.",
     },
   ];
 
@@ -27,10 +27,10 @@ export default function Features() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-tight">
-            Designed to support your therapy
+            Conceput sa-ti sustina terapia
           </h2>
           <p className="mt-4 text-sm md:text-base text-gray-600 leading-relaxed">
-            Innery helps you stay connected to your process — calmly, privately, and at your own pace.
+            Innery te ajuta sa ramai conectat(a) la procesul tau — calm, privat si in ritmul tau.
           </p>
         </div>
 

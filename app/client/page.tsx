@@ -143,7 +143,7 @@ useEffect(() => {
 
   const rawDate = data?.today.date;
   const niceDate = rawDate
-    ? new Date(rawDate).toLocaleDateString(undefined, {
+    ? new Date(rawDate).toLocaleDateString("ro-RO", {
         weekday: "long",
         month: "long",
         day: "2-digit",
@@ -196,13 +196,13 @@ useEffect(() => {
     <section className="min-h-screen bg-background">
       {accessToast ? (
         <div className="fixed inset-x-4 top-4 z-50 flex justify-center sm:inset-x-0">
-          <div className="w-full max-w-md rounded-3xl border border-(--color-soft) bg-white px-5 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-1 ring-(--color-soft)">
+          <div className="w-full max-w-md rounded-[20px] border border-(--color-soft) bg-white px-4 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-1 ring-(--color-soft) sm:rounded-[28px] sm:px-5">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-soft) text-(--color-primary)">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] bg-(--color-soft) text-(--color-primary)">
                 <span className="text-base font-semibold">i</span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-900">Access notice</p>
+                <p className="text-sm font-semibold text-slate-900">Notificare acces</p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">{accessToast}</p>
               </div>
             </div>
@@ -211,8 +211,7 @@ useEffect(() => {
       ) : null}
 
       <div className="flex min-h-screen items-center justify-center px-6">
-        <div className="flex items-center gap-3 rounded-2xl border border-(--color-soft) bg-white px-5 py-4 text-sm text-gray-600 shadow-sm">
-          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-(--color-soft) border-t-(--color-accent)" />
+<div className="flex items-center gap-3 rounded-[20px] border border-(--color-soft) bg-white px-4 py-4 text-sm text-gray-600 shadow-sm sm:rounded-[28px] sm:px-5">          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-(--color-soft) border-t-(--color-accent)" />
           <span>Se încarcă…</span>
         </div>
       </div>
@@ -230,7 +229,7 @@ useEffect(() => {
     <section className="min-h-screen bg-background">
       {savedToast ? (
         <div className="fixed right-4 top-4 z-50">
-          <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <div className="rounded-[18px] border border-gray-200 bg-white px-4 py-3 shadow-sm sm:rounded-[22px]">
             <p className="text-sm font-semibold text-gray-900">✔️ Ai făcut loc pentru tine.</p>
             <p className="text-xs text-gray-600">Chiar și un minut contează.</p>
           </div>
@@ -239,13 +238,13 @@ useEffect(() => {
 
       {accessToast ? (
         <div className="fixed inset-x-4 top-4 z-50 flex justify-center sm:inset-x-0">
-          <div className="w-full max-w-md rounded-3xl border border-(--color-soft) bg-white px-5 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-1 ring-(--color-soft)">
+          <div className="w-full max-w-md rounded-[20px] border border-(--color-soft) bg-white px-4 py-4 shadow-[0_18px_40px_rgba(31,23,32,0.14)] ring-1 ring-(--color-soft) sm:rounded-[28px] sm:px-5">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-soft) text-(--color-primary)">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] bg-(--color-soft) text-(--color-primary)">
                 <span className="text-base font-semibold">i</span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-900">Access notice</p>
+                <p className="text-sm font-semibold text-slate-900">Notificare acces</p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">{accessToast}</p>
               </div>
             </div>
@@ -255,26 +254,26 @@ useEffect(() => {
 
       {errorToast ? (
         <div className="fixed right-4 top-4 z-50">
-          <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <div className="rounded-[18px] border border-gray-200 bg-white px-4 py-3 shadow-sm sm:rounded-[22px]">
             <p className="text-sm font-semibold text-gray-900">Ups.</p>
             <p className="text-xs text-gray-600">{errorToast}</p>
           </div>
         </div>
       ) : null}
 
-      <div className="w-full px-4 pb-16 pt-6 sm:px-6 lg:px-10 lg:pt-10">
-        <div className="space-y-6 lg:mx-auto lg:max-w-5xl lg:space-y-8">
+      <div className="w-full px-3 pb-16 pt-5 sm:px-6 lg:px-10 lg:pt-10">
+        <div className="space-y-5 lg:mx-auto lg:max-w-5xl lg:space-y-8">
           <header className="space-y-6">
             <div className="px-4 sm:px-5 lg:px-7">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e7edf8_0%,#f2e8ff_100%)] text-sm font-semibold text-slate-700 shadow-sm">
                     {initialsFromName(getMeName(me))}
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-(--color-primary)">
-                      welcome back
-                    </p>
+  bine ai revenit
+</p>
                     <h1 className="mt-1 text-[1.5rem] font-semibold leading-none tracking-tight text-slate-900 sm:text-[1.7rem]">
                       {getMeName(me)}
                     </h1>
@@ -285,26 +284,26 @@ useEffect(() => {
 
             <div className="space-y-5 px-4 sm:px-5 lg:px-7">
               <div className="space-y-3">
-                <p className="text-[1.9rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[1.8rem]">
-                  Cum esti astazi?
-                </p>
+                <p className="text-[1.7rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[1.8rem]">
+  Cum ești astăzi?
+</p>
                 <p className="text-sm leading-6 text-[#8f7e86]">{niceDate}</p>
               </div>
               
 
-             <div className="w-full rounded-[36px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] p-6 text-white shadow-[0_28px_60px_rgba(184,104,152,0.24)] sm:p-7">
-                <div className="inline-flex rounded-full bg-white/45 px-3 py-1 text-xs font-semibold text-white">
-                  Daily mood check
-                </div>
+             <div className="w-full rounded-[28px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] p-5 text-white shadow-[0_28px_60px_rgba(184,104,152,0.24)] sm:rounded-[36px] sm:p-7">
+                <div className="inline-flex rounded-[18px] bg-white/45 px-3 py-1 text-xs font-semibold text-white sm:rounded-full">
+  Check-in zilnic
+</div>
 
-                <h2 className="mt-4 text-[1.8rem] font-semibold tracking-tight text-white sm:text-[2rem]">
+                <h2 className="mt-4 text-[1.6rem] font-semibold tracking-tight text-white sm:text-[2rem]">
                     Cum te simți azi?
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-white/85">
                     Alege repede o stare și începe blând de aici.
                   </p>
 
-                <div className="mt-5 grid grid-cols-5 gap-2 lg:gap-3">
+                <div className="mt-5 grid grid-cols-5 gap-1.5 sm:gap-2 lg:gap-3">
                 <MoodFaceButton label="foarte bine" icon="😊" active={mood >= 9} onClick={() => { setMood(9); openCheckinSection(); }} />
                 <MoodFaceButton label="bine" icon="🙂" active={mood >= 7 && mood < 9} onClick={() => { setMood(7); openCheckinSection(); }} />
                 <MoodFaceButton label="neutru" icon="😐" active={mood >= 5 && mood < 7} onClick={() => { setMood(5); openCheckinSection(); }} />
@@ -315,8 +314,8 @@ useEffect(() => {
                 <button
                   type="button"
                   onClick={openCheckinSection}
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-white px-5 py-3.5 text-sm font-semibold text-[#9a5d77] shadow-[0_14px_28px_rgba(255,255,255,0.22)] transition hover:opacity-95">
-                  {existsToday ? "Revino la check-in" : "Începe check-in-ul"}
+                  className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-[18px] bg-white px-5 py-3.5 text-sm font-semibold text-[#9a5d77] shadow-[0_14px_28px_rgba(255,255,255,0.22)] transition hover:opacity-95">
+                  {existsToday ? "Revino la check-in" : "Start check-in-ul"}
                 </button>
               </div>
             </div>
@@ -325,14 +324,14 @@ useEffect(() => {
           <div className="px-4 sm:px-5 lg:px-7">
           <div className="space-y-8">
              <section className="bg-transparent p-0 shadow-none">
-                <div className="flex items-center justify-between gap-3 rounded-4xl bg-white border border-black/5 px-5 py-5  shadow-[0_16px_32px_rgba(31,23,32,0.08)] sm:px-6">
+                <div className="flex items-center justify-between gap-3 rounded-[28px] border border-black/5 bg-white px-4 py-4 shadow-[0_16px_32px_rgba(31,23,32,0.08)] sm:rounded-[36px] sm:px-6 sm:py-5">
                   <div>
                     <p className="text-lg font-semibold tracking-tight text-foreground">Scrie o notiță nouă în jurnal</p>
                     <p className="mt-1 text-sm text-foreground/85">Un rând mic e suficient.</p>
                   </div>
                   <Link
                     href="/client/journal"
-                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-(--color-card) text-2xl font-medium text-[#9a5d77] transition hover:bg-(--color-soft)"
+                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-(--color-card) text-2xl font-medium text-[#9a5d77] transition hover:bg-(--color-soft) sm:rounded-full"
                     aria-label="Deschide jurnalul"
                     title="Deschide jurnalul"
                   >
@@ -373,7 +372,7 @@ useEffect(() => {
                         ? lastCheckin.mood <= 4
                           ? "Poate te-ar ajuta un exercițiu scurt de respirație sau o pauză conștientă."
                           : "Se vede un echilibru. Continuă cu pași mici."
-                        : "Începe cu un check-in sau un gând scurt în jurnal."
+                        : "Start cu un check-in sau un gând scurt în jurnal."
                     }
                     tone="purple"
                     href="/client/journal"
@@ -385,9 +384,9 @@ useEffect(() => {
               {checkinOpen ? (
                 <section
                   ref={checkinSectionRef}
-                  className="overflow-hidden rounded-4xl bg-white shadow-[0_20px_44px_rgba(171,122,150,0.16)] ring-1 ring-[#f3d7df]"
+                  className="overflow-hidden rounded-[28px] bg-white shadow-[0_20px_44px_rgba(171,122,150,0.16)] ring-1 ring-[#f3d7df] sm:rounded-[36px]"
                 >
-                  <div className="flex items-start justify-between gap-4 border-b border-[#f5e3ea] bg-[linear-gradient(135deg,#fff4ef_0%,#fdf3ff_100%)] px-5 py-4 sm:px-6">
+                  <div className="flex flex-col gap-3 border-b border-[#f5e3ea] bg-[linear-gradient(135deg,#fff4ef_0%,#fdf3ff_100%)] px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6">
                     <div>
                       <p className="text-base font-semibold text-slate-900">
                         {existsToday ? "Revino și ajustează blând" : "O fotografie sinceră a momentului"}
@@ -397,13 +396,13 @@ useEffect(() => {
                     <button
                       type="button"
                       onClick={() => setCheckinOpen(false)}
-                     className="inline-flex rounded-xl border border-white/80 bg-white px-3 py-2 text-sm font-semibold text-[#8c6072] shadow-sm transition hover:bg-white"
+                     className="inline-flex min-h-10 w-full sm:w-auto rounded-[18px] border border-white/80 bg-white px-3 py-2 text-sm font-semibold text-[#8c6072] shadow-sm transition hover:bg-white"
                     >
                       Închide
                     </button>
                   </div>
 
-                  <div className="px-5 py-5 sm:px-6 sm:py-6">
+                  <div className="px-4 py-4 sm:px-6 sm:py-6">
                     <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
                       <div className="space-y-5">
                         <FancySlider label="Stare" value={mood} onChange={setMood} kind="mood" />
@@ -413,7 +412,7 @@ useEffect(() => {
                       </div>
 
                       <div className="space-y-5">
-                        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                       <div className="rounded-[20px] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-[28px]">
                           <div className="grid grid-cols-1 gap-4">
                             <div>
                               <label className="block text-sm font-semibold text-gray-900">Somn (ore)</label>
@@ -424,7 +423,7 @@ useEffect(() => {
                                 max={24}
                                 value={sleepHours}
                                 onChange={(e) => setSleepHours(Number(e.target.value))}
-                                className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="mt-2 w-full rounded-[18px] border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                               />
                               <p className="mt-2 text-[11px] text-gray-500">Poți scrie 6.5, 7, 8…</p>
                             </div>
@@ -436,25 +435,25 @@ useEffect(() => {
                                 onChange={(e) => setNote(e.target.value)}
                                 placeholder="Un gând scurt..."
                                 rows={4}
-                                className="mt-2 w-full resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="mt-2 w-full resize-none rounded-[18px] border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                               />
                               <p className="mt-2 text-[11px] text-gray-500">Doar pentru tine. Poate rămâne gol.</p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="rounded-3xl border border-[#f7dbe8] bg-[linear-gradient(135deg,#fff5ef_0%,#fff7fb_100%)] p-4">
+                        <div className="rounded-[20px] border border-[#f7dbe8] bg-[linear-gradient(135deg,#fff5ef_0%,#fff7fb_100%)] p-4 sm:rounded-[28px]">
                           <p className="text-xs font-semibold text-gray-900">Un mic reminder</p>
                           <p className="mt-1 text-xs text-gray-600">Dacă simți că te grăbești, e ok. Revino blând la ritm.</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mt-5 flex flex-col-reverse gap-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
                       <button
                         type="button"
                         onClick={() => setCheckinOpen(false)}
-                        className="inline-flex w-full items-center justify-center rounded-2xl border border-[#eed6e0] bg-white px-6 py-3 text-sm font-semibold text-[#7f6470] shadow-sm transition hover:bg-[#fffafb] sm:w-auto"
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-[18px] border border-[#eed6e0] bg-white px-6 py-3 text-sm font-semibold text-[#7f6470] shadow-sm transition hover:bg-[#fffafb] sm:w-auto"
                       >
                         Nu acum
                       </button>
@@ -463,8 +462,8 @@ useEffect(() => {
                         type="button"
                         disabled={saving}
                         onClick={saveCheckin}
-                        className="inline-flex w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(184,104,152,0.24)] transition hover:opacity-95 disabled:opacity-60 sm:w-auto">
-                        {saving ? "Salvez..." : "Salvează"}
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--color-accent)_50%,var(--color-primary)_100%)] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(184,104,152,0.24)] transition hover:opacity-95 disabled:opacity-60 sm:w-auto">
+                        {saving ? "Salvez..." : "Salveaza"}
                       </button>
                     </div>
                   </div>
@@ -472,7 +471,7 @@ useEffect(() => {
               ) : null}
             </div>
 
-             <section className="mt-10 rounded-[28px] bg-[linear-gradient(135deg,#ffffff_0%,rgba(239,208,202,0.18)_60%,rgba(125,128,218,0.08)_100%)] p-6  border border-black/5">
+             <section className="mt-10 rounded-[28px] border border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,rgba(239,208,202,0.18)_60%,rgba(125,128,218,0.08)_100%)] p-4 sm:rounded-4xl sm:p-6">
                 <div>
                   <p className="text-lg font-semibold tracking-tight text-slate-900">Ultimul tău check-in</p>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
@@ -490,14 +489,14 @@ useEffect(() => {
                     </div>
 
                     {lastCheckin.note ? (
-                      <div className="mt-6 rounded-3xl border border-(--color-card) bg-(--color-card) p-5 text-sm text-gray-700 shadow-sm">
+                      <div className="mt-6 rounded-[20px] border border-(--color-card) bg-(--color-card) p-4 text-sm text-gray-700 shadow-sm sm:rounded-[28px] sm:p-5">
                         <span className="font-semibold text-gray-900">Notiță: </span>
                         {lastCheckin.note}
                       </div>
                     ) : null}
                   </>
                 ) : (
-                  <div className="mt-4 rounded-3xl border border-dashed border-(--color-card) bg-white/80 p-4 text-sm text-slate-500">
+                  <div className="mt-4 rounded-[20px] border border-dashed border-(--color-card) bg-white/80 p-4 text-sm text-slate-500 sm:rounded-[28px]">
                     Încă nu ai un check-in salvat. Poți începe chiar de sus.
                   </div>
                 )}
@@ -512,7 +511,7 @@ useEffect(() => {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-black/5 bg-(--color-card) p-5 ">
+    <div className="rounded-[20px] border border-black/5 bg-(--color-card) p-4 sm:rounded-[28px] sm:p-5">
       <p className="text-xs font-medium text-[#8f7e86]">{label}</p>
       <p className="mt-2 text-sm font-semibold text-slate-900">{value}</p>
     </div>
@@ -536,7 +535,7 @@ function MoodFaceButton({
       aria-label={label}
       title={label}
       className={
-        "flex h-12 w-full items-center justify-center rounded-full border text-xl shadow-sm transition sm:h-14 " +
+        "flex h-12 w-full items-center justify-center rounded-[18px] border text-xl shadow-sm transition sm:h-14 sm:rounded-full " +
         (active
           ? "border-(--color-soft) bg-[linear-gradient(135deg,var(--color-warm)_0%,var(--background)_100%)] ring-2 ring-(--color-soft)"
           : "border-white/70 bg-white/80 backdrop-blur hover:bg-[#fffafb]")
@@ -571,17 +570,17 @@ function SoftFeatureCard({
 
   const content = (
     <>
-            <div className={`flex min-h-55 w-full flex-col rounded-[28px] p-5 shadow-[0_16px_28px_rgba(31,23,32,0.08)] ${toneClass}`}>
+            <div className={`flex min-h-55 w-full flex-col rounded-[20px] p-4 shadow-[0_16px_28px_rgba(31,23,32,0.08)] sm:rounded-[28px] sm:p-5 ${toneClass}`}>
         <div className="inline-flex rounded-full bg-white/60 px-3 py-1 text-xs font-semibold text-slate-600">
           {badge}
         </div>
         <h3 className="mt-5 text-[1.45rem] font-semibold leading-[1.08] tracking-tight text-slate-900 lg:text-[1.65rem]">{title}</h3>
-        <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+        <p className="mt-3 text-sm leading-6 sm:leading-7 text-slate-600">{description}</p>
         <div className="mt-auto" />
       </div>
-      <div className="mt-3 flex items-center justify-between rounded-[20px] bg-white px-4 py-3 shadow-[0_8px_18px_rgba(31,23,32,0.08)]">
+      <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white px-4 py-3 shadow-[0_8px_18px_rgba(31,23,32,0.08)] sm:rounded-[20px]">
         <span className="text-sm font-semibold text-slate-900">{actionLabel}</span>
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(--color-card) text-2xl font-medium text-[#9a5d77] transition hover:bg-(--color-soft)">+</span>
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[18px] bg-(--color-card) text-2xl font-medium text-[#9a5d77] transition hover:bg-(--color-soft) sm:rounded-full">+</span>
       </div>
     </>
   );
@@ -611,7 +610,7 @@ function MiniInsightCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-[20px] bg-[linear-gradient(180deg,#ffffff_0%,#fff7fb_100%)] p-4 shadow-[0_10px_20px_rgba(189,133,158,0.10)]">
+    <div className="rounded-[20px] bg-[linear-gradient(180deg,#ffffff_0%,#fff7fb_100%)] p-4 shadow-[0_10px_20px_rgba(189,133,158,0.10)] sm:rounded-[28px]">
      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c19488]">{label}</p>
       <p className="mt-2 text-sm font-semibold leading-6 text-slate-900">{value}</p>
       <p className="mt-1 text-xs leading-5 text-slate-500">{helper}</p>
@@ -644,14 +643,14 @@ const intensity =
     : "bg-[#ffe3d6] text-[#b96a49]";
 
   return (
-    <div className="rounded-3xl border border-[#f4dfe6] bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_100%)] p-5 shadow-[0_12px_26px_rgba(31,23,32,0.08)]">
+    <div className="rounded-[20px] border border-[#f4dfe6] bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_100%)] p-4 shadow-[0_12px_26px_rgba(31,23,32,0.08)] sm:rounded-[28px] sm:p-5">
       <div className="flex items-center justify-between">
         <label htmlFor={id} className="text-sm font-semibold text-gray-900">
           {label}
         </label>
 
         <span
-          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${intensity}`}
+          className={`inline-flex items-center gap-1 rounded-[18px] px-3 py-1 text-xs font-semibold sm:rounded-full ${intensity}`}
         >
           <span className="h-2 w-2 rounded-full bg-current opacity-70" />
           {value}/10

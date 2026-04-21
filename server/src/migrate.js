@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 export const umzug = new Umzug({
   migrations: {
-    glob: path.join(__dirname, "migrations", "*.js"),
+    glob: path.join(__dirname, "..", "migrations", "*.{js,cjs}"),
   },
   context: sequelize.getQueryInterface(),
   storage: new SequelizeStorage({ sequelize }),
