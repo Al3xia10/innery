@@ -3,9 +3,9 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { models } from "../models/index.js";
 import jwt from "jsonwebtoken";
-import { env } from "../config/env.js";
+import { env } from "../config/config.js";
 import crypto from "crypto";
-import { sendPasswordResetEmail } from "../lib/mailer.js";
+import { sendPasswordResetEmail } from "../controller/mailer.js";
 
 const router = Router();
 

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { models } from "../models/index.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { generateGoalStepsWithAi } from "../lib/goalStepsAi.js";
+import { generateGoalStepsWithAi } from "../controller/goalStepsAi.js";
 
 const router = Router();
 

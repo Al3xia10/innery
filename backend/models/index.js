@@ -1,4 +1,4 @@
-import { sequelize } from "../config/db.js";
+import { sequelize } from "../config/config.js";
 import { initUserModel } from "./User.js";
 import Client from "./Client.js";
 import { initSessionModel } from "./Session.js";

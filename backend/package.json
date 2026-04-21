@@ -2,17 +2,18 @@
   "name": "innery-backend",
   "version": "1.0.0",
   "type": "module",
-  "main": "src/server.js",
+  "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "db:up": "node src/migrate.js up",
-    "db:down": "node src/migrate.js down",
-    "db:pending": "node src/migrate.js pending",
-    "db:executed": "node src/migrate.js executed",
-    "migrate": "sequelize-cli db:migrate --env production --config config/config.cjs --migrations-path migrations",
-    "migrate:undo": "sequelize-cli db:migrate:undo",
-    "seed": "sequelize-cli db:seed:all",
-    "start": "node src/server.js"
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "db:migrate": "sequelize-cli db:migrate --config config/config.js --migrations-path migrations",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo --config config/config.js --migrations-path migrations",
+    "db:migrate:undo:all": "sequelize-cli db:migrate:undo:all --config config/config.js --migrations-path migrations",
+    "db:migrate:status": "sequelize-cli db:migrate:status --config config/config.js --migrations-path migrations",
+    "db:seed:all": "sequelize-cli db:seed:all --config config/config.js --seeders-path seeders",
+    "db:seed:undo:all": "sequelize-cli db:seed:undo:all --config config/config.js --seeders-path seeders",
+    "migration:generate": "sequelize-cli migration:generate --config config/config.js --migrations-path migrations",
+    "seed:generate": "sequelize-cli seed:generate --config config/config.js --seeders-path seeders"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -27,7 +28,6 @@
     "nodemailer": "^6.9.15",
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.2",
-    "umzug": "^3.8.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

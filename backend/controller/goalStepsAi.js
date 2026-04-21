@@ -1,4 +1,4 @@
-import { env } from "../config/env.js";
+import { env } from "../config/config.js";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/responses";
 

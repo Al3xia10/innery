@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { env } from "../config/env.js";
+import { env } from "../config/config.js";
 
 export function requireAuth(req, res, next) {
   try {
